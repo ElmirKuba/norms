@@ -41,7 +41,7 @@ _Nothing yet._
 ### Авторизация и устройства
 См. [`docs/auth-devices.md`](docs/auth-devices.md).
 - Бэк: таблица `sessions` (id, account_id, system_name, platform, nickname, refresh_token, created_at, updated_at).
-- Бэк: JWT-пара access (15 сек) + refresh (30 дней), ротация, TTL через env.
+- Бэк: JWT-пара access (15 мин) + refresh (30 дней), ротация, TTL через env. Refresh token rotation + reuse detection. WSS-ротация через `token_refresh`/`tokens_updated` (без реконнекта).
 - Бэк: лимит устройств через env (default 20).
 - Бэк: эндпоинты логина, refresh, кика устройства, "выйти на всех кроме текущего".
 - Бэк: эндпоинт `PATCH /api/v1/session/update-nickname` — установка/снятие прозвища текущей сессии.

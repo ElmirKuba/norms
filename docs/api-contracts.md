@@ -190,7 +190,7 @@ Request: пусто.
 Response 204.
 
 ### `POST /api/v1/session/refresh`
-Ротация токенов.
+Ротация токенов (HTTP-вариант). Используется если WSS не открыт (например, при запуске прилы).
 
 Public (но валидируется refresh).
 
@@ -205,10 +205,12 @@ Response 200:
 ```
 
 Errors:
-- 401 `refresh_invalid` (нет такой записи в sessions / refresh испорчен)
+- 401 `refresh_invalid` (нет такой записи в sessions / refresh испорчен / уже использован — reuse detection)
 - 401 `refresh_expired`
 
-При успешной ротации `sessions.updated_at` обновляется (заменяет `last_active_at`).
+При успешной ротации: старый refresh инвалидируется, выдаётся новый, `sessions.updated_at` обновляется.
+
+**Reuse detection:** если refresh уже был использован — сессия считается компрометированной, выдаётся `401 refresh_reused`, устройство кикается (запись из `sessions` удаляется, онлайн-девайсу шлётся WSS `session_kicked`).
 
 ### `GET /api/v1/account/read`
 Чтение данных аккаунта.
@@ -633,7 +635,31 @@ Errors:
 [server закрывает коннект]
 ```
 
-После `auth_ok` — двухсторонний канал. Сервер пушит события, клиент может присылать команды (для будущих фич — пока только receive-only с серверной стороны).
+После `auth_ok` — двухсторонний канал. Сервер пушит события, клиент может присылать команды.
+
+### Ротация токенов (client → server)
+
+Access TTL = 15 минут. WSS-соединение живёт часами. Клиент обновляет токены, не разрывая соединение.
+
+**Клиент проактивно отправляет за 3 секунды до истечения access:**
+```json
+→ { "type": "token_refresh", "refresh_token": "..." }
+```
+
+**Сервер отвечает новой парой:**
+```json
+← { "type": "tokens_updated", "access_token": "...", "refresh_token": "..." }
+```
+
+**Ошибка (reuse detection или refresh истёк):**
+```json
+← { "type": "token_refresh_failed", "code": "refresh_reused" | "refresh_expired" | "refresh_invalid" }
+[server закрывает коннект, сессия кикается]
+```
+
+**Grace period:** если access истёк раньше, чем клиент успел рефрешнуть — сервер не рвёт соединение сразу, даёт 2 секунды на входящий `token_refresh`. По истечению grace period без рефреша — закрывает.
+
+**Refresh token rotation:** каждый `token_refresh` инвалидирует старый refresh и выдаёт новый. Reuse detection: повторное использование уже использованного refresh = компрометация, сессия кикается.
 
 ### Heartbeat
 Сервер шлёт `{ "type": "ping" }` каждые 30 сек. Клиент должен ответить `{ "type": "pong" }`. Иначе через 90 сек коннект закрывается.

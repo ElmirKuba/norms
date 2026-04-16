@@ -125,7 +125,7 @@ REDIS_URL=redis://localhost:6379
 SESSION_STORE=postgres  # postgres | redis
 
 # Auth (см. auth-devices.md)
-JWT_ACCESS_TTL=15s
+JWT_ACCESS_TTL=15m
 JWT_REFRESH_TTL=30d
 JWT_ACCESS_SECRET=...
 JWT_REFRESH_SECRET=...
