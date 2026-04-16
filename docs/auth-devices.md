@@ -34,7 +34,7 @@ JWT-пара: access + refresh.
 
 ## Хранение сессий
 
-Варианты: таблица в БД или Redis. Redis быстрее для частых обновлений (ротация каждые 15 сек), но требует настройки persistence (RDB/AOF) чтобы не терять сессии при перезапуске. Решение — вместе с выбором бэк-стека.
+Через абстракцию `SessionStore` с двумя реализациями (`PostgresSessionStore` и `RedisSessionStore`). Активная реализация выбирается через env `SESSION_STORE=postgres|redis`. Подробнее: [`backend-stack.md`](backend-stack.md) → SessionStore.
 
 ## Нейминг устройств
 
@@ -54,11 +54,18 @@ JWT-пара: access + refresh.
 
 - **Само-кик** (в настройках: "выйти на всех устройствах кроме текущего" или кик конкретного устройства) — удаляем запись из `sessions`.
 - **Админ-кик** — то же самое.
-- **Уведомление кикнутого устройства:** если онлайн — через WSS-сигнал, устройство сразу переходит на экран авторизации. Если офлайн — при следующем подключении refresh token не найдётся в таблице → 401 → экран авторизации.
+- **Уведомление кикнутого устройства:** если онлайн — WSS-событие `session_kicked` (см. [`api-contracts.md`](api-contracts.md) → WSS), устройство сразу переходит на экран авторизации. Если офлайн — при следующем подключении refresh token не найдётся в таблице → 401 → экран авторизации.
+
+## Установка прозвища
+
+Эндпоинт `PATCH /api/v1/session/update-nickname` (см. [`api-contracts.md`](api-contracts.md)) — установка/снятие `nickname` для текущей сессии. Передача `null` снимает прозвище.
+
+Прозвища чужих устройств (только локально, не на сервер) — через локальный SQLite в таблице `peer_devices.my_local_nickname` (см. [`local-storage.md`](local-storage.md)).
 
 ## Login flow
 
-1. Юзер вводит логин (UIN или username — бэк определяет по формату) + пароль.
-2. Бэк проверяет credentials, создаёт запись в `sessions` (system_name, platform, refresh_token).
-3. Возвращает пару access + refresh.
-4. Клиент сохраняет токены локально. Мульти-аккаунт: каждый аккаунт — своя пара токенов, переключение в UI.
+1. Юзер вводит логин (UIN или username — бэк определяет по формату: только цифры → UIN, иначе username) + пароль.
+2. Клиент шлёт `POST /api/v1/account/auth` с `{ login, password, system_name, platform }`. `system_name` берётся из `DeviceInfoService` (см. [`platform-services.md`](platform-services.md)), `platform` — из `detectPlatform()`.
+3. Бэк проверяет credentials, создаёт запись в `sessions` (`system_name`, `platform`, `refresh_token`).
+4. Возвращает аккаунт + сессию (с парой access + refresh).
+5. Клиент сохраняет токены локально (keychain через `StorageService`). Мульти-аккаунт: каждый аккаунт — своя пара токенов, переключение в UI.

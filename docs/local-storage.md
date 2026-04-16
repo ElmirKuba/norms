@@ -19,8 +19,15 @@
 ## Что НЕ в SQLite
 
 - **JWT-токены** — в системном keychain через Capacitor secure storage / electron `keytar`. Безопаснее.
-- **Мастер-ключ устройства** (которым шифруются приватные ключи чатов) — в системном keychain. Доступ через `BiometricService` (Face ID / Touch ID / fingerprint).
-- **Индекс залогиненных аккаунтов** — key-value (`@capacitor/preferences` / `electron-store`). JSON: `[{ accountId, dbPath, isActive }]`. Простой переключатель аккаунтов.
+- **Мастер-ключ устройства** (которым шифруются приватные ключи чатов) — в системном keychain. Случайный, генерируется при первой установке прилы. **Не деривируется из пароля** — поэтому смена пароля не ломает чаты. Доступ через `BiometricService` (Face ID / Touch ID / fingerprint).
+- **Key-value хранилище** (`@capacitor/preferences` / `electron-store`) — для не-чувствительных флагов и индексов:
+  - `accounts_index` — JSON `[{ accountId, dbPath, isActive }]`. Переключатель аккаунтов.
+  - `onboarding.first_chat_modal_shown` — boolean. После первого чата на этом устройстве не показываем модалку с объяснением per-device модели (см. [`devices-and-chats.md`](devices-and-chats.md)).
+  - `onboarding.orphan_peers_dismissed` — boolean. После клика «понял, больше не показывать» welcome-экран осиротевших собеседников не возвращается на этом устройстве.
+  - Прочие UI-флаги по мере появления.
+
+### Сиротские keychain-items
+iOS/macOS Keychain переживает удаление прилы. SQLite — нет. При первом запуске, если SQLite пуст, а в keychain есть мастер-ключ — удаляем его как сирота, генерируем новый. См. [`recovery.md`](recovery.md).
 
 ## Структура per-account БД (`account_{accountId}.db`)
 

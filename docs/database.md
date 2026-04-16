@@ -1,6 +1,6 @@
 # База данных
 
-Документ описывает кросс-cutting конвенции БД, общие для бэкенда (стек ещё не зафиксирован — см. [TODO.md](../TODO.md) → "Decisions deferred") и для локальной SQLite на устройствах.
+Документ описывает кросс-cutting конвенции БД, общие для бэкенда (PostgreSQL 16 + Drizzle, см. [`backend-stack.md`](backend-stack.md)) и для локальной SQLite на устройствах (см. [`local-storage.md`](local-storage.md)).
 
 ## Универсальный формат ID
 
@@ -32,5 +32,11 @@
 
 ## Схемы по фичам
 
+Серверные таблицы:
 - [`identity.md`](identity.md) — `accounts`, `uins`
-- Локальная SQLite на устройствах — будет описана здесь по мере реализации.
+- [`invites.md`](invites.md) — `invites`, `referrals`
+- [`auth-devices.md`](auth-devices.md) — `sessions`
+- [`recovery.md`](recovery.md) — `recovery_questions`
+- [`encryption.md`](encryption.md) — `chats`, `pending_messages`
+
+Локальная SQLite на устройствах: [`local-storage.md`](local-storage.md).

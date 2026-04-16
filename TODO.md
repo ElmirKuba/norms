@@ -12,7 +12,7 @@ _Nothing yet._
 - Компонент лендинга на корневом маршруте `/`
 - Компонент-заглушка для всех остальных маршрутов в вебе
 - Детект ОС через `navigator.userAgent` / `navigator.userAgentData` — подсветка релевантной кнопки скачивания
-- Запрос ссылок у бэка `GET /api/app/downloads` при инициализации (только если `platform === 'browser'`)
+- Запрос ссылок у бэка `GET /api/v1/app/downloads` при инициализации (только если `platform === 'browser'`)
 
 ### Идентификация / аккаунты
 См. [`docs/identity.md`](docs/identity.md), [`docs/database.md`](docs/database.md).
@@ -44,6 +44,7 @@ _Nothing yet._
 - Бэк: JWT-пара access (15 сек) + refresh (30 дней), ротация, TTL через env.
 - Бэк: лимит устройств через env (default 20).
 - Бэк: эндпоинты логина, refresh, кика устройства, "выйти на всех кроме текущего".
+- Бэк: эндпоинт `PATCH /api/v1/session/update-nickname` — установка/снятие прозвища текущей сессии.
 - Бэк: WSS-сигнал кикнутому устройству.
 - Фронт: хранение токенов локально, мульти-аккаунт (несколько пар токенов).
 - Фронт: настройки → список устройств (nickname ?? system_name, платформа, дата активности, текущее помечено), кнопки кика.
@@ -54,15 +55,42 @@ _Nothing yet._
 - Админ-панель: выдача `username` доверенным аккаунтам (через UI / БД).
 - Настройки приватности: кто может писать пользователю (публично / только инвайт / закрыто и т.п.). Конкретный набор режимов — подпункт при реализации.
 
+### Recovery (восстановление пароля)
+См. [`docs/recovery.md`](docs/recovery.md).
+- Бэк: таблица `recovery_questions` (account_id, question, answer_hash, answer_salt).
+- Бэк: API создания/редактирования/удаления Q/A пар.
+- Бэк: эндпоинт `GET /api/v1/recovery/preset-questions` — готовый список вопросов от сервера.
+- Бэк: API запроса списка вопросов аккаунта (без хешей) + проверка ответа + выдача `reset_token`.
+- Бэк: API сброса пароля по `reset_token`.
+- Бэк: rate-limit неудачных попыток (per-account, эскалация 1ч → 24ч → 7д).
+- Бэк: WSS-сигнал `password_reset_via_recovery` всем сессиям аккаунта.
+- Фронт: настройки → раздел «Восстановление доступа», список Q/A, добавление preset/своих.
+- Фронт: обязательное предупреждение «recovery вернёт аккаунт, не чаты» — без принятия кнопка «Сохранить» неактивна.
+- Фронт: экран «Забыли пароль?» — UIN/username → выбор вопроса → ответ → новый пароль.
+- Фронт: баннер при сбросе пароля через recovery (если уже залогинен на этом устройстве).
+
+### Мульти-девайс UX
+См. [`docs/devices-and-chats.md`](docs/devices-and-chats.md).
+- Бэк: эндпоинт `GET /api/v1/chat/read-orphan-peers` — список `account_id` собеседников из чужих сессий моего же аккаунта.
+- Фронт: экран «Welcome» при первом логине новой сессии — список осиротевших собеседников + кнопка «понял, больше не показывать».
+- Фронт: onboarding-модалка при создании первого чата на каждом устройстве (флаг в локальном key-value).
+
 ## Decisions deferred
-- **Backend stack** — конкретный фреймворк (NestJS?), БД (MySQL/Postgres), расположение в репо (тот же / отдельный), архитектура. Обсудим после фронта. Reference: [`nest-backend-example/`](nest-backend-example/).
-- **Хеширование пароля** — на клиенте перед отправкой или на сервере? Влияет на E2E-модель и процесс восстановления.
-- **Очередь UIN-задач** — BullMQ + Redis vs минимальный custom worker. Зависит от выбора бэк-стека.
-- **Хранение сессий** — Redis (быстрый, но нужна persistence) vs таблица в БД. Связано с бэк-стеком.
 - **Список паттернов "красивых" UIN** для стартового резервирования.
 
+## Decisions fixed (recent)
+- **Backend stack** — NestJS + PostgreSQL 16 + Drizzle + Redis (BullMQ + опц. SessionStore). См. [`docs/backend-stack.md`](docs/backend-stack.md).
+- **Очередь UIN-задач** — BullMQ на Redis. См. [`docs/backend-stack.md`](docs/backend-stack.md).
+- **Хранение сессий** — абстракция `SessionStore`, реализации Postgres/Redis, выбор через `SESSION_STORE` env. См. [`docs/backend-stack.md`](docs/backend-stack.md).
+- **Структура репо** — `application/` + `backend/` на одном уровне, два независимых `package.json`. См. [`PROJECT.md`](PROJECT.md).
+- **Хеширование пароля** — на сервере, argon2id. Plain-text по TLS. См. [`docs/identity.md`](docs/identity.md), [`docs/recovery.md`](docs/recovery.md).
+- **Мастер-ключ устройства** — случайный (Signal-style), в keychain, не зависит от пароля. См. [`docs/local-storage.md`](docs/local-storage.md).
+- **Recovery аккаунта** — через секретные Q/A (микс preset + свои, без лимита, OR-логика, argon2id хеш ответов). Recovery возвращает аккаунт, не чаты. Без Q/A восстановление невозможно. См. [`docs/recovery.md`](docs/recovery.md).
+- **Мульти-девайс UX** — чаты per-device, без авто-синхронизации. На новом устройстве показываем список «осиротевших собеседников». При первом чате на устройстве — onboarding-модалка. См. [`docs/devices-and-chats.md`](docs/devices-and-chats.md).
+- **API контракты MVP** — REST `/api/v1/` (resource/action нейминг) + WSS `wss://normisy.app/ws` (auth первым сообщением). См. [`docs/api-contracts.md`](docs/api-contracts.md).
+
 ## Infrastructure TODO
-- **Бэк-API `GET /api/app/downloads`** — возвращает `{ ios, android, windows, macos, linux: string }`. Источник ссылок (env vars / БД / GitHub Releases) — на усмотрение бэка.
+- **Бэк-API `GET /api/v1/app/downloads`** — возвращает `{ ios, android, windows, macos, linux: string }`. Источник ссылок (env vars / БД / GitHub Releases) — на усмотрение бэка.
 - **Universal Links / App Links** — `apple-app-site-association` (iOS) и `assetlinks.json` (Android) кладутся на бэк по фиксированным путям. Чтобы инвайт-ссылка `https://normisy.app/invite/...` открывалась в установленной приле.
 - **Хостинг фронта** — Docker рядом с бэком на vds/vps (CI/CD позже) либо ручной деплой `dist/` на старте.
 
