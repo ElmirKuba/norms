@@ -30,7 +30,8 @@
           "fill": "#8E8E93",
           "content": "Placeholder",
           "fontFamily": "Inter",
-          "fontSize": 15
+          "fontSize": 15,
+          "fontWeight": "normal"
         }
       ]
     },
@@ -2272,6 +2273,16 @@
                   "fontFamily": "Inter",
                   "fontSize": 14,
                   "fontWeight": "normal"
+                },
+                {
+                  "type": "icon_font",
+                  "id": "GyPnV",
+                  "name": "theme-toggle",
+                  "width": 20,
+                  "height": 20,
+                  "iconFontName": "moon",
+                  "iconFontFamily": "lucide",
+                  "fill": "#8E8E93"
                 }
               ]
             }
@@ -2717,6 +2728,730 @@
             "mode": "fill"
           },
           "cornerRadius": 36
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "eM77T",
+      "x": -1560,
+      "y": 1040,
+      "name": "О проекте",
+      "width": 1440,
+      "fill": "#FAFAFA",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "aXVcm",
+          "name": "nav",
+          "width": "fill_container",
+          "height": 64,
+          "fill": "#FFFFFF",
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#F0F0F0"
+          },
+          "padding": [
+            0,
+            80
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "ZGIH6",
+              "name": "navLogo",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Tud2r",
+                  "name": "navIcon",
+                  "metadata": {
+                    "type": "unsplash",
+                    "username": "silverkblack",
+                    "link": "https://unsplash.com/@silverkblack",
+                    "author": "Vitaly Gariev"
+                  },
+                  "width": 32,
+                  "height": 32,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "./images/generated-1776420738462.png",
+                    "mode": "fill"
+                  },
+                  "cornerRadius": 9,
+                  "justifyContent": "center",
+                  "alignItems": "center"
+                },
+                {
+                  "type": "text",
+                  "id": "EzX46",
+                  "name": "navName",
+                  "fill": "#1A1A1A",
+                  "content": "нормисы",
+                  "fontFamily": "Inter",
+                  "fontSize": 18,
+                  "fontWeight": "700",
+                  "letterSpacing": -0.5
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "zo7Cs",
+              "name": "navLinks",
+              "gap": 32,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "pKs0E",
+                  "name": "navL1",
+                  "fill": "#8E8E93",
+                  "content": "О проекте",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "DtKnV",
+                  "name": "navL2",
+                  "fill": "#8E8E93",
+                  "content": "Безопасность",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "icon_font",
+                  "id": "zUy6Q",
+                  "name": "theme-toggle",
+                  "width": 20,
+                  "height": 20,
+                  "iconFontName": "moon",
+                  "iconFontFamily": "lucide",
+                  "fill": "#8E8E93"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "uE5dp",
+          "name": "hero",
+          "width": "fill_container",
+          "fill": "#FFFFFF",
+          "layout": "vertical",
+          "gap": 20,
+          "padding": [
+            100,
+            80
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "RAyOD",
+              "name": "badgeA",
+              "fill": "#F0EBFF",
+              "cornerRadius": 20,
+              "gap": 6,
+              "padding": [
+                6,
+                14
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "4IJxn",
+                  "width": 14,
+                  "height": 14,
+                  "iconFontName": "users",
+                  "iconFontFamily": "lucide",
+                  "fill": "#582CFF"
+                },
+                {
+                  "type": "text",
+                  "id": "xqJj7",
+                  "fill": "#582CFF",
+                  "content": "О проекте",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "i3fd4",
+              "fill": "#1A1A1A",
+              "textGrowth": "fixed-width",
+              "width": 760,
+              "content": "Нормисы — мессенджер для своих",
+              "textAlign": "center",
+              "fontFamily": "Inter",
+              "fontSize": 56,
+              "fontWeight": "700",
+              "letterSpacing": -1.5
+            },
+            {
+              "type": "text",
+              "id": "VcWpN",
+              "fill": "#8E8E93",
+              "textGrowth": "fixed-width",
+              "width": 760,
+              "content": "Мы создали Нормисы для тех, кто устал от слежки и хочет общаться только с теми, кому доверяет.",
+              "textAlign": "center",
+              "fontFamily": "Inter",
+              "fontSize": 20,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "AzPaC",
+          "name": "values",
+          "width": "fill_container",
+          "gap": 24,
+          "padding": 80,
+          "children": [
+            {
+              "type": "frame",
+              "id": "avcq9",
+              "name": "c1",
+              "width": "fill_container",
+              "fill": "#FFFFFF",
+              "cornerRadius": 16,
+              "layout": "vertical",
+              "gap": 16,
+              "padding": 32,
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "MxtBF",
+                  "width": 24,
+                  "height": 24,
+                  "iconFontName": "shield-off",
+                  "iconFontFamily": "lucide",
+                  "fill": "#582CFF"
+                },
+                {
+                  "type": "text",
+                  "id": "jyOsM",
+                  "fill": "#1A1A1A",
+                  "content": "Без лишнего",
+                  "fontFamily": "Inter",
+                  "fontSize": 18,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "qMwpd",
+                  "fill": "#8E8E93",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Никакого номера телефона или email. Только инвайт от человека, которому доверяешь.",
+                  "fontFamily": "Inter",
+                  "fontSize": 15,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "sZiF1",
+              "name": "c2",
+              "width": "fill_container",
+              "fill": "#FFFFFF",
+              "cornerRadius": 16,
+              "layout": "vertical",
+              "gap": 16,
+              "padding": 32,
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "BX4n6",
+                  "width": 24,
+                  "height": 24,
+                  "iconFontName": "lock",
+                  "iconFontFamily": "lucide",
+                  "fill": "#582CFF"
+                },
+                {
+                  "type": "text",
+                  "id": "5ufKg",
+                  "fill": "#1A1A1A",
+                  "content": "Закрытый круг",
+                  "fontFamily": "Inter",
+                  "fontSize": 18,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "864wc",
+                  "fill": "#8E8E93",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Регистрация только по приглашению. Вы контролируете, кто рядом.",
+                  "fontFamily": "Inter",
+                  "fontSize": 15,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "3BFbX",
+              "name": "c3",
+              "width": "fill_container",
+              "fill": "#FFFFFF",
+              "cornerRadius": 16,
+              "layout": "vertical",
+              "gap": 16,
+              "padding": 32,
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "JvQL1",
+                  "width": 24,
+                  "height": 24,
+                  "iconFontName": "heart",
+                  "iconFontFamily": "lucide",
+                  "fill": "#582CFF"
+                },
+                {
+                  "type": "text",
+                  "id": "W0tYS",
+                  "fill": "#1A1A1A",
+                  "content": "Сделано честно",
+                  "fontFamily": "Inter",
+                  "fontSize": 18,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "o9Z2R",
+                  "fill": "#8E8E93",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Никакой рекламы и аналитики. Только продукт, которому можно доверять.",
+                  "fontFamily": "Inter",
+                  "fontSize": 15,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "fLlh3",
+          "name": "ftA",
+          "width": "fill_container",
+          "fill": "#FFFFFF",
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#F0F0F0"
+          },
+          "padding": [
+            24,
+            80
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "FjAPe",
+              "fill": "#8E8E93",
+              "content": "© 2025 Нормисы",
+              "fontFamily": "Inter",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "text",
+              "id": "LN3Bv",
+              "fill": "#8E8E93",
+              "content": "О проекте · Безопасность",
+              "fontFamily": "Inter",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "1sp1y",
+      "x": -1560,
+      "y": 2200,
+      "name": "Безопасность",
+      "width": 1440,
+      "fill": "#FAFAFA",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "IVWzG",
+          "name": "nav",
+          "width": "fill_container",
+          "height": 64,
+          "fill": "#FFFFFF",
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#F0F0F0"
+          },
+          "padding": [
+            0,
+            80
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "DdBHF",
+              "name": "navLogo",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "dQLXc",
+                  "name": "navIcon",
+                  "metadata": {
+                    "type": "unsplash",
+                    "username": "silverkblack",
+                    "link": "https://unsplash.com/@silverkblack",
+                    "author": "Vitaly Gariev"
+                  },
+                  "width": 32,
+                  "height": 32,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "./images/generated-1776420738462.png",
+                    "mode": "fill"
+                  },
+                  "cornerRadius": 9,
+                  "justifyContent": "center",
+                  "alignItems": "center"
+                },
+                {
+                  "type": "text",
+                  "id": "g308N",
+                  "name": "navName",
+                  "fill": "#1A1A1A",
+                  "content": "нормисы",
+                  "fontFamily": "Inter",
+                  "fontSize": 18,
+                  "fontWeight": "700",
+                  "letterSpacing": -0.5
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "CaU9P",
+              "name": "navLinks",
+              "gap": 32,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "uRa5u",
+                  "name": "navL1",
+                  "fill": "#8E8E93",
+                  "content": "О проекте",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "ww5FC",
+                  "name": "navL2",
+                  "fill": "#8E8E93",
+                  "content": "Безопасность",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "icon_font",
+                  "id": "TkyjS",
+                  "name": "theme-toggle",
+                  "width": 20,
+                  "height": 20,
+                  "iconFontName": "moon",
+                  "iconFontFamily": "lucide",
+                  "fill": "#8E8E93"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "mWKfL",
+          "name": "hero",
+          "width": "fill_container",
+          "fill": "#FFFFFF",
+          "layout": "vertical",
+          "gap": 20,
+          "padding": [
+            100,
+            80
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "4HGES",
+              "name": "badgeS",
+              "fill": "#F0EBFF",
+              "cornerRadius": 20,
+              "gap": 6,
+              "padding": [
+                6,
+                14
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "cT1xG",
+                  "width": 14,
+                  "height": 14,
+                  "iconFontName": "shield-check",
+                  "iconFontFamily": "lucide",
+                  "fill": "#582CFF"
+                },
+                {
+                  "type": "text",
+                  "id": "1Gtem",
+                  "fill": "#582CFF",
+                  "content": "Безопасность",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "3jE8x",
+              "fill": "#1A1A1A",
+              "textGrowth": "fixed-width",
+              "width": 760,
+              "content": "Ваши сообщения — только ваши",
+              "textAlign": "center",
+              "fontFamily": "Inter",
+              "fontSize": 56,
+              "fontWeight": "700",
+              "letterSpacing": -1.5
+            },
+            {
+              "type": "text",
+              "id": "MwacC",
+              "fill": "#8E8E93",
+              "textGrowth": "fixed-width",
+              "width": 760,
+              "content": "Нормисы использует сквозное шифрование. Сервер не видит содержимого ваших переписок.",
+              "textAlign": "center",
+              "fontFamily": "Inter",
+              "fontSize": 20,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "sFxs3",
+          "name": "features",
+          "width": "fill_container",
+          "gap": 24,
+          "padding": 80,
+          "children": [
+            {
+              "type": "frame",
+              "id": "gVuml",
+              "name": "f1",
+              "width": "fill_container",
+              "fill": "#1A1A1A",
+              "cornerRadius": 20,
+              "layout": "vertical",
+              "gap": 20,
+              "padding": 40,
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "5KesD",
+                  "width": 28,
+                  "height": 28,
+                  "iconFontName": "lock-keyhole",
+                  "iconFontFamily": "lucide",
+                  "fill": "#9B6FFF"
+                },
+                {
+                  "type": "text",
+                  "id": "x2Su9",
+                  "fill": "#FFFFFF",
+                  "content": "Сквозное шифрование",
+                  "fontFamily": "Inter",
+                  "fontSize": 20,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "amXNZ",
+                  "fill": "#9E9E9E",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "ECDH для обмена ключами, AES-256-GCM для шифрования. Ключи создаются на устройстве и никогда не покидают его.",
+                  "fontFamily": "Inter",
+                  "fontSize": 15,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "dZmqF",
+              "name": "f2",
+              "width": "fill_container",
+              "fill": "#FFFFFF",
+              "cornerRadius": 20,
+              "layout": "vertical",
+              "gap": 20,
+              "padding": 40,
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "Bs1JA",
+                  "width": 28,
+                  "height": 28,
+                  "iconFontName": "server-off",
+                  "iconFontFamily": "lucide",
+                  "fill": "#582CFF"
+                },
+                {
+                  "type": "text",
+                  "id": "y2qlm",
+                  "fill": "#1A1A1A",
+                  "content": "Сервер — только транзит",
+                  "fontFamily": "Inter",
+                  "fontSize": 20,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "HrCnr",
+                  "fill": "#8E8E93",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Сервер передаёт зашифрованные пакеты, но не хранит и не читает содержимое переписки.",
+                  "fontFamily": "Inter",
+                  "fontSize": 15,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "1nc81",
+              "name": "f3",
+              "width": "fill_container",
+              "fill": "#FFFFFF",
+              "cornerRadius": 20,
+              "layout": "vertical",
+              "gap": 20,
+              "padding": 40,
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "XnLIw",
+                  "width": 28,
+                  "height": 28,
+                  "iconFontName": "key-round",
+                  "iconFontFamily": "lucide",
+                  "fill": "#582CFF"
+                },
+                {
+                  "type": "text",
+                  "id": "qY11l",
+                  "fill": "#1A1A1A",
+                  "content": "Ключи только на устройстве",
+                  "fontFamily": "Inter",
+                  "fontSize": 20,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "jb4kC",
+                  "fill": "#8E8E93",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Мастер-ключ хранится в Keychain/Keystore. Смена пароля не ломает существующие чаты.",
+                  "fontFamily": "Inter",
+                  "fontSize": 15,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "yQdLG",
+          "name": "ftS",
+          "width": "fill_container",
+          "fill": "#FFFFFF",
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#F0F0F0"
+          },
+          "padding": [
+            24,
+            80
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "6hceS",
+              "fill": "#8E8E93",
+              "content": "© 2025 Нормисы",
+              "fontFamily": "Inter",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "text",
+              "id": "1YRsT",
+              "fill": "#8E8E93",
+              "content": "О проекте · Безопасность",
+              "fontFamily": "Inter",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            }
+          ]
         }
       ]
     }
