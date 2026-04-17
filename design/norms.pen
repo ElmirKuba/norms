@@ -105,26 +105,17 @@
                 },
                 {
                   "type": "frame",
-                  "id": "VHJj4",
-                  "name": "iconRing1",
-                  "width": 80,
-                  "height": 80,
-                  "fill": "#582CFF",
-                  "cornerRadius": 24,
-                  "justifyContent": "center",
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "icon_font",
-                      "id": "KehQJ",
-                      "name": "iconLock1",
-                      "width": 34,
-                      "height": 34,
-                      "iconFontName": "lock-keyhole",
-                      "iconFontFamily": "lucide",
-                      "fill": "#FFFFFF"
-                    }
-                  ]
+                  "id": "0HVPW",
+                  "name": "logo1",
+                  "width": 100,
+                  "height": 107,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "./images/generated-1776420738462.png",
+                    "mode": "fill"
+                  },
+                  "cornerRadius": 36
                 },
                 {
                   "type": "text",
@@ -1274,17 +1265,17 @@
                   "id": "8XJ46",
                   "name": "chatName7",
                   "fill": "#1A1A1A",
-                  "content": "Макс",
+                  "content": "Поход в кино",
                   "fontFamily": "Inter",
-                  "fontSize": 16,
+                  "fontSize": 15,
                   "fontWeight": "600"
                 },
                 {
                   "type": "text",
                   "id": "eUcbv",
                   "name": "chatStatus7",
-                  "fill": "#34C759",
-                  "content": "в сети",
+                  "fill": "#8E8E93",
+                  "content": "Макс · Айфон Максика",
                   "fontFamily": "Inter",
                   "fontSize": 12,
                   "fontWeight": "normal"
@@ -1451,6 +1442,210 @@
                       "name": "bubbleTime3",
                       "fill": "#8E8E93",
                       "content": "14:22",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "a3fh5",
+              "name": "msgOut2",
+              "width": "fill_container",
+              "justifyContent": "end",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "ms9nZ",
+                  "name": "bbl4",
+                  "fill": "#582CFF",
+                  "cornerRadius": [
+                    16,
+                    16,
+                    4,
+                    16
+                  ],
+                  "layout": "vertical",
+                  "gap": 4,
+                  "padding": [
+                    10,
+                    14
+                  ],
+                  "alignItems": "end",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Wpaep",
+                      "name": "bbl4t",
+                      "fill": "#FFFFFF",
+                      "textGrowth": "fixed-width",
+                      "width": 220,
+                      "content": "Там новый Вильнёв, завтра в 19:30?",
+                      "fontFamily": "Inter",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "y7nbR",
+                      "name": "bbl4time",
+                      "fill": "#FFFFFFAA",
+                      "content": "14:23",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "6cV0E",
+              "name": "msgIn3",
+              "width": "fill_container",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "PsVag",
+                  "name": "bbl5",
+                  "fill": "#F5F5F7",
+                  "cornerRadius": [
+                    16,
+                    16,
+                    16,
+                    4
+                  ],
+                  "layout": "vertical",
+                  "gap": 4,
+                  "padding": [
+                    10,
+                    14
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "GcjZw",
+                      "name": "bbl5t",
+                      "fill": "#1A1A1A",
+                      "textGrowth": "fixed-width",
+                      "width": 220,
+                      "content": "Огонь, беру Дашу, норм?",
+                      "fontFamily": "Inter",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "MQ6Ii",
+                      "name": "bbl5time",
+                      "fill": "#8E8E93",
+                      "content": "14:25",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "bJjAo",
+              "name": "msgOut3",
+              "width": "fill_container",
+              "justifyContent": "end",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "QjZ2z",
+                  "name": "bbl6",
+                  "fill": "#582CFF",
+                  "cornerRadius": [
+                    16,
+                    16,
+                    4,
+                    16
+                  ],
+                  "layout": "vertical",
+                  "gap": 4,
+                  "padding": [
+                    10,
+                    14
+                  ],
+                  "alignItems": "end",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Z3ehN",
+                      "name": "bbl6t",
+                      "fill": "#FFFFFF",
+                      "textGrowth": "fixed-width",
+                      "width": 220,
+                      "content": "Конечно, чем больше тем веселее",
+                      "fontFamily": "Inter",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "A8ELz",
+                      "name": "bbl6time",
+                      "fill": "#FFFFFFAA",
+                      "content": "14:26",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Ty92G",
+              "name": "msgIn4",
+              "width": "fill_container",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "beQDg",
+                  "name": "bbl7",
+                  "fill": "#F5F5F7",
+                  "cornerRadius": [
+                    16,
+                    16,
+                    16,
+                    4
+                  ],
+                  "layout": "vertical",
+                  "gap": 4,
+                  "padding": [
+                    10,
+                    14
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "3n7mB",
+                      "name": "bbl7t",
+                      "fill": "#1A1A1A",
+                      "textGrowth": "fixed-width",
+                      "width": 220,
+                      "content": "Да, в 7 на месте буду 👍",
+                      "fontFamily": "Inter",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "AjNQc",
+                      "name": "bbl7time",
+                      "fill": "#8E8E93",
+                      "content": "14:28",
                       "fontFamily": "Inter",
                       "fontSize": 11,
                       "fontWeight": "normal"
@@ -1975,6 +2170,553 @@
               "fill": "#582CFF"
             }
           }
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "lDpSn",
+      "x": -1560,
+      "y": -260,
+      "name": "Landing",
+      "clip": true,
+      "width": 1440,
+      "height": 900,
+      "fill": "#FAFAFA",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "rvzFn",
+          "name": "nav",
+          "width": "fill_container",
+          "height": 64,
+          "fill": "#FFFFFF",
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#F0F0F0"
+          },
+          "padding": [
+            0,
+            80
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "RCxew",
+              "name": "navLogo",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "wUFpn",
+                  "name": "navIcon",
+                  "metadata": {
+                    "type": "unsplash",
+                    "username": "silverkblack",
+                    "link": "https://unsplash.com/@silverkblack",
+                    "author": "Vitaly Gariev"
+                  },
+                  "width": 32,
+                  "height": 32,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "./images/generated-1776420738462.png",
+                    "mode": "fill"
+                  },
+                  "cornerRadius": 9,
+                  "justifyContent": "center",
+                  "alignItems": "center"
+                },
+                {
+                  "type": "text",
+                  "id": "cWaLR",
+                  "name": "navName",
+                  "fill": "#1A1A1A",
+                  "content": "нормисы",
+                  "fontFamily": "Inter",
+                  "fontSize": 18,
+                  "fontWeight": "700",
+                  "letterSpacing": -0.5
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "4jCtu",
+              "name": "navLinks",
+              "gap": 32,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "edtvt",
+                  "name": "navL1",
+                  "fill": "#8E8E93",
+                  "content": "О проекте",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "tGGHD",
+                  "name": "navL2",
+                  "fill": "#8E8E93",
+                  "content": "Безопасность",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "a2E1k",
+          "name": "hero",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 48,
+          "padding": [
+            0,
+            80,
+            80,
+            80
+          ],
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "caULt",
+              "name": "heroText",
+              "layout": "vertical",
+              "gap": 20,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "0lJsl",
+                  "name": "heroBadge",
+                  "fill": "#F0EBFF",
+                  "cornerRadius": 20,
+                  "gap": 6,
+                  "padding": [
+                    6,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "mCfPn",
+                      "name": "heroBadgeIcon",
+                      "width": 14,
+                      "height": 14,
+                      "iconFontName": "shield-check",
+                      "iconFontFamily": "lucide",
+                      "fill": "#582CFF"
+                    },
+                    {
+                      "type": "text",
+                      "id": "cizcC",
+                      "name": "heroBadgeText",
+                      "fill": "#582CFF",
+                      "content": "Закрытая регистрация по инвайтам",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "kpuhb",
+                  "name": "heroH1",
+                  "fill": "#1A1A1A",
+                  "content": "Пространство для своих",
+                  "fontFamily": "Inter",
+                  "fontSize": 64,
+                  "fontWeight": "700",
+                  "letterSpacing": -2
+                },
+                {
+                  "type": "text",
+                  "id": "0izjt",
+                  "name": "heroSub",
+                  "fill": "#8E8E93",
+                  "content": "Без телефона и email. Без слежки. Только те, кому доверяешь.",
+                  "fontFamily": "Inter",
+                  "fontSize": 20,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "cFsg4",
+              "name": "dlRow",
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Fsh5P",
+                  "name": "btnIos",
+                  "height": 52,
+                  "fill": "#1A1A1A",
+                  "cornerRadius": 12,
+                  "gap": 10,
+                  "padding": [
+                    14,
+                    22
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "3RhmM",
+                      "name": "btnIosIcon",
+                      "width": 20,
+                      "height": 20,
+                      "iconFontName": "apple",
+                      "iconFontFamily": "lucide",
+                      "fill": "#FFFFFF"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "pwgx9",
+                      "name": "btnIosText",
+                      "layout": "vertical",
+                      "gap": 1,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "GPEGC",
+                          "name": "btnIosSmall",
+                          "fill": "#AAAAAA",
+                          "content": "Скачать в",
+                          "fontFamily": "Inter",
+                          "fontSize": 10,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "AjDCP",
+                          "name": "btnIosBig",
+                          "fill": "#FFFFFF",
+                          "content": "App Store",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "V4s8a",
+                  "name": "btnAndroid",
+                  "height": 52,
+                  "fill": "#1A1A1A",
+                  "cornerRadius": 12,
+                  "gap": 10,
+                  "padding": [
+                    14,
+                    22
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "BOvxy",
+                      "name": "btnAndIcon",
+                      "width": 20,
+                      "height": 20,
+                      "iconFontName": "smartphone",
+                      "iconFontFamily": "lucide",
+                      "fill": "#FFFFFF"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "HtDEB",
+                      "name": "btnAndText",
+                      "layout": "vertical",
+                      "gap": 1,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ut1oO",
+                          "name": "btnAndSmall",
+                          "fill": "#AAAAAA",
+                          "content": "Скачать для",
+                          "fontFamily": "Inter",
+                          "fontSize": 10,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "fbj42",
+                          "name": "btnAndBig",
+                          "fill": "#FFFFFF",
+                          "content": "Android",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "pVl7Y",
+                  "name": "btnWin",
+                  "height": 52,
+                  "fill": "#F5F5F7",
+                  "cornerRadius": 12,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#E5E5EA"
+                  },
+                  "gap": 10,
+                  "padding": [
+                    14,
+                    22
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "49DJw",
+                      "name": "btnWinIcon",
+                      "width": 20,
+                      "height": 20,
+                      "iconFontName": "monitor",
+                      "iconFontFamily": "lucide",
+                      "fill": "#1A1A1A"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ckJyD",
+                      "name": "btnWinText",
+                      "layout": "vertical",
+                      "gap": 1,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "zlm2j",
+                          "name": "btnWinSmall",
+                          "fill": "#8E8E93",
+                          "content": "Скачать для",
+                          "fontFamily": "Inter",
+                          "fontSize": 10,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "KjkDd",
+                          "name": "btnWinBig",
+                          "fill": "#1A1A1A",
+                          "content": "Windows",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "GOJry",
+                  "name": "btnMac",
+                  "height": 52,
+                  "fill": "#F5F5F7",
+                  "cornerRadius": 12,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#E5E5EA"
+                  },
+                  "gap": 10,
+                  "padding": [
+                    14,
+                    22
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "Cpmmo",
+                      "name": "btnMacIcon",
+                      "width": 20,
+                      "height": 20,
+                      "iconFontName": "laptop",
+                      "iconFontFamily": "lucide",
+                      "fill": "#1A1A1A"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Y8xf8",
+                      "name": "btnMacText",
+                      "layout": "vertical",
+                      "gap": 1,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "e8ZKc",
+                          "name": "btnMacSmall",
+                          "fill": "#8E8E93",
+                          "content": "Скачать для",
+                          "fontFamily": "Inter",
+                          "fontSize": 10,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "HQuBO",
+                          "name": "btnMacBig",
+                          "fill": "#1A1A1A",
+                          "content": "macOS",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "KXpAv",
+                  "name": "btnLin",
+                  "height": 52,
+                  "fill": "#F5F5F7",
+                  "cornerRadius": 12,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#E5E5EA"
+                  },
+                  "gap": 10,
+                  "padding": [
+                    14,
+                    22
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "mXHn6",
+                      "name": "btnLinIcon",
+                      "width": 20,
+                      "height": 20,
+                      "iconFontName": "terminal",
+                      "iconFontFamily": "lucide",
+                      "fill": "#1A1A1A"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "qt6mw",
+                      "name": "btnLinText",
+                      "layout": "vertical",
+                      "gap": 1,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "IVKPq",
+                          "name": "btnLinSmall",
+                          "fill": "#8E8E93",
+                          "content": "Скачать для",
+                          "fontFamily": "Inter",
+                          "fontSize": 10,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "iKcBN",
+                          "name": "btnLinBig",
+                          "fill": "#1A1A1A",
+                          "content": "Linux",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "9BpgO",
+      "x": -1560,
+      "y": 740,
+      "name": "Logo Exploration",
+      "width": 800,
+      "height": 200,
+      "fill": "#F0F0F0",
+      "cornerRadius": 16,
+      "gap": 24,
+      "padding": 24,
+      "children": [
+        {
+          "type": "frame",
+          "id": "cCw1t",
+          "name": "logo1",
+          "width": 152,
+          "height": 152,
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "./images/generated-1776420738462.png",
+            "mode": "fill"
+          },
+          "cornerRadius": 36
+        },
+        {
+          "type": "frame",
+          "id": "PzLpI",
+          "name": "logo2",
+          "width": 152,
+          "height": 152,
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "./images/generated-1776420726079.png",
+            "mode": "fill"
+          },
+          "cornerRadius": 36
+        },
+        {
+          "type": "frame",
+          "id": "ndzyC",
+          "name": "logo3",
+          "width": 152,
+          "height": 152,
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "./images/generated-1776420726977.png",
+            "mode": "fill"
+          },
+          "cornerRadius": 36
         }
       ]
     }
