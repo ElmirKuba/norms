@@ -7,22 +7,47 @@
 Порядок имеет значение. Capacitor в Electron вернёт `'web'` (он не знает про Electron), поэтому Electron проверяется первым.
 
 ```typescript
-export type Platform = 'electron' | 'ios' | 'android' | 'browser';
+export enum AppPlatform {
+  IOS = 'ios',
+  ANDROID = 'android',
+  ELECTRON_WINDOWS = 'electron-windows',
+  ELECTRON_MACOS = 'electron-macos',
+  ELECTRON_LINUX = 'electron-linux',
+  WEB = 'web',
+}
 
-export function detectPlatform(): Platform {
-  if ((window as any).__ELECTRON__) return 'electron';
-  if (Capacitor.isNativePlatform()) {
-    return Capacitor.getPlatform() as 'ios' | 'android';
+export type PlatformFamily = 'mobile' | 'desktop' | 'web';
+
+@Injectable({ providedIn: 'root' })
+export class PlatformDetectorService {
+  readonly platform: AppPlatform;
+  readonly family: PlatformFamily;
+
+  // Удобные геттеры: isMobile, isElectron, isWeb, isIOS, isAndroid, ...
+
+  private detect(): AppPlatform {
+    // 1. Electron? Проверяем наличие electronAPI (из preload.ts)
+    if (window.electronAPI) return this.detectElectronOS();
+    // 2. Capacitor?
+    if ((window as any).Capacitor?.getPlatform?.() === 'ios') return AppPlatform.IOS;
+    if ((window as any).Capacitor?.getPlatform?.() === 'android') return AppPlatform.ANDROID;
+    // 3. Fallback — браузер
+    return AppPlatform.WEB;
   }
-  return 'browser';
 }
 ```
 
-`window.__ELECTRON__` устанавливается в Electron preload-скрипте:
+`window.electronAPI` устанавливается в Electron preload-скрипте через `contextBridge`:
 ```typescript
-// electron/preload.js
-contextBridge.exposeInMainWorld('__ELECTRON__', true);
+// electron/preload.ts
+contextBridge.exposeInMainWorld('electronAPI', {
+  getAppVersion: () => ipcRenderer.invoke('get-app-version'),
+  getPlatform: () => ipcRenderer.invoke('get-platform'),
+  onDeepLink: (cb) => ipcRenderer.on('deep-link', (_e, url) => cb(url)),
+});
 ```
+
+**Маппинг для бэка:** при отправке на сервер (login, session creation) гранулярная платформа маппится в `'ios' | 'android' | 'electron'` — бэк не различает ОС десктопа.
 
 ## DI-паттерн: abstract class + useFactory
 
@@ -38,18 +63,18 @@ export abstract class StorageService {
   abstract remove(key: string): Promise<void>;
 }
 
-// services/storage/storage.electron.service.ts
+// services/storage/storage-electron.service.ts
 @Injectable()
-export class ElectronStorageService extends StorageService {
+export class StorageElectronService extends StorageService {
   async get(key: string): Promise<string | null> {
     return (window as any).electronAPI.storage.get(key);
   }
   // ...
 }
 
-// services/storage/storage.capacitor.service.ts
+// services/storage/storage-capacitor.service.ts
 @Injectable()
-export class CapacitorStorageService extends StorageService {
+export class StorageCapacitorService extends StorageService {
   async get(key: string): Promise<string | null> {
     const { value } = await Preferences.get({ key });
     return value;
@@ -57,9 +82,9 @@ export class CapacitorStorageService extends StorageService {
   // ...
 }
 
-// services/storage/storage.browser.service.ts
+// services/storage/storage-web.service.ts
 @Injectable()
-export class BrowserStorageService extends StorageService {
+export class StorageWebService extends StorageService {
   async get(): Promise<string | null> {
     throw new BrowserNotSupportedError('StorageService');
   }
@@ -69,23 +94,17 @@ export class BrowserStorageService extends StorageService {
 
 Связка в `app.config.ts` через фабрику:
 ```typescript
-// services/storage/storage.providers.ts
-export const storageProvider: Provider = {
-  provide: StorageService,
-  useFactory: (): StorageService => {
-    const platform = detectPlatform();
-    if (platform === 'electron') return new ElectronStorageService();
-    if (platform === 'ios' || platform === 'android') return new CapacitorStorageService();
-    return new BrowserStorageService();
-  },
-};
+// services/storage/storage.provider.ts
+export function storageServiceFactory(platform: PlatformDetectorService): StorageService {
+  if (platform.isMobile) return new StorageCapacitorService();
+  if (platform.isElectron) return new StorageElectronService();
+  return new StorageWebService();
+}
 
 // app.config.ts
 export const appConfig: ApplicationConfig = {
   providers: [
-    storageProvider,
-    notificationProvider,
-    networkProvider,
+    { provide: StorageService, useFactory: storageServiceFactory, deps: [PlatformDetectorService] },
     // ...
   ],
 };
@@ -98,11 +117,11 @@ export const appConfig: ApplicationConfig = {
 
 ## Браузерная заглушка
 
-Angular **загружается полностью** в браузере, но при `detectPlatform() === 'browser'` маршрутизатор показывает только лендинг + заглушку со ссылками на скачивание. **Никакой регистрации, авторизации, мессенджера или настроек в вебе** — всё это требует нативной прилы.
+Angular **загружается полностью** в браузере, но при `platform.isWeb` маршрутизатор показывает только лендинг + заглушку со ссылками на скачивание. **Никакой регистрации, авторизации, мессенджера или настроек в вебе** — всё это требует нативной прилы.
 
 Все платформенные сервисы имеют браузерную реализацию, которая бросает `BrowserNotSupportedError` — защита от случайной утечки функционала через прямой URL или баг роутера.
 
-Ссылки на скачивание фронт получает от бэка (`GET /api/app/downloads`) при инициализации **только если `platform === 'browser'`**. На странице — детект ОС через `navigator.userAgent` / `navigator.userAgentData` для подсветки релевантной кнопки (на macOS — крупно `.dmg`, остальные мелкими).
+Ссылки на скачивание фронт получает от бэка (`GET /api/v1/app/downloads`) при инициализации **только если `platform.isWeb`**. На странице — детект ОС через `navigator.userAgent` / `navigator.userAgentData` для подсветки релевантной кнопки (на macOS — крупно `.dmg`, остальные мелкими).
 
 ## Структура папок
 
@@ -110,18 +129,20 @@ Angular **загружается полностью** в браузере, но 
 
 ```
 src/app/services/
+  platform/
+    platform.service.ts            ← PlatformDetectorService (providedIn: 'root')
   storage/
     storage.service.ts             ← abstract
-    storage.electron.service.ts
-    storage.capacitor.service.ts
-    storage.browser.service.ts
-    storage.providers.ts           ← useFactory
+    storage-electron.service.ts
+    storage-capacitor.service.ts
+    storage-web.service.ts
+    storage.provider.ts            ← useFactory
   notifications/
     notification.service.ts
-    notification.electron.service.ts
-    notification.capacitor.service.ts
-    notification.browser.service.ts
-    notification.providers.ts
+    notification-electron.service.ts
+    notification-capacitor.service.ts
+    notification-web.service.ts
+    notification.provider.ts
   ...
 ```
 

@@ -6,13 +6,13 @@ JWT-пара: access + refresh.
 
 | Токен | TTL по умолчанию | Заметки |
 |---|---|---|
-| access | 15 минут | Конфигурируется через env |
+| access | 15 секунд | Конфигурируется через env (`JWT_ACCESS_TTL`) |
 | refresh | 30 дней | Конфигурируется через env |
 
 **Ротация — два контекста:**
 
 - **HTTP:** когда access истёк → `POST /api/v1/session/refresh` с refresh_token в body → новая пара (оба токена). Используется если WSS не открыт.
-- **WSS (долгоживущее соединение):** клиент проактивно отправляет `{ type: "token_refresh", refresh_token }` за 3 секунды до истечения access. Сервер отвечает `{ type: "tokens_updated", access_token, refresh_token }`. Соединение не рвётся. Grace period 1-2 сек если access всё-таки истёк раньше refresh. Подробнее: [`api-contracts.md`](api-contracts.md) → WSS.
+- **WSS (долгоживущее соединение):** клиент проактивно отправляет `{ type: "token_refresh", refresh_token }` за 3 секунды до истечения access. Сервер отвечает `{ type: "tokens_updated", access_token, refresh_token }`. Соединение не рвётся. Grace period 2 сек если access всё-таки истёк раньше refresh. Подробнее: [`api-contracts.md`](api-contracts.md) → WSS.
 
 **Refresh token rotation:** при каждой ротации старый refresh инвалидируется, выдаётся новый. **Reuse detection:** если пришёл уже использованный refresh — сессия считается компрометированной, устройство кикается.
 
@@ -35,7 +35,7 @@ JWT-пара: access + refresh.
 | `nickname` | string nullable | Прозвище устройства, установленное владельцем. Приоритет над `system_name` при показе другим юзерам |
 | `refresh_token` | string | Текущий refresh token |
 | `created_at` | timestamp | |
-| `updated_at` | timestamp | Обновляется при каждой ротации токенов (~каждые 15 мин при активном использовании). Заменяет `last_active_at` |
+| `updated_at` | timestamp | Обновляется при каждой ротации токенов (~каждые `JWT_ACCESS_TTL` при активном использовании). Заменяет `last_active_at` |
 
 ## Хранение сессий
 

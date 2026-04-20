@@ -12,7 +12,7 @@ _Nothing yet._
 - Компонент лендинга на корневом маршруте `/`
 - Компонент-заглушка для всех остальных маршрутов в вебе
 - Детект ОС через `navigator.userAgent` / `navigator.userAgentData` — подсветка релевантной кнопки скачивания
-- Запрос ссылок у бэка `GET /api/v1/app/downloads` при инициализации (только если `platform === 'browser'`)
+- Запрос ссылок у бэка `GET /api/v1/app/downloads` при инициализации (только если `platform.isWeb`)
 
 ### Идентификация / аккаунты
 См. [`docs/identity.md`](docs/identity.md), [`docs/database.md`](docs/database.md).
@@ -41,7 +41,7 @@ _Nothing yet._
 ### Авторизация и устройства
 См. [`docs/auth-devices.md`](docs/auth-devices.md).
 - Бэк: таблица `sessions` (id, account_id, system_name, platform, nickname, refresh_token, created_at, updated_at).
-- Бэк: JWT-пара access (15 мин) + refresh (30 дней), ротация, TTL через env. Refresh token rotation + reuse detection. WSS-ротация через `token_refresh`/`tokens_updated` (без реконнекта).
+- Бэк: JWT-пара access (15 сек) + refresh (30 дней), ротация, TTL через env. Refresh token rotation + reuse detection. WSS-ротация через `token_refresh`/`tokens_updated` (без реконнекта).
 - Бэк: лимит устройств через env (default 20).
 - Бэк: эндпоинты логина, refresh, кика устройства, "выйти на всех кроме текущего".
 - Бэк: эндпоинт `PATCH /api/v1/session/update-nickname` — установка/снятие прозвища текущей сессии.
@@ -57,7 +57,7 @@ _Nothing yet._
 
 ### Recovery (восстановление пароля)
 См. [`docs/recovery.md`](docs/recovery.md).
-- Бэк: таблица `recovery_questions` (account_id, question, answer_hash, answer_salt).
+- Бэк: таблица `recovery_questions` (account_id, question, answer_hash).
 - Бэк: API создания/редактирования/удаления Q/A пар.
 - Бэк: эндпоинт `GET /api/v1/recovery/preset-questions` — готовый список вопросов от сервера.
 - Бэк: API запроса списка вопросов аккаунта (без хешей) + проверка ответа + выдача `reset_token`.
@@ -82,7 +82,7 @@ _Nothing yet._
 - **Backend stack** — NestJS + PostgreSQL 16 + Drizzle + Redis (BullMQ + опц. SessionStore). См. [`docs/backend-stack.md`](docs/backend-stack.md).
 - **Очередь UIN-задач** — BullMQ на Redis. См. [`docs/backend-stack.md`](docs/backend-stack.md).
 - **Хранение сессий** — абстракция `SessionStore`, реализации Postgres/Redis, выбор через `SESSION_STORE` env. См. [`docs/backend-stack.md`](docs/backend-stack.md).
-- **Структура репо** — `application/` + `backend/` на одном уровне, два независимых `package.json`. См. [`PROJECT.md`](PROJECT.md).
+- **Структура репо** — `application-with-frontend/` + `backend/` на одном уровне, два независимых `package.json`. См. [`PROJECT.md`](PROJECT.md).
 - **Хеширование пароля** — на сервере, argon2id. Plain-text по TLS. См. [`docs/identity.md`](docs/identity.md), [`docs/recovery.md`](docs/recovery.md).
 - **Мастер-ключ устройства** — случайный (Signal-style), в keychain, не зависит от пароля. См. [`docs/local-storage.md`](docs/local-storage.md).
 - **Recovery аккаунта** — через секретные Q/A (микс preset + свои, без лимита, OR-логика, argon2id хеш ответов). Recovery возвращает аккаунт, не чаты. Без Q/A восстановление невозможно. См. [`docs/recovery.md`](docs/recovery.md).

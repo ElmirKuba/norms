@@ -42,8 +42,7 @@ iOS/macOS Keychain по умолчанию переживает удаление
 | `id` | string PK | Универсальный ID (см. [`database.md`](database.md)) |
 | `account_id` | string FK | → `accounts.id`. One-to-many: один аккаунт — много Q/A |
 | `question` | string | Текст вопроса (открыто). Может быть из preset-списка или своя формулировка |
-| `answer_hash` | string | argon2id хеш нормализованного ответа |
-| `answer_salt` | string | Индивидуальная соль |
+| `answer_hash` | string | argon2id хеш нормализованного ответа (соль встроена в хеш — формат `$argon2id$v=...$salt$hash`) |
 | `created_at` | timestamp | |
 | `updated_at` | timestamp | |
 
@@ -61,7 +60,7 @@ iOS/macOS Keychain по умолчанию переживает удаление
 
 ### Удаление / редактирование Q/A
 - Удалить отдельную пару — DELETE по `id`.
-- Изменить ответ — обновляет `answer_hash` + `answer_salt` + `updated_at`.
+- Изменить ответ — обновляет `answer_hash` + `updated_at`.
 - Изменить вопрос — то же.
 
 ### Восстановление пароля
@@ -80,6 +79,21 @@ iOS/macOS Keychain по умолчанию переживает удаление
 9. Бэк проверяет токен, обновляет `password_hash` в `accounts`.
 10. **Сессии остаются нетронутыми.** Всем онлайн-сессиям прилетает WSS-уведомление: `password_reset_via_recovery` (UI показывает баннер «Пароль был сброшен через секретные вопросы. Если это не вы — кикните подозрительные устройства»).
 
+## Хранение reset_token
+
+`reset_token` — одноразовый случайный токен (TTL 10 минут), выдаётся при успешном ответе на секретный вопрос. Хранится в Redis:
+
+```
+SET reset_token:{token} {account_id} EX 600
+```
+
+При вызове `POST /api/v1/recovery/reset-password`:
+1. Бэк читает `GET reset_token:{token}` → получает `account_id`.
+2. Если ключа нет → `401 reset_token_expired` или `reset_token_invalid`.
+3. Если есть → меняет пароль, удаляет ключ из Redis (`DEL`).
+
+Redis уже в стеке (BullMQ), переиспользуем. Автоматический TTL заменяет cleanup-job.
+
 ## Защита от brute-force
 
 Q/A — слабее пароля (ответы часто короткие, словарные). Без rate-limit взламывается перебором.
@@ -90,7 +104,18 @@ Q/A — слабее пароля (ответы часто короткие, с�
 - 5 неудач ещё раз → блок на 7 дней.
 - Счётчик сбрасывается при **успешном логине** (не при успешном recovery — иначе можно сбросить через recovery и продолжить).
 
-Реализация — таблица `recovery_attempts` или Redis-счётчик (если `SESSION_STORE=redis` уже подключён, переиспользуем).
+Реализация — Redis-счётчик (Redis уже в стеке для BullMQ):
+
+```
+# Ключ: recovery_attempts:{account_id}
+# Значение: количество неудачных попыток
+# TTL: обновляется при каждой неудаче на текущий период блокировки
+
+INCR recovery_attempts:{account_id}
+EXPIRE recovery_attempts:{account_id} {lock_period_seconds}
+```
+
+При успешном логине: `DEL recovery_attempts:{account_id}`.
 
 ## UI
 

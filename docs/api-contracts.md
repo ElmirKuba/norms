@@ -28,7 +28,7 @@ HTTP-ручки и WSS-события для бэка. Стиль именова
 
 ### Авторизация
 - HTTP: `Authorization: Bearer {access_token}`. Access TTL — `JWT_ACCESS_TTL` (default 15s).
-- Refresh — отдельным эндпоинтом (`POST /session/refresh`), refresh-токен в body.
+- Refresh — отдельным эндпоинтом (`POST /api/v1/session/refresh`), refresh-токен в body.
 - Эндпоинты регистрации, авторизации, начала recovery, `app/downloads`, `app/feature-flags`, `app/migrate` — **публичные** (без Bearer).
 
 ### Формат ошибок
@@ -639,7 +639,7 @@ Errors:
 
 ### Ротация токенов (client → server)
 
-Access TTL = 15 минут. WSS-соединение живёт часами. Клиент обновляет токены, не разрывая соединение.
+Access TTL = `JWT_ACCESS_TTL` (default 15s). WSS-соединение живёт часами. Клиент обновляет токены, не разрывая соединение.
 
 **Клиент проактивно отправляет за 3 секунды до истечения access:**
 ```json

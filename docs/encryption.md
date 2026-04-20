@@ -54,7 +54,7 @@ RSA-4096 шифрует максимум ~446 байт. ECC (ECDH) вообще 
 ```
 
 ### Недоставленные сообщения
-Сервер хранит зашифрованные blob'ы пока устройство не выйдет онлайн — без лимита по времени. Если устройство кикнуто (сессия удалена) — сообщения сохраняются, доставятся когда авторизуется заново (MVP-решение).
+Сервер хранит зашифрованные blob'ы пока устройство не выйдет онлайн — без лимита по времени. Если устройство кикнуто (сессия удалена) — все `pending_messages` для чатов этой сессии удаляются вместе с сессией (ключей для расшифровки на новом устройстве всё равно не будет).
 
 ## Таблицы
 
@@ -64,8 +64,9 @@ RSA-4096 шифрует максимум ~446 байт. ECC (ECDH) вообще 
 |---|---|---|
 | `id` | string PK | Универсальный ID |
 | `name` | string | Название чата (не шифруется). Unique в пределах пары устройств (case-insensitive) |
-| `session_a_id` | string FK | → `sessions.id` (инициатор) |
-| `session_b_id` | string FK | → `sessions.id` (получатель) |
+| `session_a_id` | string FK | → `sessions.id`. Всегда `min(id)` из пары (нормализация, `CHECK session_a_id < session_b_id`) |
+| `session_b_id` | string FK | → `sessions.id`. Всегда `max(id)` из пары (нормализация) |
+| `created_by_session_id` | string FK | → `sessions.id` — кто инициировал создание чата |
 | `status` | string | `pending_key` / `active` |
 | `public_key_a` | string nullable | X25519 публичный ключ session_a. NULL после обмена |
 | `public_key_b` | string nullable | X25519 публичный ключ session_b. NULL после обмена |
@@ -79,5 +80,6 @@ RSA-4096 шифрует максимум ~446 байт. ECC (ECDH) вообще 
 | `id` | string PK | Универсальный ID |
 | `chat_id` | string FK | → `chats.id` |
 | `sender_session_id` | string FK | → `sessions.id` |
+| `receiver_session_id` | string FK | → `sessions.id`. Для быстрой выборки при доставке |
 | `encrypted_blob` | blob | Зашифрованное сообщение |
 | `created_at` | timestamp | |

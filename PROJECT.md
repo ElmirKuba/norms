@@ -31,11 +31,11 @@
 - **`FilePickerService` / `CameraService`** — не реализуются до завершения базового текстового обмена.
 
 ## Repository Structure
-Два независимых `package.json`: фронт (`application/`) и бэк (`backend/`). Без Nx/Turbo/workspaces. Внутри `application/` — один `ng build` → три платформы.
+Два независимых `package.json`: фронт (`application-with-frontend/`) и бэк (`backend/`). Без Nx/Turbo/workspaces. Внутри `application-with-frontend/` — один `ng build` → три платформы.
 
 ```
 norms/
-├── application/              ← Angular + Capacitor + Electron (свой package.json)
+├── application-with-frontend/ ← Angular + Capacitor + Electron (свой package.json)
 │   ├── package.json
 │   ├── angular.json
 │   ├── capacitor.config.ts

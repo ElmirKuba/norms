@@ -10,6 +10,7 @@
 | `id` | string PK | Универсальный ID (см. [`database.md`](database.md)) |
 | `password_hash` | string | argon2id (хешируется на сервере, см. ниже Login) |
 | `username` | string nullable, unique (case-insensitive) | См. ниже — выдаётся только админом |
+| `invites_remaining` | integer, default 3 | Сколько инвайтов осталось (см. [`invites.md`](invites.md)) |
 | `created_at` | timestamp | |
 | `updated_at` | timestamp | |
 

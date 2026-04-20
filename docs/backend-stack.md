@@ -1,6 +1,6 @@
 # Backend stack
 
-Серверная часть «Нормисов». Решение по стеку — зафиксировано. Конкретные API-контракты — в [`api-contracts.md`](api-contracts.md) (TODO).
+Серверная часть «Нормисов». Решение по стеку — зафиксировано. Конкретные API-контракты — в [`api-contracts.md`](api-contracts.md).
 
 ## Стек
 
@@ -52,7 +52,7 @@ SESSION_STORE=redis     # prod, частые обновления
 
 ```
 norms/
-├── application/        ← Angular + Capacitor + Electron (свой package.json)
+├── application-with-frontend/  ← Angular + Capacitor + Electron (свой package.json)
 │   ├── src/
 │   ├── electron/
 │   ├── ios/
@@ -70,7 +70,7 @@ norms/
 └── TODO.md
 ```
 
-Два независимых `package.json`, без Nx/Turbo/pnpm-workspaces. Trade-off: типы API-контрактов дублируются руками между `application/` и `backend/` (или копипастятся через codegen позже). Для MVP — ОК.
+Два независимых `package.json`, без Nx/Turbo/pnpm-workspaces. Trade-off: типы API-контрактов дублируются руками между `application-with-frontend/` и `backend/` (или копипастятся через codegen позже). Для MVP — ОК.
 
 ## Docker Compose (dev)
 
@@ -125,7 +125,7 @@ REDIS_URL=redis://localhost:6379
 SESSION_STORE=postgres  # postgres | redis
 
 # Auth (см. auth-devices.md)
-JWT_ACCESS_TTL=15m
+JWT_ACCESS_TTL=15s
 JWT_REFRESH_TTL=30d
 JWT_ACCESS_SECRET=...
 JWT_REFRESH_SECRET=...
