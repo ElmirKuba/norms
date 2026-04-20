@@ -1,20 +1,33 @@
 {
-  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "ng serve",
-      "type": "chrome",
+      "name": "Debug Electron (Main Process)",
+      "type": "node",
       "request": "launch",
-      "preLaunchTask": "npm: start",
-      "url": "http://localhost:4200/"
+      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
+      "args": ["dist-electron/main.js", "--dev", "--remote-debugging-port=9222"],
+      "preLaunchTask": "electron:compile",
+      "outFiles": ["${workspaceFolder}/dist-electron/**/*.js"],
+      "sourceMaps": true,
+      "console": "integratedTerminal"
     },
     {
-      "name": "ng test",
+      "name": "Debug Electron (Renderer / Angular)",
       "type": "chrome",
-      "request": "launch",
-      "preLaunchTask": "npm: test",
-      "url": "http://localhost:9876/debug.html"
+      "request": "attach",
+      "port": 9222,
+      "webRoot": "${workspaceFolder}/src",
+      "sourceMaps": true,
+      "sourceMapPathOverrides": {
+        "webpack:/*": "${webRoot}/*"
+      }
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Debug Electron (Full)",
+      "configurations": ["Debug Electron (Main Process)", "Debug Electron (Renderer / Angular)"]
     }
   ]
 }

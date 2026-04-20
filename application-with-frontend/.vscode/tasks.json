@@ -37,6 +37,12 @@
           }
         }
       }
+    },
+    {
+      "label": "electron:compile",
+      "type": "shell",
+      "command": "npm run electron:compile",
+      "problemMatcher": ["$tsc"]
     }
   ]
 }
