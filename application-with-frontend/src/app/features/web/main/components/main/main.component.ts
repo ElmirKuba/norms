@@ -29,5 +29,6 @@ export class MainWebComponent {
   /** Переключает цветовую тему интерфейса */
   public toggleTheme(): void {
     // TODO: реализовать переключение темы
+    console.log('toggleTheme');
   }
 }
