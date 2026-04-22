@@ -1,6 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
+/** Основной компонент продукта */
 @Component({
   selector: 'root-component',
   imports: [RouterOutlet],

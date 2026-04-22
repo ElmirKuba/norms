@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 
+/** Основной массив маршрутизации продукта */
 export const routes: Routes = [
   {
     path: 'web',

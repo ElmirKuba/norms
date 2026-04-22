@@ -1,5 +1,13 @@
 @import '../node_modules/modern-normalize/modern-normalize.css';
 
+@font-face {
+  font-family: 'Manrope';
+  src: url('assets/fonts/manrope/Manrope-VariableFont_wght.ttf') format('truetype');
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+
 *,
 *::after,
 *::before {
@@ -11,4 +19,5 @@
 html,
 body {
   height: 100%;
+  font-family: 'Manrope', sans-serif;
 }

@@ -1,1 +1,23 @@
-<p class="web-main">web-main works!</p>
+<div class="web-main">
+  <header class="web-header">
+    <div class="web-header__project">
+      <div class="web-header__project-logo">
+        <img src="./../../../../../../assets/images/icons/logo.icon.png" />
+      </div>
+
+      <div class="web-header__project-name">нормисы</div>
+    </div>
+
+    <nav class="web-header__nav">
+      <a routerLink="welcome" routerLinkActive="active">Главная</a>
+      <a routerLink="about" routerLinkActive="active">О проекте</a>
+      <a routerLink="security" routerLinkActive="active">Безопасность</a>
+    </nav>
+  </header>
+
+  <main class="web-main">
+    <router-outlet />
+  </main>
+
+  <footer class="web-footer">web-main__footer</footer>
+</div>
