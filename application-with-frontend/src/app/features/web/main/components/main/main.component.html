@@ -9,9 +9,15 @@
     </div>
 
     <nav class="web-header__nav">
-      <a routerLink="welcome" routerLinkActive="active">Главная</a>
-      <a routerLink="about" routerLinkActive="active">О проекте</a>
-      <a routerLink="security" routerLinkActive="active">Безопасность</a>
+      @for (item of navItems; track $index) {
+        @if (item.kind === 'link') {
+          <a [routerLink]="item.path" routerLinkActive="active">{{ item.label }}</a>
+        } @else if (item.kind === 'button') {
+          <button class="web-header__nav-theme" (click)="item.onClick()">
+            <img [src]="item.imgSrc" [alt]="item.imgAlt" />
+          </button>
+        }
+      }
     </nav>
   </header>
 

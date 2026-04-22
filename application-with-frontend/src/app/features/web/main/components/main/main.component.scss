@@ -39,6 +39,31 @@
     }
 
     &__nav {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 32px;
+
+      a {
+        color: #8e8e93;
+        text-decoration: none;
+        border-bottom: 1px solid #fff;
+
+        &:hover {
+          border-bottom: 1px solid #1a1a1a;
+        }
+      }
+
+      &-theme {
+        border: none;
+        background-color: inherit;
+        width: fit-content;
+        height: fit-content;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+      }
     }
   }
 
