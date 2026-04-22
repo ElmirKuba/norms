@@ -1,12 +1,15 @@
 # CLAUDE.md
 
 ## Project Overview
+
 See [PROJECT.md](PROJECT.md) for the full project description, goals, and philosophy.
 
 ## Current Tasks
+
 See [TODO.md](TODO.md) for what's done, in progress, and planned.
 
 ## Project Structure
+
 - `application-with-frontend/` — Angular + Capacitor + Electron (свой `package.json`, один `ng build` → 3 платформы).
 - `backend/` — NestJS (свой `package.json`). Подробнее: [`docs/backend-stack.md`](docs/backend-stack.md).
 - `docs/` — детальная проектная документация (наполняется по мере обсуждения).
@@ -31,7 +34,9 @@ See [TODO.md](TODO.md) for what's done, in progress, and planned.
   - [`nest-backend-example/BUGS.md`](nest-backend-example/BUGS.md) — известные баги.
 
 ## Tech Stack
+
 **Frontend (`application-with-frontend/`, один `package.json`, один `ng build` → 3 платформы):**
+
 - Angular + TypeScript
 - Capacitor — iOS, Android (загружают `dist/` в webview)
 - Electron — Windows, macOS, Linux (грузит `dist/` через `file://`)
@@ -39,18 +44,22 @@ See [TODO.md](TODO.md) for what's done, in progress, and planned.
 - Реалтайм: WSS + RxJS
 
 **Backend (`backend/`, свой `package.json`):**
+
 - NestJS + TypeScript
 - PostgreSQL 16 + Drizzle ORM
 - Redis (BullMQ для очереди UIN, опциональный SessionStore)
 - Подробнее: [`docs/backend-stack.md`](docs/backend-stack.md).
 
 ## Key Commands
+
 _To be added once project is initialized._
 
 ## Code Conventions
+
 _To be defined._
 
 ## Important Decisions
+
 - **Single `package.json` для фронта** (внутри `application-with-frontend/`): Angular + Capacitor + Electron. Платформенный DI-слой на рантайме определяет окружение. Scripts разделяют таргеты сборки. У бэка свой `package.json` в `backend/`.
 - **Backend stack:** NestJS + PostgreSQL 16 + Drizzle ORM + Redis (BullMQ для очереди UIN, опциональный SessionStore через env). Подробнее: [`docs/backend-stack.md`](docs/backend-stack.md).
 - **Документация в `docs/`**, а не `.claude/docs/` — последняя зарезервирована под конфиги агента.
@@ -63,3 +72,9 @@ _To be defined._
 - **Чаты и E2E:** чат = между двумя устройствами (device-to-device), UI показывает аккаунт. ECDH → AES-256-GCM (гибридная схема). Название чата не шифруется, уникально per device-pair (case-insensitive). Оптимистичная отправка (pending_key). Forward secrecy не в MVP. Подробнее: [`docs/encryption.md`](docs/encryption.md).
 - **Мульти-девайс UX:** чаты не синхронизируются между моими устройствами (per-device модель). На новом устройстве (recovery / переустановка / второй девайс) фронт показывает список «осиротевших собеседников» — `account_id`-ов, с кем были чаты с других сессий. При создании первого чата на каждом устройстве — onboarding-модалка с объяснением модели. Полная миграция чатов — в потом-потом. Подробнее: [`docs/devices-and-chats.md`](docs/devices-and-chats.md).
 - **API контракты:** REST + WSS. Префикс `/api/v1/`. Resource/action нейминг (`account/create`, `session/read-list`, `invite/revoke/:id`). Один глобальный WSS endpoint `wss://normisy.app/ws`, авторизация первым сообщением. Ошибки в стиле NestJS HttpException + поле `code`. Подробнее: [`docs/api-contracts.md`](docs/api-contracts.md).
+
+---
+
+## Разрешения
+
+- Claude может свободно создавать и редактировать любые файлы в `~/coding/norms/`

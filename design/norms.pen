@@ -4,8 +4,8 @@
     {
       "type": "frame",
       "id": "ZpYN4",
-      "x": 0,
-      "y": -260,
+      "x": -2860,
+      "y": 40,
       "name": "Component/Input",
       "reusable": true,
       "width": 342,
@@ -38,8 +38,8 @@
     {
       "type": "frame",
       "id": "iqdGP",
-      "x": 400,
-      "y": -260,
+      "x": -2860,
+      "y": 528,
       "name": "Component/Button/Primary",
       "reusable": true,
       "width": 342,
@@ -64,8 +64,8 @@
     {
       "type": "frame",
       "id": "1i81t",
-      "x": 0,
-      "y": 0,
+      "x": 380,
+      "y": -260,
       "name": "Welcome",
       "clip": true,
       "width": 390,
@@ -206,8 +206,8 @@
     {
       "type": "frame",
       "id": "rZeHG",
-      "x": 490,
-      "y": 0,
+      "x": 870,
+      "y": -260,
       "name": "Reg — Invite Code",
       "clip": true,
       "width": 390,
@@ -332,8 +332,8 @@
     {
       "type": "frame",
       "id": "jy0Ao",
-      "x": 980,
-      "y": 0,
+      "x": 870,
+      "y": 684,
       "name": "Reg — Create Account",
       "clip": true,
       "width": 390,
@@ -458,8 +458,8 @@
     {
       "type": "frame",
       "id": "lIRWk",
-      "x": 1470,
-      "y": 0,
+      "x": 1360,
+      "y": -260,
       "name": "Login",
       "clip": true,
       "width": 390,
@@ -608,8 +608,8 @@
     {
       "type": "frame",
       "id": "5Pfuc",
-      "x": 0,
-      "y": -180,
+      "x": -2860,
+      "y": 192,
       "name": "Component/BottomNav",
       "reusable": true,
       "width": 390,
@@ -692,8 +692,8 @@
     {
       "type": "frame",
       "id": "WklIA",
-      "x": 0,
-      "y": -100,
+      "x": -2860,
+      "y": 356,
       "name": "Component/ChatItem",
       "reusable": true,
       "width": 342,
@@ -793,8 +793,8 @@
     {
       "type": "frame",
       "id": "KJwi2",
-      "x": 0,
-      "y": 960,
+      "x": 2340,
+      "y": -260,
       "name": "Chats — Empty",
       "clip": true,
       "width": 390,
@@ -930,8 +930,8 @@
     {
       "type": "frame",
       "id": "vvu7S",
-      "x": 490,
-      "y": 960,
+      "x": 2830,
+      "y": -260,
       "name": "Chats — List",
       "clip": true,
       "width": 390,
@@ -1211,8 +1211,8 @@
     {
       "type": "frame",
       "id": "hOooS",
-      "x": 980,
-      "y": 960,
+      "x": 2830,
+      "y": 684,
       "name": "Chat Conversation",
       "clip": true,
       "width": 390,
@@ -1798,8 +1798,8 @@
     {
       "type": "frame",
       "id": "BDWzl",
-      "x": 1470,
-      "y": 960,
+      "x": 3320,
+      "y": -260,
       "name": "Settings",
       "clip": true,
       "width": 390,
@@ -2744,8 +2744,8 @@
     {
       "type": "frame",
       "id": "9BpgO",
-      "x": -1560,
-      "y": 740,
+      "x": -2860,
+      "y": -260,
       "name": "Logo Exploration",
       "width": 800,
       "height": 200,
@@ -2767,34 +2767,6 @@
             "mode": "fill"
           },
           "cornerRadius": 36
-        },
-        {
-          "type": "frame",
-          "id": "PzLpI",
-          "name": "logo2",
-          "width": 152,
-          "height": 152,
-          "fill": {
-            "type": "image",
-            "enabled": true,
-            "url": "./images/generated-1776420726079.png",
-            "mode": "fill"
-          },
-          "cornerRadius": 36
-        },
-        {
-          "type": "frame",
-          "id": "ndzyC",
-          "name": "logo3",
-          "width": 152,
-          "height": 152,
-          "fill": {
-            "type": "image",
-            "enabled": true,
-            "url": "./images/generated-1776420726977.png",
-            "mode": "fill"
-          },
-          "cornerRadius": 36
         }
       ]
     },
@@ -2802,7 +2774,7 @@
       "type": "frame",
       "id": "eM77T",
       "x": -1560,
-      "y": 1040,
+      "y": 740,
       "name": "О проекте",
       "width": 1440,
       "fill": "#FAFAFA",
@@ -3142,7 +3114,7 @@
               "type": "text",
               "id": "FjAPe",
               "fill": "#8E8E93",
-              "content": "© 2025 Нормисы",
+              "content": "© 2026 Нормисы",
               "fontFamily": "Inter",
               "fontSize": 14,
               "fontWeight": "normal"
@@ -3164,7 +3136,7 @@
       "type": "frame",
       "id": "1sp1y",
       "x": -1560,
-      "y": 2200,
+      "y": 1691,
       "name": "Безопасность",
       "width": 1440,
       "fill": "#FAFAFA",
@@ -3504,7 +3476,7 @@
               "type": "text",
               "id": "6hceS",
               "fill": "#8E8E93",
-              "content": "© 2025 Нормисы",
+              "content": "© 2026 Нормисы",
               "fontFamily": "Inter",
               "fontSize": 14,
               "fontWeight": "normal"
@@ -3524,132 +3496,9 @@
     },
     {
       "type": "frame",
-      "id": "q5XmS",
-      "x": 0,
-      "y": 1960,
-      "name": "UIN Pending",
-      "clip": true,
-      "width": 390,
-      "height": 844,
-      "fill": "#EDEDED",
-      "layout": "vertical",
-      "children": [
-        {
-          "type": "frame",
-          "id": "UHoUg",
-          "width": "fill_container",
-          "height": "fill_container",
-          "fill": "#F5F5F7"
-        },
-        {
-          "type": "rectangle",
-          "id": "7u1FP",
-          "layoutPosition": "absolute",
-          "x": 0,
-          "y": 0,
-          "opacity": 0.45,
-          "fill": "#1A1A1A",
-          "width": 390,
-          "height": 844
-        },
-        {
-          "type": "frame",
-          "id": "gh0J9",
-          "layoutPosition": "absolute",
-          "x": 0,
-          "y": 470,
-          "name": "modal",
-          "width": 390,
-          "fill": "#FFFFFF",
-          "cornerRadius": [
-            20,
-            20,
-            0,
-            0
-          ],
-          "layout": "vertical",
-          "gap": 20,
-          "padding": [
-            16,
-            24,
-            40,
-            24
-          ],
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "rectangle",
-              "cornerRadius": 2,
-              "id": "4ZHWM",
-              "fill": "#E5E5EA",
-              "width": 36,
-              "height": 4
-            },
-            {
-              "type": "frame",
-              "id": "hp20b",
-              "name": "iconCirc",
-              "width": 64,
-              "height": 64,
-              "fill": "#FFF3E0",
-              "cornerRadius": 32,
-              "justifyContent": "center",
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "icon_font",
-                  "id": "oKQfk",
-                  "width": 28,
-                  "height": 28,
-                  "iconFontName": "timer",
-                  "iconFontFamily": "lucide",
-                  "fill": "#FF9500"
-                }
-              ]
-            },
-            {
-              "type": "text",
-              "id": "lQjd6",
-              "fill": "#1A1A1A",
-              "content": "Назначаем UIN...",
-              "textAlign": "center",
-              "fontFamily": "Inter",
-              "fontSize": 20,
-              "fontWeight": "700"
-            },
-            {
-              "type": "text",
-              "id": "ac5Se",
-              "fill": "#8E8E93",
-              "textGrowth": "fixed-width",
-              "width": "fill_container",
-              "content": "Не выходите из аккаунта, пока UIN не будет назначен.\n\nUIN — ваш логин. Без него восстановить аккаунт нельзя.",
-              "textAlign": "center",
-              "fontFamily": "Inter",
-              "fontSize": 15,
-              "fontWeight": "normal"
-            },
-            {
-              "id": "oOHr6",
-              "type": "ref",
-              "ref": "iqdGP",
-              "width": "fill_container",
-              "name": "uinBtn",
-              "descendants": {
-                "GQa8u": {
-                  "content": "Понятно"
-                }
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "frame",
       "id": "VteWg",
-      "x": 490,
-      "y": 1960,
+      "x": 1360,
+      "y": 684,
       "name": "Orphan Peers",
       "clip": true,
       "width": 390,
@@ -3901,8 +3750,8 @@
     {
       "type": "frame",
       "id": "pqEvY",
-      "x": 980,
-      "y": 1960,
+      "x": 2340,
+      "y": 2572,
       "name": "First Chat Modal",
       "clip": true,
       "width": 390,
@@ -4002,8 +3851,8 @@
     {
       "type": "frame",
       "id": "YH1Ct",
-      "x": 1470,
-      "y": 1960,
+      "x": 1850,
+      "y": -260,
       "name": "Recovery — Введите UIN",
       "clip": true,
       "width": 390,
@@ -4136,8 +3985,8 @@
     {
       "type": "frame",
       "id": "Ukwhp",
-      "x": 1960,
-      "y": 1960,
+      "x": 1850,
+      "y": 684,
       "name": "Recovery — Выберите вопрос",
       "clip": true,
       "width": 390,
@@ -4352,8 +4201,8 @@
     {
       "type": "frame",
       "id": "aZA6c",
-      "x": 2450,
-      "y": 1960,
+      "x": 1850,
+      "y": 1628,
       "name": "Recovery — Ответьте на вопрос",
       "clip": true,
       "width": 390,
@@ -4476,8 +4325,8 @@
     {
       "type": "frame",
       "id": "YKpXD",
-      "x": 2940,
-      "y": 1960,
+      "x": 1850,
+      "y": 2572,
       "name": "Recovery — Новый пароль",
       "clip": true,
       "width": 390,
@@ -4610,8 +4459,8 @@
     {
       "type": "frame",
       "id": "DfkQd",
-      "x": 0,
-      "y": 2904,
+      "x": 2340,
+      "y": 684,
       "name": "Search",
       "clip": true,
       "width": 390,
@@ -4878,8 +4727,8 @@
     {
       "type": "frame",
       "id": "Sm102",
-      "x": 490,
-      "y": 2904,
+      "x": 2340,
+      "y": 1628,
       "name": "User Profile",
       "clip": true,
       "width": 390,
@@ -5149,8 +4998,8 @@
     {
       "type": "frame",
       "id": "c1ClV",
-      "x": 980,
-      "y": 2904,
+      "x": 2340,
+      "y": 3516,
       "name": "Create Chat Modal",
       "clip": true,
       "width": 390,
@@ -5401,8 +5250,8 @@
     {
       "type": "frame",
       "id": "0JMVj",
-      "x": 1470,
-      "y": 2904,
+      "x": 3810,
+      "y": -260,
       "name": "Settings — Devices",
       "clip": true,
       "width": 390,
@@ -5650,8 +5499,8 @@
     {
       "type": "frame",
       "id": "5G6Lj",
-      "x": 1960,
-      "y": 2904,
+      "x": 4300,
+      "y": -260,
       "name": "Settings — Invites",
       "clip": true,
       "width": 390,
@@ -5888,8 +5737,8 @@
     {
       "type": "frame",
       "id": "P3bn2",
-      "x": 2450,
-      "y": 2904,
+      "x": 4790,
+      "y": -260,
       "name": "Settings — Recovery",
       "clip": true,
       "width": 390,
@@ -6141,8 +5990,8 @@
     {
       "type": "frame",
       "id": "Y0zPY",
-      "x": 2940,
-      "y": 2904,
+      "x": 5280,
+      "y": -260,
       "name": "Settings — Privacy",
       "clip": true,
       "width": 390,
@@ -6515,8 +6364,8 @@
     {
       "type": "frame",
       "id": "fNQiR",
-      "x": 0,
-      "y": 3848,
+      "x": 3810,
+      "y": 1628,
       "name": "Session Kicked",
       "clip": true,
       "width": 390,
@@ -6919,8 +6768,8 @@
     {
       "type": "frame",
       "id": "clgAm",
-      "x": 490,
-      "y": 3848,
+      "x": 1850,
+      "y": 3516,
       "name": "Password Reset Banner",
       "clip": true,
       "width": 390,
@@ -7330,8 +7179,8 @@
     {
       "type": "frame",
       "id": "jw1Fc",
-      "x": 980,
-      "y": 3848,
+      "x": 3810,
+      "y": 684,
       "name": "Kick Device Confirmation",
       "clip": true,
       "width": 390,
@@ -7724,8 +7573,8 @@
     {
       "type": "frame",
       "id": "41fWL",
-      "x": 1470,
-      "y": 3848,
+      "x": 2830,
+      "y": 1628,
       "name": "Chat — Pending Key",
       "clip": true,
       "width": 390,
@@ -7996,8 +7845,8 @@
     {
       "type": "frame",
       "id": "k2sb4",
-      "x": 0,
-      "y": 4792,
+      "x": 870,
+      "y": 2572,
       "name": "UIN Assigned",
       "clip": true,
       "width": 390,
@@ -8159,8 +8008,8 @@
     {
       "type": "frame",
       "id": "LeGvW",
-      "x": 490,
-      "y": 4792,
+      "x": 5770,
+      "y": -260,
       "name": "Settings — Change Password",
       "clip": true,
       "width": 390,
@@ -8422,8 +8271,8 @@
     {
       "type": "frame",
       "id": "2PVZr",
-      "x": 980,
-      "y": 4792,
+      "x": 2830,
+      "y": 2572,
       "name": "Chat — Failed Message",
       "clip": true,
       "width": 390,
@@ -8809,8 +8658,8 @@
     {
       "type": "frame",
       "id": "IK5Jd",
-      "x": 0,
-      "y": 5736,
+      "x": 4790,
+      "y": 684,
       "name": "Add Recovery Question",
       "clip": true,
       "width": 390,
@@ -9307,8 +9156,8 @@
     {
       "type": "frame",
       "id": "DtzMs",
-      "x": 490,
-      "y": 5736,
+      "x": 4300,
+      "y": 684,
       "name": "Create Invite — Success",
       "clip": true,
       "width": 390,
@@ -9566,7 +9415,7 @@
           "type": "frame",
           "id": "3TalF",
           "x": 0,
-          "y": 380,
+          "y": 417,
           "name": "ciModal",
           "width": 390,
           "fill": "#FFFFFF",
@@ -9733,8 +9582,8 @@
     {
       "type": "frame",
       "id": "4njd6",
-      "x": 980,
-      "y": 5736,
+      "x": 3810,
+      "y": 2572,
       "name": "Device Rename",
       "clip": true,
       "width": 390,
@@ -10035,7 +9884,7 @@
               "type": "text",
               "id": "YwHVc",
               "fill": "#1A1A1A",
-              "content": "Прозвище устройства",
+              "content": "Псевдоним устройства",
               "fontFamily": "Inter",
               "fontSize": 18,
               "fontWeight": "700"
@@ -10110,6 +9959,246 @@
                   "fontWeight": "600"
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "Oa6Fb",
+      "x": 870,
+      "y": 1628,
+      "name": "UIN Pending",
+      "clip": true,
+      "width": 390,
+      "height": 844,
+      "fill": "#FFFFFF",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "6Ep5u",
+          "name": "topBar5",
+          "width": "fill_container",
+          "height": 56,
+          "padding": [
+            0,
+            24
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "7T8ML",
+              "name": "topTitle5",
+              "fill": "#1A1A1A",
+              "content": "Чаты",
+              "fontFamily": "Inter",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "avvMA",
+              "name": "topActions5",
+              "gap": 16,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "v3JCp",
+                  "name": "searchIcon5",
+                  "width": 22,
+                  "height": 22,
+                  "iconFontName": "search",
+                  "iconFontFamily": "lucide",
+                  "fill": "#1A1A1A"
+                },
+                {
+                  "type": "icon_font",
+                  "id": "VOuOC",
+                  "name": "newChatIcon5",
+                  "width": 22,
+                  "height": 22,
+                  "iconFontName": "square-pen",
+                  "iconFontFamily": "lucide",
+                  "fill": "#1A1A1A"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "eWIds",
+          "name": "content5",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 16,
+          "padding": [
+            0,
+            40
+          ],
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "OHBRK",
+              "name": "emptyIcon",
+              "width": 56,
+              "height": 56,
+              "iconFontName": "message-circle",
+              "iconFontFamily": "lucide",
+              "fill": "#D1D1D6"
+            },
+            {
+              "type": "text",
+              "id": "SYYOe",
+              "name": "emptyTitle",
+              "fill": "#1A1A1A",
+              "content": "Пока нет чатов",
+              "fontFamily": "Inter",
+              "fontSize": 18,
+              "fontWeight": "600"
+            },
+            {
+              "type": "text",
+              "id": "xLO8x",
+              "name": "emptyDesc",
+              "fill": "#8E8E93",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Найдите собеседника по username или UIN",
+              "textAlign": "center",
+              "fontFamily": "Inter",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            },
+            {
+              "id": "BahUE",
+              "type": "ref",
+              "ref": "iqdGP",
+              "width": 220,
+              "name": "emptyBtn",
+              "descendants": {
+                "GQa8u": {
+                  "content": "Найти собеседника"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "YlyF3",
+          "type": "ref",
+          "ref": "5Pfuc",
+          "width": "fill_container",
+          "name": "nav5",
+          "enabled": true
+        },
+        {
+          "type": "rectangle",
+          "id": "7u1FP",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "opacity": 0.45,
+          "fill": "#1A1A1A",
+          "width": 390,
+          "height": 844
+        },
+        {
+          "type": "frame",
+          "id": "gh0J9",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 470,
+          "name": "modal",
+          "width": 390,
+          "fill": "#FFFFFF",
+          "cornerRadius": [
+            20,
+            20,
+            0,
+            0
+          ],
+          "layout": "vertical",
+          "gap": 20,
+          "padding": [
+            16,
+            24,
+            40,
+            24
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "cornerRadius": 2,
+              "id": "4ZHWM",
+              "fill": "#E5E5EA",
+              "width": 36,
+              "height": 4
+            },
+            {
+              "type": "frame",
+              "id": "hp20b",
+              "name": "iconCirc",
+              "width": 64,
+              "height": 64,
+              "fill": "#FFF3E0",
+              "cornerRadius": 32,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "oKQfk",
+                  "width": 28,
+                  "height": 28,
+                  "iconFontName": "timer",
+                  "iconFontFamily": "lucide",
+                  "fill": "#FF9500"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "lQjd6",
+              "fill": "#1A1A1A",
+              "content": "Назначаем UIN...",
+              "textAlign": "center",
+              "fontFamily": "Inter",
+              "fontSize": 20,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "ac5Se",
+              "fill": "#8E8E93",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Не выходите из аккаунта, пока UIN не будет назначен.\n\nUIN — ваш логин. Без него восстановить аккаунт нельзя.",
+              "textAlign": "center",
+              "fontFamily": "Inter",
+              "fontSize": 15,
+              "fontWeight": "normal"
+            },
+            {
+              "id": "oOHr6",
+              "type": "ref",
+              "ref": "iqdGP",
+              "width": "fill_container",
+              "name": "uinBtn",
+              "descendants": {
+                "GQa8u": {
+                  "content": "Понятно"
+                }
+              }
             }
           ]
         }
