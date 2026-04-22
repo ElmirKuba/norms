@@ -2,9 +2,9 @@ import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/
 import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
-import { StorageService } from './services/storage/storage.service';
-import { storageServiceFactory } from './services/storage/storage.provider';
-import { PlatformDetectorService } from './services/platform/platform.service';
+import { StorageService } from './core/services/storage/storage.service';
+import { storageServiceFactory } from './core/services/storage/storage.provider';
+import { PlatformDetectorService } from './core/services/platform/platform.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [

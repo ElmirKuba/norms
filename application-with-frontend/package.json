@@ -101,6 +101,7 @@
     "@capacitor/keyboard": "^8.0.3",
     "@capacitor/preferences": "^8.0.1",
     "@capacitor/status-bar": "^8.0.2",
+    "modern-normalize": "^3.0.1",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
