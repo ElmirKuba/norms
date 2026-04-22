@@ -1,5 +1,18 @@
 import { Injectable } from '@angular/core';
 
+declare global {
+  interface Window {
+    /** API Electron, внедряемый через preload.ts */
+    electronAPI?: Record<string, unknown>;
+    /** API Capacitor, доступный на нативных платформах */
+    // eslint-disable-next-line @typescript-eslint/naming-convention -- внешнее API Capacitor использует PascalCase
+    Capacitor?: {
+      /** Возвращает идентификатор платформы: 'ios' | 'android' | 'web' */
+      getPlatform?: () => string;
+    };
+  }
+}
+
 /**
  * Перечисление всех поддерживаемых платформ.
  * Определяется один раз при старте приложения.
@@ -10,67 +23,75 @@ export enum AppPlatform {
   ELECTRON_WINDOWS = 'electron-windows',
   ELECTRON_MACOS = 'electron-macos',
   ELECTRON_LINUX = 'electron-linux',
-  WEB = 'web', // браузер (заглушка)
+  WEB = 'web',
 }
 
-/**
- * Группы платформ для удобных проверок.
- */
+/** Группы платформ для удобных проверок */
 export type PlatformFamily = 'mobile' | 'desktop' | 'web';
 
+/** Определяет текущую платформу при старте и предоставляет удобные геттеры */
 @Injectable({ providedIn: 'root' })
 export class PlatformDetectorService {
   /** Текущая платформа — определяется один раз */
-  readonly platform: AppPlatform;
+  public readonly platform: AppPlatform;
 
   /** Группа платформ */
-  readonly family: PlatformFamily;
+  public readonly family: PlatformFamily;
 
-  constructor() {
-    this.platform = this.detect();
-    this.family = this.resolveFamily(this.platform);
+  public constructor() {
+    this.platform = this._detect();
+    this.family = this._resolveFamily(this.platform);
   }
 
-  // --- Удобные геттеры ---
-
-  get isIOS(): boolean {
+  /** Возвращает true, если платформа — iOS */
+  public get isIOS(): boolean {
     return this.platform === AppPlatform.IOS;
   }
-  get isAndroid(): boolean {
+
+  /** Возвращает true, если платформа — Android */
+  public get isAndroid(): boolean {
     return this.platform === AppPlatform.ANDROID;
   }
-  get isMobile(): boolean {
+
+  /** Возвращает true, если платформа — мобильная (iOS или Android) */
+  public get isMobile(): boolean {
     return this.family === 'mobile';
   }
-  get isElectron(): boolean {
+
+  /** Возвращает true, если платформа — Electron (desktop) */
+  public get isElectron(): boolean {
     return this.family === 'desktop';
   }
-  get isWeb(): boolean {
+
+  /** Возвращает true, если платформа — обычный браузер */
+  public get isWeb(): boolean {
     return this.platform === AppPlatform.WEB;
   }
-  get isWindows(): boolean {
+
+  /** Возвращает true, если ОС — Windows (только Electron) */
+  public get isWindows(): boolean {
     return this.platform === AppPlatform.ELECTRON_WINDOWS;
   }
-  get isMacOS(): boolean {
+
+  /** Возвращает true, если ОС — macOS (только Electron) */
+  public get isMacOS(): boolean {
     return this.platform === AppPlatform.ELECTRON_MACOS;
   }
-  get isLinux(): boolean {
+
+  /** Возвращает true, если ОС — Linux (только Electron) */
+  public get isLinux(): boolean {
     return this.platform === AppPlatform.ELECTRON_LINUX;
   }
 
-  // --- Детекция ---
-
-  private detect(): AppPlatform {
+  private _detect(): AppPlatform {
     // 1. Electron? Проверяем наличие electronAPI (из preload.ts)
-    if (typeof window !== 'undefined' && window.electronAPI) {
-      return this.detectElectronOS();
+    if (typeof window !== 'undefined' && window.electronAPI !== undefined) {
+      return this._detectElectronOS();
     }
 
     // 2. Capacitor? Проверяем наличие Capacitor на window
-    if (typeof window !== 'undefined' && (window as any).Capacitor) {
-      const capacitor = (window as any).Capacitor;
-      const nativePlatform = capacitor.getPlatform?.() as string;
-
+    if (typeof window !== 'undefined' && window.Capacitor !== undefined) {
+      const nativePlatform: string | undefined = window.Capacitor.getPlatform?.();
       if (nativePlatform === 'ios') return AppPlatform.IOS;
       if (nativePlatform === 'android') return AppPlatform.ANDROID;
     }
@@ -79,19 +100,18 @@ export class PlatformDetectorService {
     return AppPlatform.WEB;
   }
 
-  private detectElectronOS(): AppPlatform {
+  private _detectElectronOS(): AppPlatform {
     // navigator.userAgent содержит информацию об ОС даже в Electron
-    const ua = navigator.userAgent.toLowerCase();
+    const ua: string = navigator.userAgent.toLowerCase();
 
     if (ua.includes('win')) return AppPlatform.ELECTRON_WINDOWS;
     if (ua.includes('mac')) return AppPlatform.ELECTRON_MACOS;
     if (ua.includes('linux')) return AppPlatform.ELECTRON_LINUX;
 
-    // Fallback
     return AppPlatform.ELECTRON_WINDOWS;
   }
 
-  private resolveFamily(platform: AppPlatform): PlatformFamily {
+  private _resolveFamily(platform: AppPlatform): PlatformFamily {
     switch (platform) {
       case AppPlatform.IOS:
       case AppPlatform.ANDROID:
