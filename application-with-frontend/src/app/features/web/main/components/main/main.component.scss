@@ -48,9 +48,15 @@
         color: #8e8e93;
         text-decoration: none;
         border-bottom: 1px solid #fff;
+        transition: border-color 0.3s ease;
 
         &:hover {
           border-bottom: 1px solid #1a1a1a;
+        }
+
+        &.active {
+          border-bottom-color: #1a1a1a;
+          font-weight: 500;
         }
       }
 
@@ -74,8 +80,49 @@
 
   .web-main {
     flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
   }
 
   .web-footer {
+    background-color: #ffffff;
+    border: 1px solid #f0f0f0;
+    padding-left: 80px;
+    padding-right: 80px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    &__copyrigth {
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: 0;
+      color: #8e8e93;
+    }
+
+    &__nav {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 6px;
+
+      a {
+        color: #8e8e93;
+        text-decoration: none;
+        border-bottom: 1px solid #fff;
+        transition: border-color 0.3s ease;
+
+        &:hover {
+          border-bottom: 1px solid #1a1a1a;
+        }
+
+        &.active {
+          border-bottom-color: #1a1a1a;
+          font-weight: 500;
+        }
+      }
+    }
   }
 }

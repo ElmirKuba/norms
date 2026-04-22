@@ -12,10 +12,27 @@ import { type NavItem } from '../../main.types';
 })
 export class MainWebComponent {
   /** Список пунктов навигации верхней панели */
-  public readonly navItems: NavItem[] = [
-    { kind: 'link', label: 'Главная', path: 'welcome' },
-    { kind: 'link', label: 'О проекте', path: 'about' },
-    { kind: 'link', label: 'Безопасность', path: 'security' },
+  public readonly navItemsFooter: NavItem[] = [
+    {
+      kind: 'link',
+      label: 'Главная',
+      path: 'welcome',
+    },
+    {
+      kind: 'link',
+      label: 'О проекте',
+      path: 'about',
+    },
+    {
+      kind: 'link',
+      label: 'Безопасность',
+      path: 'security',
+    },
+  ];
+
+  /** Список пунктов навигации верхней панели */
+  public readonly navItemsHeader: NavItem[] = [
+    ...this.navItemsFooter,
     {
       kind: 'button',
       imgSrc: './../../../../../../assets/images/buttons/theme-toggle.svg',
@@ -28,7 +45,7 @@ export class MainWebComponent {
 
   /** Переключает цветовую тему интерфейса */
   public toggleTheme(): void {
-    // TODO: реализовать переключение темы
-    console.log('toggleTheme');
+    // TODO: ElmirKuba 2026-04-22: реализовать переключение темы
+    alert('Когда-то в будущем');
   }
 }

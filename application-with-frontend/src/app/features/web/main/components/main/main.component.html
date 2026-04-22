@@ -9,9 +9,16 @@
     </div>
 
     <nav class="web-header__nav">
-      @for (item of navItems; track $index) {
+      @for (item of navItemsHeader; track $index) {
         @if (item.kind === 'link') {
-          <a [routerLink]="item.path" routerLinkActive="active">{{ item.label }}</a>
+          <a
+            [routerLink]="item.path"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{
+              exact: true,
+            }"
+            >{{ item.label }}</a
+          >
         } @else if (item.kind === 'button') {
           <button class="web-header__nav-theme" (click)="item.onClick()">
             <img [src]="item.imgSrc" [alt]="item.imgAlt" />
@@ -25,5 +32,18 @@
     <router-outlet />
   </main>
 
-  <footer class="web-footer">web-main__footer</footer>
+  <footer class="web-footer">
+    <div class="web-footer__copyrigth">© 2026 Нормисы</div>
+
+    <nav class="web-footer__nav">
+      @for (item of navItemsFooter; track $index) {
+        @if (item.kind === 'link') {
+          <a [routerLink]="item.path" routerLinkActive="active">{{ item.label }}</a>
+        }
+        @if ($index !== navItemsFooter.length - 1) {
+          <span class="web-footer__nav-interpoint">&middot;</span>
+        }
+      }
+    </nav>
+  </footer>
 </div>
