@@ -1,20 +1,29 @@
 <div class="web-welcome">
-  12345
-  <!-- <div class="web-welcome__badge">
-    <img src="./../../../../../../assets/images/icons/shield-success.svg" alt="Значок щита" />
+  <div class="promo">
+    <shared-badge [iconType]="badgeTypeIcons.SHIELD_SUCCESS">
+      Закрытая регистрация по инвайтам
+    </shared-badge>
 
-    Закрытая регистрация по инвайтам
+    <h1 class="promo__title">Пространство для своих</h1>
+
+    <p class="promo__description">Без телефона и email. Без слежки. Только те, кому доверяешь.</p>
   </div>
-
-  <h1>Пространство для своих</h1>
-  <p>Без телефона и email. Без слежки. Только те, кому доверяешь.</p>
 
   <div class="download-buttons">
-    <a href="#" class="btn btn-dark">App Store</a>
-    <a href="#" class="btn btn-dark">Android</a>
-    <a href="#" class="btn btn-light">Windows</a>
-    <a href="#" class="btn btn-light">macOS</a>
-    <a href="#" class="btn btn-light">Linux</a>
+    @for (button of downloadButtons; track $index) {
+      <button
+        class="download-buttons__item"
+        [ngClass]="{
+          'download-buttons__item--detect': button.osType === currentOs,
+        }"
+      >
+        <img [src]="iconSrcPath(button.osType)" />
+
+        <div class="btn-content">
+          <span class="btn-label">{{ button.label }}</span>
+          <span class="btn-name">{{ button.name }}</span>
+        </div>
+      </button>
+    }
   </div>
-  -->
 </div>

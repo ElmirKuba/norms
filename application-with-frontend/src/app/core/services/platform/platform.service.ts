@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 
 declare global {
+  /** Расширение глобального Window для платформенных API */
   interface Window {
     /** API Electron, внедряемый через preload.ts */
     electronAPI?: Record<string, unknown>;
@@ -29,6 +30,16 @@ export enum AppPlatform {
 /** Группы платформ для удобных проверок */
 export type PlatformFamily = 'mobile' | 'desktop' | 'web';
 
+/** Операционные системы пользователя */
+export enum OperatingSystem {
+  WINDOWS = 'windows',
+  MACOS = 'macos',
+  IOS = 'ios',
+  ANDROID = 'android',
+  LINUX = 'linux',
+  UNKNOWN = 'unknown',
+}
+
 /** Определяет текущую платформу при старте и предоставляет удобные геттеры */
 @Injectable({ providedIn: 'root' })
 export class PlatformDetectorService {
@@ -38,9 +49,13 @@ export class PlatformDetectorService {
   /** Группа платформ */
   public readonly family: PlatformFamily;
 
+  /** Конкретная ОС */
+  public readonly os: OperatingSystem = OperatingSystem.UNKNOWN;
+
   public constructor() {
     this.platform = this._detect();
     this.family = this._resolveFamily(this.platform);
+    this.os = this._detectOS();
   }
 
   /** Возвращает true, если платформа — iOS */
@@ -83,6 +98,10 @@ export class PlatformDetectorService {
     return this.platform === AppPlatform.ELECTRON_LINUX;
   }
 
+  /**
+   * Определяет текущую платформу по наличию платформенных API в window.
+   * @returns Идентифицированная платформа
+   */
   private _detect(): AppPlatform {
     // 1. Electron? Проверяем наличие electronAPI (из preload.ts)
     if (typeof window !== 'undefined' && window.electronAPI !== undefined) {
@@ -100,6 +119,10 @@ export class PlatformDetectorService {
     return AppPlatform.WEB;
   }
 
+  /**
+   * Определяет ОС внутри Electron по userAgent.
+   * @returns Платформа Electron для текущей ОС
+   */
   private _detectElectronOS(): AppPlatform {
     // navigator.userAgent содержит информацию об ОС даже в Electron
     const ua: string = navigator.userAgent.toLowerCase();
@@ -111,6 +134,11 @@ export class PlatformDetectorService {
     return AppPlatform.ELECTRON_WINDOWS;
   }
 
+  /**
+   * Определяет группу платформы по конкретной платформе.
+   * @param platform - Текущая платформа
+   * @returns Группа платформы
+   */
   private _resolveFamily(platform: AppPlatform): PlatformFamily {
     switch (platform) {
       case AppPlatform.IOS:
@@ -123,5 +151,29 @@ export class PlatformDetectorService {
       default:
         return 'web';
     }
+  }
+
+  /**
+   * Новый метод: Определяет ОС на основе userAgent или платформенных API
+   * @returns Обнаруженная OС
+   */
+  private _detectOS(): OperatingSystem {
+    if (typeof window === 'undefined') return OperatingSystem.UNKNOWN;
+
+    const ua = navigator.userAgent.toLowerCase();
+
+    // 1. Проверка на мобильные ОС (включая браузер и натив)
+    if (/iphone|ipad|ipod/.test(ua)) return OperatingSystem.IOS;
+    if (ua.includes('android')) return OperatingSystem.ANDROID;
+
+    // 2. Проверка iPad на новых iOS (которые прикидываются Mac)
+    if (ua.includes('mac') && navigator.maxTouchPoints > 1) return OperatingSystem.IOS;
+
+    // 3. Десктопные ОС
+    if (ua.includes('win')) return OperatingSystem.WINDOWS;
+    if (ua.includes('mac')) return OperatingSystem.MACOS;
+    if (ua.includes('linux')) return OperatingSystem.LINUX;
+
+    return OperatingSystem.UNKNOWN;
   }
 }

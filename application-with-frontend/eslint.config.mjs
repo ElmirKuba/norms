@@ -184,7 +184,7 @@ export default tseslint.config(
       'jsdoc/require-jsdoc': [
         'error',
         {
-          publicOnly: true,
+          publicOnly: false,
           require: {
             ClassDeclaration: true,       // export class Foo {}
             FunctionDeclaration: true,    // export function foo() {}
@@ -195,6 +195,7 @@ export default tseslint.config(
           contexts: [
             'TSInterfaceDeclaration',   // export interface Foo {}
             'TSTypeAliasDeclaration',   // export type Foo = ...
+            'TSEnumDeclaration',        // export enum Foo {}
             'TSPropertySignature',      // поля interface { ... }
             'PropertyDefinition',       // поля class { ... }
           ],
