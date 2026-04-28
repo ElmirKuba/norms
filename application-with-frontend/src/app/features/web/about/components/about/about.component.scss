@@ -1,2 +1,90 @@
+:host {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
 .web-about {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 48px;
+  justify-content: center;
+  padding: 48px 24px;
+
+  .promo {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+    text-align: center;
+
+    &__title {
+      font-size: 40px;
+      font-weight: 700;
+      color: #1a1a1a;
+      letter-spacing: -1.5px;
+
+      @media (min-width: 768px) {
+        font-size: 56px;
+        letter-spacing: -2px;
+      }
+    }
+
+    &__description {
+      font-size: 16px;
+      font-weight: 400;
+      color: #8e8e93;
+      max-width: 480px;
+
+      @media (min-width: 768px) {
+        font-size: 20px;
+      }
+    }
+  }
+
+  .features {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    width: 100%;
+    max-width: 900px;
+
+    @media (min-width: 600px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (min-width: 900px) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    &__card {
+      background: #f5f5f7;
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+
+      &-icon {
+        width: 24px;
+        height: 24px;
+      }
+
+      &-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: #1a1a1a;
+      }
+
+      &-description {
+        font-size: 14px;
+        font-weight: 400;
+        color: #8e8e93;
+        line-height: 1.5;
+        margin: 0;
+      }
+    }
+  }
 }

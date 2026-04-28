@@ -1,1 +1,23 @@
-<div class="web-security">web-security</div>
+<div class="web-security">
+  <div class="promo">
+    <shared-badge [iconType]="badgeTypeIcons.LOCK">
+      Безопасность
+    </shared-badge>
+
+    <h1 class="promo__title">Ваши сообщения — только ваши</h1>
+
+    <p class="promo__description">
+      Нормисы использует сквозное шифрование. Сервер не видит содержимого ваших переписок.
+    </p>
+  </div>
+
+  <div class="features">
+    @for (feature of features; track $index) {
+      <div class="features__card" [class.features__card--dark]="feature.isDark">
+        <img class="features__card-icon" [src]="feature.imgSrc" [alt]="feature.imgAlt" />
+        <span class="features__card-title">{{ feature.title }}</span>
+        <p class="features__card-description">{{ feature.description }}</p>
+      </div>
+    }
+  </div>
+</div>

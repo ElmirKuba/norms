@@ -1,17 +1,21 @@
 # TODO
 
 ## Done
-_Nothing yet._
+
+### Лендинг (веб)
+- `MainWebComponent` — layout-обёртка с header/footer и `<router-outlet>` для web-маршрутов
+- `WelcomeWebComponent` — главная страница (`/web/welcome`) по макету: badge, promo, кнопки скачивания с детектом ОС
+- `AboutWebComponent` — страница «О проекте» (`/web/about`) по макету: badge, promo, 3 feature-карточки
+- `SecurityWebComponent` — страница «Безопасность» (`/web/security`) по макету: badge, promo, 3 feature-карточки (первая тёмная)
+- SVG-иконки для badge (info, lock) и feature-карточек About и Security (`assets/images/icons/features/*.svg`)
+- Строгий ESLint (typescript-eslint strict-type-checked + jsdoc + angular-eslint) + tsconfig extra-strict
 
 ## In Progress
 _Nothing yet._
 
 ## Up Next
 
-### Лендинг + заглушка (веб)
-- Компонент лендинга на корневом маршруте `/`
-- Компонент-заглушка для всех остальных маршрутов в вебе
-- Детект ОС через `navigator.userAgent` / `navigator.userAgentData` — подсветка релевантной кнопки скачивания
+### Лендинг + заглушка (веб) — оставшееся
 - Запрос ссылок у бэка `GET /api/v1/app/downloads` при инициализации (только если `platform.isWeb`)
 
 ### Идентификация / аккаунты
