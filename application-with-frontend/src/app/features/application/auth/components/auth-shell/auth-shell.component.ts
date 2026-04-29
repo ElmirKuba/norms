@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import type { Location } from '@angular/common';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Location } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 
 /** Shell-компонент для экранов авторизации: header с кнопкой «назад» и переключением темы */
@@ -11,7 +11,8 @@ import { RouterOutlet } from '@angular/router';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AuthShellComponent {
-  public constructor(private readonly _location: Location) {}
+  /** Сервис истории браузера для навигации назад */
+  private readonly _location: Location = inject(Location);
 
   /** Переход на предыдущий экран */
   public goBack(): void {

@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import type { Router } from '@angular/router';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { ButtonSharedComponent } from '../../../../../shared/components/button/button.component';
 import type { FeatureFlags } from '../../types/auth.types';
 import { MOCK_FEATURE_FLAGS } from '../../types/auth.types';
@@ -16,7 +16,8 @@ export class WelcomeApplicationComponent {
   /** Мок feature flags (заменить на сервис когда бэк будет готов) */
   protected readonly _flags: FeatureFlags = MOCK_FEATURE_FLAGS;
 
-  public constructor(private readonly _router: Router) {}
+  /** Роутер для навигации между экранами */
+  private readonly _router: Router = inject(Router);
 
   /** Переход на регистрацию: инвайт-код или сразу создание аккаунта */
   public onRegister(): void {

@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import type { Router } from '@angular/router';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { ButtonSharedComponent } from '../../../../../shared/components/button/button.component';
 import { MOCK_UIN } from '../../types/uin.types';
 
@@ -20,7 +20,8 @@ export class UinAssignedApplicationComponent {
     return this._uin.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1 ');
   }
 
-  public constructor(private readonly _router: Router) {}
+  /** Роутер для навигации между экранами */
+  private readonly _router: Router = inject(Router);
 
   /** Скопировать UIN в буфер обмена */
   public async onCopy(): Promise<void> {

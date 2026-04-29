@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import type { WritableSignal } from '@angular/core';
-import type { Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { InputSharedComponent } from '../../../../../shared/components/input/input.component';
 import { ButtonSharedComponent } from '../../../../../shared/components/button/button.component';
 
@@ -26,7 +26,8 @@ export class InviteCodeApplicationComponent {
     return this._rawCode().replace(/\D/g, '').length === 10;
   }
 
-  public constructor(private readonly _router: Router) {}
+  /** Роутер для навигации между экранами */
+  private readonly _router: Router = inject(Router);
 
   /**
    * Обрабатывает ввод — оставляет только цифры, добавляет дефисы

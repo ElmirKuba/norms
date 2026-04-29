@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import type { WritableSignal } from '@angular/core';
-import type { Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { InputSharedComponent } from '../../../../../shared/components/input/input.component';
 import { ButtonSharedComponent } from '../../../../../shared/components/button/button.component';
 
@@ -24,7 +24,8 @@ export class LoginApplicationComponent {
     return this._login().trim().length > 0 && this._password().length >= 8;
   }
 
-  public constructor(private readonly _router: Router) {}
+  /** Роутер для навигации между экранами */
+  private readonly _router: Router = inject(Router);
 
   /** Вход (мок: переходим на main) */
   public onSubmit(): void {

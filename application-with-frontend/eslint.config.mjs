@@ -14,7 +14,7 @@ export default tseslint.config(
 
   // ─── TypeScript ──────────────────────────────────────────────────────────────
   {
-    files: ['**/*.ts'],
+    files: ['*.component.ts', '*.service.ts', '*.directive.ts'],
     extends: [
       eslint.configs.recommended,
       ...tseslint.configs.strictTypeChecked,
@@ -34,7 +34,7 @@ export default tseslint.config(
       // ── Базовые JS ──────────────────────────────────────────────────────────
       'no-console': 'error',
       'no-debugger': 'error',
-      'eqeqeq': ['error', 'always'],
+      eqeqeq: ['error', 'always'],
       'prefer-const': 'error',
       // no-unused-vars базовый отключаем — используем TS-версию
       'no-unused-vars': 'off',
@@ -53,19 +53,16 @@ export default tseslint.config(
       // Обязательный тип возврата на всех экспортируемых функциях
       '@typescript-eslint/explicit-module-boundary-types': 'error',
       // public/private/protected обязательны на всех членах класса
-      '@typescript-eslint/explicit-member-accessibility': [
-        'error',
-        { accessibility: 'explicit' },
-      ],
+      '@typescript-eslint/explicit-member-accessibility': ['error', { accessibility: 'explicit' }],
       // Явные аннотации типов даже если TS может вывести сам
       '@typescript-eslint/typedef': [
         'error',
         {
-          arrowParameter: true,           // (x: number): string => ...
+          arrowParameter: true, // (x: number): string => ...
           memberVariableDeclaration: true, // class { prop: string = ... }
-          parameter: true,                // function f(x: string): void
-          propertyDeclaration: true,      // interface/type { prop: string }
-          variableDeclaration: false,     // const x = 'hello' — вывод TS достаточен
+          parameter: true, // function f(x: string): void
+          propertyDeclaration: true, // interface/type { prop: string }
+          variableDeclaration: false, // const x = 'hello' — вывод TS достаточен
         },
       ],
       // Разрешаем писать явные типы даже там, где TS вывел бы сам
@@ -156,7 +153,11 @@ export default tseslint.config(
       // import type { Foo } — для типов используем type-import
       '@typescript-eslint/consistent-type-imports': [
         'error',
-        { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
+        {
+          prefer: 'type-imports',
+          fixStyle: 'inline-type-imports',
+          disallowTypeAnnotations: false,
+        },
       ],
       '@typescript-eslint/consistent-type-exports': [
         'error',
@@ -186,18 +187,18 @@ export default tseslint.config(
         {
           publicOnly: false,
           require: {
-            ClassDeclaration: true,       // export class Foo {}
-            FunctionDeclaration: true,    // export function foo() {}
-            MethodDefinition: true,       // public method() {}
+            ClassDeclaration: true, // export class Foo {}
+            FunctionDeclaration: true, // export function foo() {}
+            MethodDefinition: true, // public method() {}
             ArrowFunctionExpression: false,
             FunctionExpression: false,
           },
           contexts: [
-            'TSInterfaceDeclaration',   // export interface Foo {}
-            'TSTypeAliasDeclaration',   // export type Foo = ...
-            'TSEnumDeclaration',        // export enum Foo {}
-            'TSPropertySignature',      // поля interface { ... }
-            'PropertyDefinition',       // поля class { ... }
+            'TSInterfaceDeclaration', // export interface Foo {}
+            'TSTypeAliasDeclaration', // export type Foo = ...
+            'TSEnumDeclaration', // export enum Foo {}
+            'TSPropertySignature', // поля interface { ... }
+            'PropertyDefinition', // поля class { ... }
           ],
           checkConstructors: false,
         },

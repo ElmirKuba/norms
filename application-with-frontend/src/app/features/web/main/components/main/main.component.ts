@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import type { OnDestroy, OnInit, WritableSignal } from '@angular/core';
 import { NavigationEnd, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import type { Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { filter } from 'rxjs';
 import type { Subscription } from 'rxjs';
 import { type NavItem, type NavLink } from '../../types/main.types';
@@ -59,7 +59,9 @@ export class MainWebComponent implements OnInit, OnDestroy {
   public ngOnInit(): void {
     this._routerSub = this._router.events
       .pipe(filter((e: unknown): e is NavigationEnd => e instanceof NavigationEnd))
-      .subscribe((): void => { this.menuOpen.set(false); });
+      .subscribe((): void => {
+        this.menuOpen.set(false);
+      });
   }
 
   /** @inheritdoc */

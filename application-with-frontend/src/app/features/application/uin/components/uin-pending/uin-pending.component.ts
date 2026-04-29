@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import type { Router } from '@angular/router';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { ButtonSharedComponent } from '../../../../../shared/components/button/button.component';
 
 /**
@@ -15,7 +15,8 @@ import { ButtonSharedComponent } from '../../../../../shared/components/button/b
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UinPendingApplicationComponent {
-  public constructor(private readonly _router: Router) {}
+  /** Роутер для навигации между экранами */
+  private readonly _router: Router = inject(Router);
 
   /**
    * Мок: симулировать получение UIN и перейти на uin-assigned.
