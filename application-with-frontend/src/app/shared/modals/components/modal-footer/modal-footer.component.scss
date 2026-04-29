@@ -1,0 +1,21 @@
+:host {
+  display: block;
+  margin-top: 24px;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 8px;
+
+  &--vertically {
+    flex-direction: column;
+  }
+
+  &--reversed {
+    flex-direction: row-reverse;
+
+    &.modal-footer--vertically {
+      flex-direction: column-reverse;
+    }
+  }
+}

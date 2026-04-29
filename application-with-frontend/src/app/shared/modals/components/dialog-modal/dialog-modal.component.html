@@ -1,0 +1,45 @@
+<div class="dialog-modal">
+  <shared-modal-header [icon]="data.icon">
+    @if (data.title) {
+      <span [innerHTML]="data.title"></span>
+    }
+  </shared-modal-header>
+
+  @if (data.text || data.component) {
+    <shared-modal-content>
+      @if (data.component) {
+        <ng-container
+          [ngComponentOutlet]="data.component"
+          [ngComponentOutletInputs]="{ data: data.componentData }"
+        />
+      } @else if (data.text) {
+        <div
+          [class.text-center]="data.textCenter"
+          [innerHTML]="data.text"
+        ></div>
+      }
+    </shared-modal-content>
+  }
+
+  <shared-modal-footer
+    [vertically]="!!data.isFooterButtonsVertically"
+    [reversed]="!!data.isButtonsOrderReversed"
+  >
+    @if (data.isConfirmModal) {
+      <shared-button
+        variant="primary"
+        [disabled]="isConfirmDisabled()"
+        (clicked)="onConfirm()"
+      >
+        {{ data.confirmBtnText ?? 'Да' }}
+      </shared-button>
+      <shared-button variant="secondary" (clicked)="onCancel()">
+        {{ data.cancelBtnText ?? 'Нет' }}
+      </shared-button>
+    } @else {
+      <shared-button variant="primary" (clicked)="onClose()">
+        {{ data.closeBtnText ?? 'Закрыть' }}
+      </shared-button>
+    }
+  </shared-modal-footer>
+</div>

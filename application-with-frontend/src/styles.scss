@@ -21,3 +21,39 @@ body {
   height: 100%;
   font-family: 'Manrope', sans-serif;
 }
+
+// ─── Angular Material Dialog: сброс стилей Material ───────────────────────────
+
+.mat-mdc-dialog-container .mdc-dialog__surface {
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+}
+
+.mat-mdc-dialog-container {
+  --mdc-dialog-container-color: transparent;
+  --mat-dialog-container-max-width: 100vw;
+}
+
+// ─── Пресет: center ────────────────────────────────────────────────────────────
+
+.modal-panel--center .mdc-dialog__surface {
+  background: #ffffff !important;
+  border-radius: 20px !important;
+  overflow: hidden;
+}
+
+// ─── Пресет: bottom-sheet ──────────────────────────────────────────────────────
+
+.modal-panel--bottom-sheet {
+  .mat-mdc-dialog-container {
+    padding: 0;
+  }
+
+  .mdc-dialog__surface {
+    background: #ffffff !important;
+    border-radius: 24px 24px 0 0 !important;
+    overflow: hidden;
+  }
+}

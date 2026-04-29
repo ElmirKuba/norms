@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import type { OnDestroy, OnInit, WritableSignal } from '@angular/core';
-import { NavigationEnd, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { Router } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 import type { Subscription } from 'rxjs';
 import { type NavItem, type NavLink } from '../../types/main.types';

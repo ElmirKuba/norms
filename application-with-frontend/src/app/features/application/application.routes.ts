@@ -5,7 +5,6 @@ import type { AuthShellComponent } from './auth/components/auth-shell/auth-shell
 import type { InviteCodeApplicationComponent } from './auth/components/invite-code/invite-code.component';
 import type { CreateAccountApplicationComponent } from './auth/components/create-account/create-account.component';
 import type { LoginApplicationComponent } from './auth/components/login/login.component';
-import type { UinPendingApplicationComponent } from './uin/components/uin-pending/uin-pending.component';
 import type { UinAssignedApplicationComponent } from './uin/components/uin-assigned/uin-assigned.component';
 
 /** Основной массив маршрутизации application-составляющей */
@@ -62,17 +61,10 @@ export const APPLICATION_ROUTES: Routes = [
     ],
   },
 
-  // UIN экраны
+  // UIN экраны (uin/pending — модалка, открывается из create-account через UinModalService)
   {
     path: 'uin',
     children: [
-      {
-        path: 'pending',
-        loadComponent: async (): Promise<typeof UinPendingApplicationComponent> => {
-          const m = await import('./uin/components/uin-pending/uin-pending.component');
-          return m.UinPendingApplicationComponent;
-        },
-      },
       {
         path: 'assigned',
         loadComponent: async (): Promise<typeof UinAssignedApplicationComponent> => {
