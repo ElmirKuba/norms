@@ -1,0 +1,31 @@
+<div class="uin-assigned">
+  <div class="uin-assigned__body">
+    <div class="uin-assigned__icon">
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+        <path d="M7 16L13 22L25 10" stroke="#582CFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <h1 class="uin-assigned__title">Ваш UIN присвоен!</h1>
+
+    <p class="uin-assigned__description">
+      Это ваш уникальный номер. Другие пользователи могут найти вас по нему.
+    </p>
+
+    <div class="uin-assigned__card">
+      <span class="uin-assigned__card-label">Ваш UIN</span>
+      <span class="uin-assigned__card-number">{{ _formattedUin }}</span>
+      <button class="uin-assigned__copy" (click)="onCopy()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="5" y="5" width="9" height="9" rx="2" stroke="#8E8E93" stroke-width="1.5"/>
+          <path d="M11 5V3C11 2.44772 10.5523 2 10 2H3C2.44772 2 2 2.44772 2 3V10C2 10.5523 2.44772 11 3 11H5" stroke="#8E8E93" stroke-width="1.5"/>
+        </svg>
+        Скопировать
+      </button>
+    </div>
+  </div>
+
+  <div class="uin-assigned__footer">
+    <shared-button (clicked)="onContinue()">Продолжить</shared-button>
+  </div>
+</div>

@@ -1,6 +1,10 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { type NavItem } from '../../main.types';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import type { OnDestroy, OnInit, WritableSignal } from '@angular/core';
+import { NavigationEnd, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import type { Router } from '@angular/router';
+import { filter } from 'rxjs';
+import type { Subscription } from 'rxjs';
+import { type NavItem, type NavLink } from '../../types/main.types';
 
 /** Основной компонент web-составляющей */
 @Component({
@@ -10,9 +14,12 @@ import { type NavItem } from '../../main.types';
   styleUrl: './main.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MainWebComponent {
-  /** Список пунктов навигации верхней панели */
-  public readonly navItemsFooter: NavItem[] = [
+export class MainWebComponent implements OnInit, OnDestroy {
+  /** Состояние мобильного меню-бургера */
+  public readonly menuOpen: WritableSignal<boolean> = signal(false);
+
+  /** Список пунктов навигации нижней панели */
+  public readonly navItemsFooter: NavLink[] = [
     {
       kind: 'link',
       label: 'Главная',
@@ -42,6 +49,28 @@ export class MainWebComponent {
       },
     },
   ];
+
+  /** Подписка на события роутера для закрытия мобильного меню */
+  private _routerSub: Subscription | null = null;
+
+  public constructor(private readonly _router: Router) {}
+
+  /** @inheritdoc */
+  public ngOnInit(): void {
+    this._routerSub = this._router.events
+      .pipe(filter((e: unknown): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe((): void => { this.menuOpen.set(false); });
+  }
+
+  /** @inheritdoc */
+  public ngOnDestroy(): void {
+    this._routerSub?.unsubscribe();
+  }
+
+  /** Переключает состояние мобильного меню */
+  public toggleMenu(): void {
+    this.menuOpen.update((v: boolean): boolean => !v);
+  }
 
   /** Переключает цветовую тему интерфейса */
   public toggleTheme(): void {

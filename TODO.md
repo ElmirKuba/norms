@@ -13,6 +13,38 @@
 ## In Progress
 _Nothing yet._
 
+## Implementation Order
+
+Зависимости между фичами определяют порядок реализации. Внутри группы — параллельно.
+
+```
+1. Backend bootstrap (NestJS init, docker-compose up, Drizzle подключение)
+   │
+2. Accounts + Auth + Sessions (таблицы accounts, sessions, JWT, login/register)
+   │
+3. UIN generation (таблица uins, BullMQ job, WSS uin_assigned)
+   │
+4. Invites (таблицы invites, referrals, feature flags)
+   │
+5. Recovery (таблица recovery_questions, Q/A CRUD, reset flow)
+   │
+6. Frontend: application shell (welcome/register/login screens, auth flow, platform guard)
+   │
+7. Chats + E2E (таблицы chats, pending_messages, ECDH key exchange, WSS messaging)
+   │
+8. Settings, search, profile, devices UI, push notifications
+```
+
+### Backend bootstrap
+
+**Как инициализировать `backend/`:**
+1. `cd backend && nest new . --package-manager npm --skip-git` (или вручную: `npm init`, установить `@nestjs/core`, `@nestjs/common`, `@nestjs/platform-express`).
+2. Установить зависимости: `drizzle-orm`, `postgres`, `drizzle-kit`, `argon2`, `jsonwebtoken`, `bullmq`, `ioredis`, `@nestjs/jwt`, `class-validator`, `class-transformer`.
+3. Структура по 4-слойной архитектуре из [`nest-backend-example/BACKEND_ARCHITECTURE.md`](nest-backend-example/BACKEND_ARCHITECTURE.md) **Часть 1** (НЕ Часть 2). PostgreSQL, не MySQL. argon2id, не bcrypt. Bearer header, не cookies. Exceptions, не Result-обёртки.
+4. `docker-compose up -d` для PostgreSQL + Redis (файл: [`docs/backend-stack.md`](docs/backend-stack.md) → Docker Compose).
+5. Drizzle config + первая миграция: таблицы `accounts` и `sessions`.
+6. Env vars по шаблону из [`docs/backend-stack.md`](docs/backend-stack.md) → Env.
+
 ## Up Next
 
 ### Лендинг + заглушка (веб) — оставшееся

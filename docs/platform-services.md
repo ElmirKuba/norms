@@ -47,6 +47,23 @@ contextBridge.exposeInMainWorld('electronAPI', {
 });
 ```
 
+### OperatingSystem (детекция ОС пользователя)
+
+Дополнительный enum для определения ОС пользователя **в браузере** (userAgent-based). Используется на веб-лендинге для подсветки кнопки скачивания релевантной платформы.
+
+```typescript
+export enum OperatingSystem {
+  WINDOWS = 'windows',
+  MACOS = 'macos',
+  IOS = 'ios',
+  ANDROID = 'android',
+  LINUX = 'linux',
+  UNKNOWN = 'unknown',
+}
+```
+
+Доступен через `PlatformDetectorService.os`. Не путать с `AppPlatform` (определяет среду выполнения: Capacitor/Electron/Web) — `OperatingSystem` определяет ОС конечного пользователя в любом контексте.
+
 **Маппинг для бэка:** при отправке на сервер (login, session creation) гранулярная платформа маппится в `'ios' | 'android' | 'electron'` — бэк не различает ОС десктопа.
 
 ## DI-паттерн: abstract class + useFactory
@@ -125,10 +142,10 @@ Angular **загружается полностью** в браузере, но 
 
 ## Структура папок
 
-Группировка по фиче (один сервис — одна папка), не по платформе:
+Группировка по фиче (один сервис — одна папка), не по платформе. Все платформенные сервисы живут в `core/services/`:
 
 ```
-src/app/services/
+src/app/core/services/
   platform/
     platform.service.ts            ← PlatformDetectorService (providedIn: 'root')
   storage/

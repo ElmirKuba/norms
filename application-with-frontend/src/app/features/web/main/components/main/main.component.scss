@@ -6,13 +6,26 @@
   .web-header {
     background-color: #ffffff;
     border: 1px solid #f0f0f0;
-    padding-left: 80px;
-    padding-right: 80px;
-    padding-top: 20px;
-    padding-bottom: 20px;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 16px;
+    padding-bottom: 16px;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    align-items: center;
+
+    @media (min-width: 640px) {
+      padding-left: 40px;
+      padding-right: 40px;
+      padding-top: 20px;
+      padding-bottom: 20px;
+    }
+
+    @media (min-width: 1024px) {
+      padding-left: 80px;
+      padding-right: 80px;
+    }
 
     &__project {
       display: flex;
@@ -45,10 +58,15 @@
       gap: 32px;
 
       a {
+        display: none;
         color: #8e8e93;
         text-decoration: none;
         border-bottom: 1px solid #fff;
         transition: border-color 0.3s ease;
+
+        @media (min-width: 640px) {
+          display: inline;
+        }
 
         &:hover {
           border-bottom: 1px solid #1a1a1a;
@@ -60,7 +78,7 @@
         }
       }
 
-      button {
+      button.web-header__nav-theme {
         border: none;
         border-bottom: 1px solid #fff;
         background-color: inherit;
@@ -76,6 +94,79 @@
         }
       }
     }
+
+    &__burger {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      justify-content: center;
+      align-items: center;
+      width: 32px;
+      height: 32px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      flex-shrink: 0;
+
+      @media (min-width: 640px) {
+        display: none;
+      }
+
+      span {
+        display: block;
+        width: 22px;
+        height: 2px;
+        background-color: #1a1a1a;
+        border-radius: 2px;
+        transition:
+          transform 0.25s ease,
+          opacity 0.25s ease;
+      }
+
+      &--open {
+        span:nth-child(1) {
+          transform: translateY(7px) rotate(45deg);
+        }
+
+        span:nth-child(2) {
+          opacity: 0;
+        }
+
+        span:nth-child(3) {
+          transform: translateY(-7px) rotate(-45deg);
+        }
+      }
+    }
+  }
+
+  .web-mobile-nav {
+    display: flex;
+    flex-direction: column;
+    background-color: #ffffff;
+    border-bottom: 1px solid #f0f0f0;
+    padding: 4px 16px 12px;
+
+    @media (min-width: 640px) {
+      display: none;
+    }
+
+    a {
+      color: #1a1a1a;
+      text-decoration: none;
+      font-size: 17px;
+      font-weight: 400;
+      padding: 14px 0;
+      border-bottom: 1px solid #f0f0f0;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &.active {
+        font-weight: 600;
+      }
+    }
   }
 
   .web-main {
@@ -87,13 +178,29 @@
   .web-footer {
     background-color: #ffffff;
     border: 1px solid #f0f0f0;
-    padding-left: 80px;
-    padding-right: 80px;
-    padding-top: 20px;
-    padding-bottom: 20px;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 16px;
+    padding-bottom: 16px;
     display: flex;
-    flex-direction: row;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+
+    @media (min-width: 640px) {
+      padding-left: 40px;
+      padding-right: 40px;
+      padding-top: 20px;
+      padding-bottom: 20px;
+      flex-direction: row;
+      justify-content: space-between;
+      gap: 0;
+    }
+
+    @media (min-width: 1024px) {
+      padding-left: 80px;
+      padding-right: 80px;
+    }
 
     &__copyrigth {
       font-size: 14px;
@@ -104,9 +211,14 @@
 
     &__nav {
       display: flex;
-      flex-direction: row;
+      flex-direction: column;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
+
+      @media (min-width: 640px) {
+        flex-direction: row;
+        gap: 6px;
+      }
 
       a {
         color: #8e8e93;
@@ -121,6 +233,14 @@
         &.active {
           border-bottom-color: #1a1a1a;
           font-weight: 500;
+        }
+      }
+
+      &-interpoint {
+        display: none;
+
+        @media (min-width: 640px) {
+          display: inline;
         }
       }
     }

@@ -1,0 +1,19 @@
+<div class="create-account">
+  <div class="create-account__header">
+    <h1 class="create-account__title">Создание аккаунта</h1>
+    <p class="create-account__description">Придумайте надёжный пароль для вашего аккаунта</p>
+  </div>
+
+  <div class="create-account__form">
+    <shared-input
+      type="password"
+      placeholder="Пароль"
+      [value]="_password()"
+      (valueChange)="_password.set($event)"
+    />
+
+    <shared-button [disabled]="!_isValid" (clicked)="onSubmit()">
+      Создать аккаунт
+    </shared-button>
+  </div>
+</div>

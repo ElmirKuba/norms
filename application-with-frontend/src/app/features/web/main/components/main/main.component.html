@@ -14,9 +14,7 @@
           <a
             [routerLink]="item.path"
             routerLinkActive="active"
-            [routerLinkActiveOptions]="{
-              exact: true,
-            }"
+            [routerLinkActiveOptions]="{ exact: true }"
             >{{ item.label }}</a
           >
         } @else if (item.kind === 'button') {
@@ -25,8 +23,32 @@
           </button>
         }
       }
+
+      <button
+        class="web-header__burger"
+        [class.web-header__burger--open]="menuOpen()"
+        (click)="toggleMenu()"
+        aria-label="Меню"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
     </nav>
   </header>
+
+  @if (menuOpen()) {
+    <nav class="web-mobile-nav">
+      @for (item of navItemsFooter; track $index) {
+        <a
+          [routerLink]="item.path"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          >{{ item.label }}</a
+        >
+      }
+    </nav>
+  }
 
   <main class="web-main">
     <router-outlet />
@@ -37,9 +59,7 @@
 
     <nav class="web-footer__nav">
       @for (item of navItemsFooter; track $index) {
-        @if (item.kind === 'link') {
-          <a [routerLink]="item.path" routerLinkActive="active">{{ item.label }}</a>
-        }
+        <a [routerLink]="item.path" routerLinkActive="active">{{ item.label }}</a>
         @if ($index !== navItemsFooter.length - 1) {
           <span class="web-footer__nav-interpoint">&middot;</span>
         }

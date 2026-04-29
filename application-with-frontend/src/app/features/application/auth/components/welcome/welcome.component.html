@@ -1,0 +1,20 @@
+<div class="welcome">
+  <header class="welcome__header">
+    <button class="welcome__theme-btn" (click)="toggleTheme()" aria-label="Переключить тему">
+      <img src="./../../../../../../assets/images/buttons/theme-toggle.svg" alt="Тема" />
+    </button>
+  </header>
+
+  <div class="welcome__hero">
+    <div class="welcome__logo-wrap">
+      <img class="welcome__logo" src="./../../../../../../assets/images/icons/logo.icon.png" alt="Нормисы" />
+    </div>
+    <h1 class="welcome__title">нормисы</h1>
+    <p class="welcome__subtitle">Пространство для своих</p>
+  </div>
+
+  <div class="welcome__actions">
+    <shared-button variant="primary" (clicked)="onRegister()">Зарегистрироваться</shared-button>
+    <shared-button variant="secondary" (clicked)="onLogin()">Войти</shared-button>
+  </div>
+</div>

@@ -1,0 +1,29 @@
+<div class="login">
+  <div class="login__header">
+    <h1 class="login__title">Вход</h1>
+    <p class="login__description">Войдите в свой аккаунт</p>
+  </div>
+
+  <div class="login__form">
+    <shared-input
+      placeholder="Логин (username или uin)"
+      [value]="_login()"
+      (valueChange)="_login.set($event)"
+    />
+
+    <shared-input
+      type="password"
+      placeholder="Пароль"
+      [value]="_password()"
+      (valueChange)="_password.set($event)"
+    />
+
+    <div class="login__forgot">
+      <button class="login__forgot-btn" (click)="onForgotPassword()">Забыли пароль?</button>
+    </div>
+
+    <shared-button [disabled]="!_isValid" (clicked)="onSubmit()">
+      Войти
+    </shared-button>
+  </div>
+</div>

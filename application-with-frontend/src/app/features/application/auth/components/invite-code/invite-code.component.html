@@ -1,0 +1,18 @@
+<div class="invite-code">
+  <div class="invite-code__header">
+    <h1 class="invite-code__title">Код приглашения</h1>
+    <p class="invite-code__description">Введите 10-значный код приглашения для доступа к платформе</p>
+  </div>
+
+  <div class="invite-code__form">
+    <shared-input
+      placeholder="XXXX-XXXX-XX"
+      [value]="_formattedCode"
+      (valueChange)="onInput($event)"
+    />
+
+    <shared-button [disabled]="!_isValid" (clicked)="onSubmit()">
+      Проверить код
+    </shared-button>
+  </div>
+</div>

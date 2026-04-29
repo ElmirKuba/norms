@@ -124,7 +124,7 @@ Request:
 ```
 
 - `invite_code` обязателен, если `feature-flags.free_registration === false`.
-- `password` — plain-text, hash на сервере argon2id (см. [`recovery.md`](recovery.md#хеширование)).
+- `password` — plain-text, минимум 8 символов, hash на сервере argon2id (см. [`identity.md`](identity.md#пароль), [`recovery.md`](recovery.md#хеширование)).
 
 Response 201:
 ```json

@@ -1,0 +1,17 @@
+<div class="auth-shell">
+  <header class="auth-shell__header">
+    <button class="auth-shell__back" (click)="goBack()" aria-label="Назад">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M15 19L8 12L15 5" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
+    <button class="auth-shell__theme" (click)="toggleTheme()" aria-label="Переключить тему">
+      <img src="./../../../../../../assets/images/buttons/theme-toggle.svg" alt="Тема" />
+    </button>
+  </header>
+
+  <div class="auth-shell__content">
+    <router-outlet />
+  </div>
+</div>

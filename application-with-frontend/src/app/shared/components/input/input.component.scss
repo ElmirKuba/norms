@@ -1,0 +1,26 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.input {
+  width: 100%;
+  box-sizing: border-box;
+  background: #f5f5f7;
+  border: 1.5px solid transparent;
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 16px;
+  font-family: inherit;
+  color: #1a1a1a;
+  outline: none;
+  transition: border-color 0.2s ease;
+
+  &::placeholder {
+    color: #8e8e93;
+  }
+
+  &:focus {
+    border-color: #582cff;
+  }
+}

@@ -6,7 +6,7 @@
 
 | Слой | Выбор | Заметки |
 |---|---|---|
-| Фреймворк | **NestJS** | TypeScript, модульная архитектура, DI, decorator-based. Есть рабочий референс: [`nest-backend-example/`](../nest-backend-example/) |
+| Фреймворк | **NestJS** | TypeScript, модульная архитектура, DI, decorator-based. Архитектурный референс: [`nest-backend-example/`](../nest-backend-example/) (⚠ MySQL, bcrypt, cookies — **не копировать**, см. предупреждения в корневом `CLAUDE.md`) |
 | БД | **PostgreSQL 16** | LISTEN/NOTIFY, JSONB, `pg_trgm` для поиска по `username`, партиционирование `pending_messages` на будущее |
 | ORM | **Drizzle** (`drizzle-orm/postgres-js` + `drizzle-kit`) | Лёгкий, миграции в TS, без магии |
 | Очередь задач | **BullMQ + Redis** | Генерация UIN, возможные будущие job'ы (cleanup просроченных blob'ов, push-sender) |
@@ -47,6 +47,27 @@ SESSION_STORE=redis     # prod, частые обновления
 ```
 
 **Без dual-write.** Единая точка правды. Если когда-нибудь понадобится cache-aside (PG truth + Redis cache) — добавим третью реализацию `HybridSessionStore`.
+
+## Архитектура бэкенда (4 слоя)
+
+Используется рекомендуемая архитектура из Части 1 [`BACKEND_ARCHITECTURE.md`](../nest-backend-example/BACKEND_ARCHITECTURE.md):
+
+```
+backend/src/
+├── presentation/         Контроллеры, DTO, gateway, ExceptionFilter
+├── application/          Use-case оркестраторы (один класс = один use-case)
+├── domain/               Бизнес-логика, сервисы, порты (abstract class), entities, errors
+├── persistence/          Drizzle-репозитории, schemas, migrations
+├── common/               Guards, декораторы, pipes, shared DTO
+├── config/               database.config, jwt.config, redis.config
+└── app.module.ts
+```
+
+**Ключевые паттерны:**
+- **Порты** — abstract class в `domain/ports/`, реализация в `persistence/`. NestJS DI связывает через `provide/useClass`.
+- **Errors** — доменные ошибки наследуют NestJS HTTP-исключения (`NotFoundException`, `UnauthorizedException`). Глобальный `ExceptionFilter` формирует ответ.
+- **DTO** — `class-validator` для входных данных в `common/dto/input/`. Выходные DTO в `common/dto/output/`.
+- **Modules** — по слою: `PersistenceModule`, `DomainModule`, `ApplicationModule`, `PresentationModule`, `CommonModule`.
 
 ## Структура репозитория
 

@@ -1,0 +1,57 @@
+:host {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.login {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 24px 40px;
+  gap: 32px;
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #1a1a1a;
+    letter-spacing: -0.5px;
+    margin: 0;
+  }
+
+  &__description {
+    font-size: 15px;
+    font-weight: 400;
+    color: #8e8e93;
+    margin: 0;
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &__forgot {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: -4px;
+  }
+
+  &__forgot-btn {
+    background: none;
+    border: none;
+    color: #582cff;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 0;
+  }
+}

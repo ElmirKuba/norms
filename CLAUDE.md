@@ -28,10 +28,18 @@ See [TODO.md](TODO.md) for what's done, in progress, and planned.
   - `push-notifications.md` — APNs/FCM, payload только `chat_id`, локальная расшифровка
   - `recovery.md` — восстановление пароля через секретные Q/A, что recovery восстанавливает (аккаунт, не чаты)
   - `devices-and-chats.md` — мульти-девайс UX, осиротевшие собеседники на новом устройстве, onboarding-модалка
+  - `frontend-architecture.md` — структура папок фронта, конвенции фич, адаптив, платформенный DI, CSS
 - `design/` — дизайн-файлы (Pencil .pen). Инструкции: [`design/CLAUDE.md`](design/CLAUDE.md).
-- `nest-backend-example/` — справочный NestJS бэкенд (форк kuba-game, почищен). Не для продакшена — только как архитектурный референс, удалить после миграции нужных паттернов.
-  - [`nest-backend-example/BACKEND_ARCHITECTURE.md`](nest-backend-example/BACKEND_ARCHITECTURE.md) — описание слоёв (рекомендуемая + текущая).
+- `nest-backend-example/` — справочный NestJS бэкенд (форк kuba-game, почищен). **Только архитектурный референс**, удалить после миграции паттернов.
+  - [`nest-backend-example/BACKEND_ARCHITECTURE.md`](nest-backend-example/BACKEND_ARCHITECTURE.md) — описание слоёв (рекомендуемая 4-слойная + текущая 5-слойная).
   - [`nest-backend-example/BUGS.md`](nest-backend-example/BUGS.md) — известные баги.
+  - **⚠ Критические отличия от реального проекта (НЕ копировать вслепую):**
+    - Пример использует **MySQL** → проект использует **PostgreSQL 16** (`drizzle-orm/postgres-js`, не `drizzle-orm/mysql2`).
+    - Пример использует **bcrypt** → проект использует **argon2id** (см. `docs/recovery.md`).
+    - Пример хранит токены в **cookies** → проект использует **`Authorization: Bearer`** header + WSS-ротацию (см. `docs/auth-devices.md`).
+    - Пример оборачивает всё в **Result<T>** → проект использует **NestJS exceptions** (рекомендуемая архитектура из Части 1 `BACKEND_ARCHITECTURE.md`).
+    - Пример использует **`/api/`** prefix → проект использует **`/api/v1/`** (см. `docs/api-contracts.md`).
+  - **Что брать из примера:** 4-слойную архитектуру (Presentation → Application → Domain → Persistence), паттерн портов (abstract class в Domain, реализация в Persistence), структуру модулей, нейминг файлов. **Не брать:** MySQL-типы, bcrypt, cookies, Result-обёртки, 5-слойную архитектуру.
 
 ## Tech Stack
 
@@ -52,18 +60,49 @@ See [TODO.md](TODO.md) for what's done, in progress, and planned.
 
 ## Key Commands
 
-_To be added once project is initialized._
+Все команды запускаются из `application-with-frontend/`.
+
+```bash
+# Разработка (браузер)
+npm start                # ng serve → http://localhost:4200
+
+# Линтинг
+npm run lint             # eslint src (strict-type-checked + angular-eslint + jsdoc)
+
+# Сборка
+npm run build            # ng build (production)
+
+# Electron (десктоп)
+npm run dev:electron     # dev-режим с hot reload Angular
+npm run build:electron   # production сборка
+
+# Capacitor (iOS)
+npm run dev:ios          # сборка + sync + открыть Xcode
+npm run cap:sync         # ng build + cap sync
+
+# Тесты
+npm run test             # ng test
+```
+
+Бэкенд (`backend/`) — ещё не инициализирован.
 
 ## Code Conventions
 
-_To be defined._
+- **Standalone components** — без NgModule, провайдеры в `app.config.ts`.
+- **ChangeDetectionStrategy.OnPush** — для всех компонентов.
+- **BEM** в CSS (`.block__element--modifier`).
+- **Strict ESLint** — `typescript-eslint strict-type-checked` + `angular-eslint` + `jsdoc/require-jsdoc` (JSDoc для всех публичных API).
+- **TypeScript strict** — `strict: true` + `noPropertyAccessFromIndexSignature`, `noUncheckedIndexedAccess` и другие extra-strict опции.
+- **Private fields** — `_prefix` для приватных свойств/методов.
+- **Camelcase** в TS, **snake_case** в JSON API.
+- **Подробнее об архитектуре фронта:** [`docs/frontend-architecture.md`](docs/frontend-architecture.md).
 
 ## Important Decisions
 
 - **Single `package.json` для фронта** (внутри `application-with-frontend/`): Angular + Capacitor + Electron. Платформенный DI-слой на рантайме определяет окружение. Scripts разделяют таргеты сборки. У бэка свой `package.json` в `backend/`.
 - **Backend stack:** NestJS + PostgreSQL 16 + Drizzle ORM + Redis (BullMQ для очереди UIN, опциональный SessionStore через env). Подробнее: [`docs/backend-stack.md`](docs/backend-stack.md).
 - **Документация в `docs/`**, а не `.claude/docs/` — последняя зарезервирована под конфиги агента.
-- **Платформенный слой:** abstract class + `useFactory` для каждого сервиса. Standalone-компоненты Angular, провайдеры в `app.config.ts`. Браузер грузит Angular полностью, но видит только лендинг + заглушку — никакой регистрации, логина, мессенджера или настроек в вебе. Структура папок — по фиче (`services/storage/`, `services/notifications/`). Tree-shaking платформенных impl не делается — принят trade-off ради single-bundle. Подробнее: [`docs/platform-services.md`](docs/platform-services.md).
+- **Платформенный слой:** abstract class + `useFactory` для каждого сервиса. Standalone-компоненты Angular, провайдеры в `app.config.ts`. Браузер грузит Angular полностью, но видит только лендинг + заглушку — никакой регистрации, логина, мессенджера или настроек в вебе. Структура папок — по фиче (`core/services/storage/`, `core/services/notifications/`). Tree-shaking платформенных impl не делается — принят trade-off ради single-bundle. Подробнее: [`docs/platform-services.md`](docs/platform-services.md).
 - **Универсальный ID для всех таблиц БД:** `{uuid-v7}_{unixtime-ms-13}`. Подробнее: [`docs/database.md`](docs/database.md).
 - **Идентификация пользователей:** login = UIN (числовой, 4–10 цифр, генерируется асинхронно после регистрации). Username — отдельная опциональная фича "для своих", выдаётся только админом. Раздельные таблицы `accounts` и `uins`, "красивые" UIN резервируются заранее. Подробнее: [`docs/identity.md`](docs/identity.md).
 - **Закрытая регистрация по инвайтам:** 10-значный код, одноразовый, с TTL. У каждого аккаунта `invites_remaining` (старт = 3). Отзыв кода возвращает +1, истечение TTL — нет. Feature flags приходят с бэка по API. Подробнее: [`docs/invites.md`](docs/invites.md).
