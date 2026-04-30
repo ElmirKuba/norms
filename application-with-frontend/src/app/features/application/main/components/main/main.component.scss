@@ -9,29 +9,64 @@
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 
   &__header {
     background: #ffffff;
-    padding: 16px 24px;
+    padding: 14px 20px 12px;
     border-bottom: 1px solid #f0f0f0;
+    flex-shrink: 0;
   }
 
-  &__title {
+  &__header-title {
     font-size: 22px;
     font-weight: 700;
     color: #1a1a1a;
     margin: 0;
+    letter-spacing: -0.4px;
   }
 
-  &__empty {
+  &__content {
     flex: 1 1 auto;
+    overflow-y: auto;
     display: flex;
+    flex-direction: column;
+  }
+
+  // ─── Tab bar ────────────────────────────────────────────────────────────────
+
+  &__tabbar {
+    display: flex;
+    background: #ffffff;
+    border-top: 1px solid #f0f0f0;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    flex-shrink: 0;
+  }
+
+  &__tab {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 3px;
+    padding: 8px 4px 10px;
+    color: #8e8e93;
+    text-decoration: none;
+    transition: color 0.15s ease;
+
+    &--active {
+      color: #582cff;
+    }
   }
 
-  &__empty-text {
-    font-size: 15px;
-    color: #8e8e93;
+  &__tab-icon {
+    flex-shrink: 0;
+  }
+
+  &__tab-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1px;
   }
 }

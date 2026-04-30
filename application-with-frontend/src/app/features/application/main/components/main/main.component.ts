@@ -1,17 +1,18 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Router } from '@angular/router';
 import { UinModalService } from '../../../uin/services/uin-modal.service';
 
-/** Основной экран приложения (мессенджер): список чатов, нав-бар */
+/** Основной shell приложения: таббар + router-outlet для дочерних экранов */
 @Component({
-  imports: [],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive],
   selector: 'application-main',
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MainApplicationComponent implements OnInit {
-  /** Роутер для чтения state навигации и дальнейших переходов */
+  /** Роутер для чтения state навигации */
   private readonly _router: Router = inject(Router);
 
   /** Сервис UIN-модалок */

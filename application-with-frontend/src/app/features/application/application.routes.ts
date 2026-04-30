@@ -6,6 +6,10 @@ import type { InviteCodeApplicationComponent } from './auth/components/invite-co
 import type { CreateAccountApplicationComponent } from './auth/components/create-account/create-account.component';
 import type { LoginApplicationComponent } from './auth/components/login/login.component';
 import type { UinAssignedApplicationComponent } from './uin/components/uin-assigned/uin-assigned.component';
+import type { ChatsApplicationComponent } from './chats/components/chats/chats.component';
+import type { SearchApplicationComponent } from './search/components/search/search.component';
+import type { SettingsApplicationComponent } from './settings/components/settings/settings.component';
+import type { ProfileApplicationComponent } from './profile/components/profile/profile.component';
 
 /** Основной массив маршрутизации application-составляющей */
 export const APPLICATION_ROUTES: Routes = [
@@ -75,13 +79,48 @@ export const APPLICATION_ROUTES: Routes = [
     ],
   },
 
-  // Основное приложение (мессенджер)
+  // Основное приложение (мессенджер): shell с таббаром
   {
     path: 'main',
     loadComponent: async (): Promise<typeof MainApplicationComponent> => {
       const m = await import('./main/components/main/main.component');
       return m.MainApplicationComponent;
     },
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'chats',
+      },
+      {
+        path: 'chats',
+        loadComponent: async (): Promise<typeof ChatsApplicationComponent> => {
+          const m = await import('./chats/components/chats/chats.component');
+          return m.ChatsApplicationComponent;
+        },
+      },
+      {
+        path: 'search',
+        loadComponent: async (): Promise<typeof SearchApplicationComponent> => {
+          const m = await import('./search/components/search/search.component');
+          return m.SearchApplicationComponent;
+        },
+      },
+      {
+        path: 'settings',
+        loadComponent: async (): Promise<typeof SettingsApplicationComponent> => {
+          const m = await import('./settings/components/settings/settings.component');
+          return m.SettingsApplicationComponent;
+        },
+      },
+      {
+        path: 'profile',
+        loadComponent: async (): Promise<typeof ProfileApplicationComponent> => {
+          const m = await import('./profile/components/profile/profile.component');
+          return m.ProfileApplicationComponent;
+        },
+      },
+    ],
   },
 
   {

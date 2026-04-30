@@ -1,9 +1,63 @@
 <div class="app-main">
   <header class="app-main__header">
-    <h1 class="app-main__title">Чаты</h1>
+    <h1 class="app-main__header-title">Чаты</h1>
   </header>
 
-  <div class="app-main__empty">
-    <p class="app-main__empty-text">Пока нет чатов</p>
-  </div>
+  <main class="app-main__content">
+    <router-outlet />
+  </main>
+
+  <nav class="app-main__tabbar">
+    <a
+      class="app-main__tab"
+      routerLink="chats"
+      routerLinkActive="app-main__tab--active"
+      aria-label="Чаты"
+    >
+      <svg class="app-main__tab-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M4 18L2 22L6 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4H4C2.9 4 2 4.9 2 6V18H4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M7 10H17M7 14H13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      <span class="app-main__tab-label">Чаты</span>
+    </a>
+
+    <a
+      class="app-main__tab"
+      routerLink="search"
+      routerLinkActive="app-main__tab--active"
+      aria-label="Поиск"
+    >
+      <svg class="app-main__tab-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M16.5 16.5L21 21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      <span class="app-main__tab-label">Поиск</span>
+    </a>
+
+    <a
+      class="app-main__tab"
+      routerLink="settings"
+      routerLinkActive="app-main__tab--active"
+      aria-label="Настройки"
+    >
+      <svg class="app-main__tab-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      <span class="app-main__tab-label">Настройки</span>
+    </a>
+
+    <a
+      class="app-main__tab"
+      routerLink="profile"
+      routerLinkActive="app-main__tab--active"
+      aria-label="Профиль"
+    >
+      <svg class="app-main__tab-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M4 20C4 17 7.6 14 12 14C16.4 14 20 17 20 20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      <span class="app-main__tab-label">Профиль</span>
+    </a>
+  </nav>
 </div>

@@ -1,0 +1,39 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+}
+
+.search {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+
+  &__bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #ffffff;
+    margin: 12px 16px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1.5px solid #f0f0f0;
+  }
+
+  &__bar-placeholder {
+    font-size: 15px;
+    color: #c7c7cc;
+  }
+
+  &__empty {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__empty-text {
+    font-size: 14px;
+    color: #8e8e93;
+  }
+}

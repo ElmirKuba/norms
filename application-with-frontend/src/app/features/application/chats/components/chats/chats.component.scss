@@ -1,0 +1,38 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+}
+
+.chats {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+
+  &__empty {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 40px 24px;
+  }
+
+  &__empty-icon {
+    margin-bottom: 8px;
+  }
+
+  &__empty-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0;
+  }
+
+  &__empty-text {
+    font-size: 14px;
+    color: #8e8e93;
+    margin: 0;
+  }
+}
