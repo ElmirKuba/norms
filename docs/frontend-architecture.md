@@ -105,15 +105,45 @@ src/app/
 ```
 application/
   application.routes.ts
+  auth/          — auth-флоу (welcome, invite-code, create-account, login)
+  uin/           — UIN-флоу (assigned; pending — модалка, не роут)
   main/          — shell: таббар на мобилке, сайдбар на десктопе
   chats/         — список чатов + экран чата
+  search/        — поиск по UIN / username
   settings/      — настройки аккаунта
   profile/       — профиль пользователя
-  ... и т.д.
 ```
 
 **Адаптив:** mobile-first. На мобилке (Capacitor) — таббар снизу.  
 На десктопе (Electron, широкий экран) — сайдбар слева, контент справа.
+
+### Актуальные роуты `application/`
+
+| Роут | Компонент | Статус |
+|---|---|---|
+| `/application/welcome` | `WelcomeApplicationComponent` | ✅ готов |
+| `/application/auth/invite-code` | `InviteCodeApplicationComponent` | ✅ готов |
+| `/application/auth/create-account` | `CreateAccountApplicationComponent` | ✅ готов |
+| `/application/auth/login` | `LoginApplicationComponent` | ✅ готов |
+| `/application/uin/assigned` | `UinAssignedApplicationComponent` | ✅ готов |
+| `/application/main` | `MainApplicationComponent` (shell + таббар) | ✅ готов |
+| `/application/main/chats` | `ChatsApplicationComponent` | 🔲 заглушка |
+| `/application/main/search` | `SearchApplicationComponent` | 🔲 заглушка |
+| `/application/main/settings` | `SettingsApplicationComponent` | 🔲 заглушка |
+| `/application/main/profile` | `ProfileApplicationComponent` | 🔲 заглушка |
+
+**Модалки (не роуты):**
+
+| Триггер | Сервис | Статус |
+|---|---|---|
+| `create-account` → submit → `main` (`state.pendingUin`) | `UinModalService.openUinPending()` | ✅ готов |
+
+**Не реализованные роуты (TODO):**
+
+| Роут | Описание |
+|---|---|
+| `/application/auth/recovery` | Восстановление пароля («Забыли пароль?») |
+| `/application/main/chats/:id` | Экран отдельного чата |
 
 ---
 
