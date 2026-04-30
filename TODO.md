@@ -2,13 +2,41 @@
 
 ## Done
 
-### Лендинг (веб)
-- `MainWebComponent` — layout-обёртка с header/footer и `<router-outlet>` для web-маршрутов
-- `WelcomeWebComponent` — главная страница (`/web/welcome`) по макету: badge, promo, кнопки скачивания с детектом ОС
-- `AboutWebComponent` — страница «О проекте» (`/web/about`) по макету: badge, promo, 3 feature-карточки
-- `SecurityWebComponent` — страница «Безопасность» (`/web/security`) по макету: badge, promo, 3 feature-карточки (первая тёмная)
-- SVG-иконки для badge (info, lock) и feature-карточек About и Security (`assets/images/icons/features/*.svg`)
+### Инфраструктура фронта
 - Строгий ESLint (typescript-eslint strict-type-checked + jsdoc + angular-eslint) + tsconfig extra-strict
+- `@angular/material` + `@angular/cdk` + `@angular/animations` установлены, `provideAnimations()` в `app.config.ts`
+- `docs/frontend-architecture.md` — архитектура фронта, конвенции папок, типы, сервисы
+
+### Лендинг (веб)
+- `MainWebComponent` — layout с header/footer, burger-меню (<640px), адаптив мобильный
+- `WelcomeWebComponent` — главная (`/web/welcome`): badge, promo, кнопки скачивания с детектом ОС
+- `AboutWebComponent` — «О проекте» (`/web/about`): badge, promo, 3 feature-карточки
+- `SecurityWebComponent` — «Безопасность» (`/web/security`): badge, promo, 3 feature-карточки
+- SVG-иконки для badge (info, lock) и feature-карточек About и Security
+
+### Shared компоненты
+- `ButtonSharedComponent` — primary / secondary, `ng-content`, `disabled`, `clicked`
+- `InputSharedComponent` — text/password, `[(value)]` two-way binding
+
+### Modal-система (`shared/modals/`)
+- `DialogModalComponent` — универсальная рамка (Способ A): иконка, заголовок, текст/компонент, кнопки
+- `ModalHeaderSharedComponent` — иконка (Preloader/Done/Error/Info/Warning) + title через `ng-content`
+- `ModalContentSharedComponent` — контентная область, поддержка `NgComponentOutlet` для встроенных компонентов
+- `ModalFooterSharedComponent` — кнопки с поддержкой vertical/reversed layout
+- `DialogModalData<T>` — типизированный generic-контракт конфигурации
+- `ModalHeaderIcon` enum, `MODAL_BOTTOM_SHEET_PARAMS`, `MODAL_CENTER_PARAMS`
+- Global styles в `styles.scss`: сброс Material MDC, панели `bottom-sheet` и `center`
+
+### Application экраны (auth/UIN флоу)
+- `WelcomeApplicationComponent` — стартовый экран: логотип, «Зарегистрироваться» / «Войти»
+- `AuthShellComponent` — shell для auth-экранов: header с кнопкой «назад» + `<router-outlet>`
+- `InviteCodeApplicationComponent` — ввод 10-значного кода, авто-форматирование XXXX-XXXX-XX
+- `CreateAccountApplicationComponent` — ввод пароля (мин. 8 символов), navigate(main, pendingUin)
+- `LoginApplicationComponent` — логин + пароль, «Забыли пароль?»
+- `UinAssignedApplicationComponent` — UIN-карточка, копирование, «Продолжить»
+- `UinModalService.openUinPending()` — bottom-sheet «Назначаем UIN...» над `application/main`
+- `MainApplicationComponent` — placeholder чатов; при `state.pendingUin` открывает UIN-модалку
+- `application.routes.ts` — lazy-loading всех экранов, роут `uin/pending` удалён (теперь модалка)
 
 ## In Progress
 _Nothing yet._

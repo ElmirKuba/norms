@@ -117,6 +117,110 @@ application/
 
 ---
 
+## Modal-система (`shared/modals/`)
+
+Движок: `@angular/material` (`MatDialog`). Material даёт overlay, backdrop, a11y, анимации — визуальный стиль полностью кастомный.
+
+### Структура
+
+```
+shared/modals/
+  types/
+    modal.types.ts       — DialogModalData<T>, ModalHeaderIcon
+  constants/
+    modal.constants.ts   — MODAL_BOTTOM_SHEET_PARAMS, MODAL_CENTER_PARAMS, размеры
+  components/
+    dialog-modal/        — универсальная рамка (Способ A, 80% случаев)
+    modal-header/        — иконка (SVG) + title через ng-content
+    modal-content/       — контентная область (текст или NgComponentOutlet)
+    modal-footer/        — кнопки, поддержка vertical / reversed
+```
+
+### Два способа открытия
+
+**Способ A — конфигурация через `DialogModalData`** (большинство случаев):
+
+```typescript
+this._dialog.open<DialogModalComponent, DialogModalData>(DialogModalComponent, {
+  ...MODAL_BOTTOM_SHEET_PARAMS,
+  data: {
+    icon: ModalHeaderIcon.Preloader,
+    title: 'Назначаем UIN...',
+    text: 'Это займёт несколько секунд.',
+    closeBtnText: 'Понятно',
+    closeCallback: () => { /* ... */ },
+  },
+});
+```
+
+**Способ B — самостоятельный компонент** (сложный layout, полноэкранные формы):
+
+```typescript
+this._dialog.open(MyFullScreenComponent, {
+  ...MODAL_BOTTOM_SHEET_PARAMS,
+  disableClose: true,
+  data: someData,
+});
+```
+
+### `DialogModalData<T>` — ключевые поля
+
+| Поле | Назначение |
+|---|---|
+| `icon` | `ModalHeaderIcon.Preloader/Done/Error/Info/Warning` |
+| `title` | заголовок |
+| `text` | текст или HTML |
+| `component` | встроенный компонент вместо текста (`NgComponentOutlet`) |
+| `componentData` | данные для компонента (generic T), через `@Input() public data` |
+| `isConfirmModal` | `true` → confirm + cancel, `false` → одна «Закрыть» |
+| `confirmCallback` / `confirmCallbackAsync` | sync = закрытие автоматически; async = ручное `ref.close()` |
+| `closeBtnText` / `closeCallback` | кнопка закрытия в не-confirm режиме |
+| `isFooterButtonsVertically` | кнопки столбиком |
+| `isButtonsOrderReversed` | confirm и cancel меняются местами |
+| `preventDialogClose` | блокирует Escape и клик по backdrop |
+
+### Доменные сервисы
+
+Каждый домен создаёт свой сервис, скрывающий конфигурацию за осмысленными методами:
+
+```typescript
+// features/application/uin/services/uin-modal.service.ts
+@Injectable({ providedIn: 'root' })
+export class UinModalService {
+  openUinPending(onAcknowledge: () => void): MatDialogRef<DialogModalComponent> { ... }
+}
+```
+
+### Пресеты
+
+```typescript
+MODAL_BOTTOM_SHEET_PARAMS  // width: 100%, position.bottom: 0, panelClass: bottom-sheet
+MODAL_CENTER_PARAMS        // width: 360px, maxWidth: calc(100vw - 32px), panelClass: center
+```
+
+### Глобальные стили
+
+В `styles.scss` переопределены Material MDC-стили для двух панелей:
+- `.modal-panel--bottom-sheet` — `border-radius: 24px 24px 0 0`
+- `.modal-panel--center` — `border-radius: 20px`
+
+### Пример: UIN Pending флоу
+
+```
+create-account.onSubmit()
+  → navigate('/application/main', state: { pendingUin: true })
+
+MainApplicationComponent.ngOnInit()
+  → lastSuccessfulNavigation()?.extras.state?.pendingUin
+  → UinModalService.openUinPending(callback)
+  → DialogModalComponent (bottom-sheet) поверх экрана чатов
+  → «Понятно» → callback → navigate('/application/uin/assigned')
+```
+
+В продакшне: вместо колбека «Понятно» → WSS-событие `uin_assigned` → `dialogRef.close()` → навигация.
+
+---
+
 ## Платформенный DI-слой
 
 Abstract class + `useFactory` в `app.config.ts` для каждого платформо-зависимого сервиса.  
