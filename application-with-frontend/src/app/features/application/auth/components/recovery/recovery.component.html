@@ -1,0 +1,122 @@
+@if (step() === 'uin') {
+  <div class="recovery">
+    <h1 class="recovery__title">Восстановление</h1>
+    <p class="recovery__subtitle">Введите ваш UIN</p>
+
+    <div class="recovery__field">
+      <input
+        class="recovery__input"
+        type="text"
+        inputmode="numeric"
+        placeholder="UIN"
+        [(ngModel)]="uin"
+        maxlength="10"
+        autocomplete="off"
+      />
+    </div>
+
+    <button
+      class="recovery__btn"
+      type="button"
+      [disabled]="!isStep1Valid()"
+      (click)="submitUin()"
+    >
+      Продолжить
+    </button>
+  </div>
+}
+
+@if (step() === 'answer') {
+  <div class="recovery">
+    <h1 class="recovery__title">Секретный вопрос</h1>
+    <p class="recovery__subtitle">Выберите вопрос и введите ответ</p>
+
+    <div class="recovery__field">
+      <button
+        class="recovery__question-select"
+        type="button"
+        (click)="showQuestions.set(!showQuestions())"
+      >
+        <span [class.recovery__question-select-placeholder]="!selectedQuestion()">
+          {{ selectedQuestion()?.text ?? 'Выберите вопрос' }}
+        </span>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      @if (showQuestions()) {
+        <div class="recovery__question-list">
+          @for (q of presetQuestions; track q.id) {
+            <button
+              class="recovery__question-item"
+              type="button"
+              (click)="selectQuestion(q)"
+            >
+              {{ q.text }}
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="recovery__field">
+      <input
+        class="recovery__input"
+        type="text"
+        placeholder="Ответ"
+        [(ngModel)]="answer"
+        autocomplete="off"
+      />
+    </div>
+
+    <button
+      class="recovery__btn"
+      type="button"
+      [disabled]="!isStep2Valid()"
+      (click)="submitAnswer()"
+    >
+      Продолжить
+    </button>
+  </div>
+}
+
+@if (step() === 'password') {
+  <div class="recovery">
+    <h1 class="recovery__title">Новый пароль</h1>
+    <p class="recovery__subtitle">Придумайте новый пароль</p>
+
+    <div class="recovery__field">
+      <input
+        class="recovery__input"
+        type="password"
+        placeholder="Новый пароль"
+        [(ngModel)]="newPassword"
+        autocomplete="new-password"
+      />
+    </div>
+
+    <div class="recovery__field">
+      <input
+        class="recovery__input"
+        type="password"
+        placeholder="Повторите пароль"
+        [(ngModel)]="confirmPassword"
+        autocomplete="new-password"
+      />
+    </div>
+
+    @if (confirmPassword && newPassword !== confirmPassword) {
+      <p class="recovery__error">Пароли не совпадают</p>
+    }
+
+    <button
+      class="recovery__btn"
+      type="button"
+      [disabled]="!isStep3Valid()"
+      (click)="submitPassword()"
+    >
+      Сохранить
+    </button>
+  </div>
+}

@@ -1,0 +1,43 @@
+@use '../settings-sub';
+
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.privacy {
+  &__info {
+    background: #f0edff;
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  &__info-text {
+    font-size: 14px;
+    color: #1a1a1a;
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  &__row-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__row-sub {
+    font-size: 12px;
+    color: #c7c7cc;
+  }
+
+  &__row-value {
+    font-size: 14px;
+    color: #8e8e93;
+    flex-shrink: 0;
+  }
+}

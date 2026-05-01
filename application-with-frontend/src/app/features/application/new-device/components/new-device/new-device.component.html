@@ -1,0 +1,41 @@
+<div class="new-device">
+  <div class="new-device__top">
+    <div class="new-device__icon">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+        <rect x="5" y="2" width="14" height="20" rx="2" stroke="#582cff" stroke-width="1.8"/>
+        <circle cx="12" cy="17" r="1" fill="#582cff"/>
+        <path d="M9 7H15M9 10H13" stroke="#582cff" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <h1 class="new-device__title">Это новое устройство</h1>
+    <p class="new-device__text">
+      Чаты с других твоих устройств сюда не переедут — это особенность сквозного шифрования.
+    </p>
+    <p class="new-device__text">
+      Раньше ты общался с {{ peers.length }} людьми. Можешь написать им снова с этого устройства.
+    </p>
+  </div>
+
+  <div class="new-device__list">
+    @for (peer of peers; track peer.id) {
+      <button class="new-device__peer" type="button" (click)="openProfile(peer)">
+        <div class="new-device__peer-avatar" [style.background]="peer.avatarColor">
+          <span class="new-device__peer-initials">{{ peer.initials }}</span>
+        </div>
+        <div class="new-device__peer-info">
+          <span class="new-device__peer-name">{{ peer.name }}</span>
+          <span class="new-device__peer-meta">UIN {{ peer.uin }} · {{ peer.lastChatAt }}</span>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M6 4L10 8L6 12" stroke="#C7C7CC" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    }
+  </div>
+
+  <div class="new-device__footer">
+    <button class="new-device__dismiss" type="button" (click)="dismiss()">
+      Понятно, не показывать
+    </button>
+  </div>
+</div>

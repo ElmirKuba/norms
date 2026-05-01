@@ -35,8 +35,44 @@
 - `LoginApplicationComponent` — логин + пароль, «Забыли пароль?»
 - `UinAssignedApplicationComponent` — UIN-карточка, копирование, «Продолжить»
 - `UinModalService.openUinPending()` — bottom-sheet «Назначаем UIN...» над `application/main`
-- `MainApplicationComponent` — placeholder чатов; при `state.pendingUin` открывает UIN-модалку
+- `MainApplicationComponent` — shell (таббар + router-outlet); при `state.pendingUin` открывает UIN-модалку
 - `application.routes.ts` — lazy-loading всех экранов, роут `uin/pending` удалён (теперь модалка)
+
+### Application экраны (чаты)
+- `ChatsApplicationComponent` — список чатов с моками: аватар, имя, последнее сообщение, время, badge непрочитанных
+- `ChatDetailApplicationComponent` — экран чата с моками: пузырьки (своё/чужое), статусы (sent/delivered/read), поле ввода + отправка; таббар виден
+- `ChatsStateService` — хранит `activeChatId` (signal); таб «Чаты» возвращает в открытый чат при переключении
+- Мок-ID чатов и сообщений в формате `{uuid-v7}_{unixtime-13ms}`
+
+### Application экраны (search / settings / profile)
+- `SearchApplicationComponent` — поле ввода, фильтрация моков по имени/UIN, кнопка «Написать»
+- `SettingsApplicationComponent` — секции с иконками, все пункты кликабельны
+- `ProfileApplicationComponent` — карточка с аватаром/инициалами, UIN, имя, username
+
+### Application экраны (auth recovery + settings sub-screens)
+- `RecoveryApplicationComponent` — 3 шага: UIN → выбор вопроса + ответ → новый пароль; кнопка «Забыли пароль?» в login подключена
+- `SettingsAccountComponent` — имя, UIN, username, заглушки смены имени/пароля/username; удалить аккаунт
+- `SettingsDevicesComponent` — список моков устройств, «текущее» badge, кнопка «Завершить» удаляет устройство из списка
+- `SettingsPrivacyComponent` — MVP-информация + будущие переключатели disabled
+- `SettingsRecoveryQuestionsComponent` — список Q&A с удалением, добавление через preset/свой вопрос, предупреждение об E2E (чекбокс)
+
+### Application экраны (onboarding / new-device / user-profile / invites)
+- `ChatOnboardingService` — модалка «Как работают чаты в Нормисах», показывается один раз за сессию при нажатии «Написать» в поиске или профиле
+- `NewDeviceApplicationComponent` (`/application/new-device`) — список orphan peers после recovery/переустановки, кнопка «Понятно»
+- `UserProfileApplicationComponent` (`/application/main/user/:accountId`) — профиль чужого пользователя, кнопка «Написать» с онбордингом
+- `SettingsInvitesComponent` (`/application/main/settings/invites`) — счётчик остатка, создание кода (мок), отзыв, копирование, список приглашённых, кто пригласил
+
+### Application экраны (chat statuses / create chat / change password / global events)
+- `ChatDetailApplicationComponent` — pending_key баннер, failed bubble (красный), кнопка «Повторить» (мок), pending_key пузырёк (затемнён + dashed круг)
+- `ChatsApplicationComponent` — иконка pending_key в превью списка чатов
+- `CreateChatModalComponent` + `CreateChatModalService` — модалка выбора устройства собеседника (Способ B), открывается после онбординга в UserProfile
+- `MockSearchUser.devices` — массив `MockUserDevice[]` (deviceId, label) для каждого пользователя
+- `SettingsChangePasswordComponent` (`/application/main/settings/change-password`) — форма (текущий/новый/повтор), show/hide пароля, мок-сабмит с spinner → success-экран; кнопка «Сменить пароль» в AccountSettings теперь кликабельна
+- `SettingsDevicesComponent` — подтверждение кика через `DialogModalComponent` (ModalHeaderIcon.Warning, isConfirmModal), inline-переименование устройства
+- `SettingsInvitesComponent` — модалка успеха после createCode() (ModalHeaderIcon.Done с кодом)
+- `SessionKickedService` (`main/services/`) — глобальный сервис, открывает bottom-sheet «Сессия завершена», после OK редиректит на `/application/welcome`; mock-триггер на экране Профиля
+- `MainApplicationComponent` — `passwordResetBanner` signal, желтый баннер «Пароль был сброшен через восстановление», закрывается крестиком; mock-триггер на экране Профиля
+- `ProfileApplicationComponent` — секция «Мок-события» с двумя кнопками для тестирования WSS событий
 
 ## In Progress
 _Nothing yet._

@@ -1,0 +1,225 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.chat-detail {
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: #ffffff;
+    border-bottom: 1px solid #f0f0f0;
+    flex-shrink: 0;
+  }
+
+  &__back {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: 0;
+    color: #582cff;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background 0.1s ease;
+
+    &:active {
+      background: #f5f5f7;
+    }
+  }
+
+  &__avatar {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__avatar-initials {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+  }
+
+  &__name {
+    font-size: 17px;
+    font-weight: 600;
+    color: #1a1a1a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__pending-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    padding: 8px 16px;
+    background: #fff8e6;
+    border-bottom: 1px solid #ffe9a0;
+    font-size: 12px;
+    color: #7a5800;
+    line-height: 1.4;
+    flex-shrink: 0;
+  }
+
+  &__pending-banner-icon {
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: #c28a00;
+  }
+
+  &__messages {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 16px;
+  }
+
+  &__bubble {
+    max-width: 75%;
+    background: #ffffff;
+    border-radius: 18px 18px 18px 4px;
+    padding: 8px 12px;
+    align-self: flex-start;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+
+    &--own {
+      align-self: flex-end;
+      background: #582cff;
+      border-radius: 18px 18px 4px 18px;
+      color: #ffffff;
+    }
+
+    &--failed {
+      background: #fff0f0;
+      color: #1a1a1a;
+      border: 1px solid #ffcdd2;
+    }
+
+    &--pending-key {
+      opacity: 0.65;
+    }
+  }
+
+  &__bubble-text {
+    font-size: 15px;
+    line-height: 1.4;
+    color: inherit;
+    margin: 0;
+    word-break: break-word;
+  }
+
+  &__bubble-meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 3px;
+    margin-top: 3px;
+  }
+
+  &__bubble-time {
+    font-size: 11px;
+    color: inherit;
+    opacity: 0.6;
+  }
+
+  &__bubble-status {
+    color: inherit;
+    opacity: 0.8;
+    flex-shrink: 0;
+
+    &--failed {
+      color: #ff3b30;
+      opacity: 1;
+    }
+  }
+
+  &__retry {
+    display: block;
+    margin-top: 5px;
+    padding: 0;
+    background: none;
+    border: none;
+    font-size: 12px;
+    color: #ff3b30;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+
+    &:active {
+      opacity: 0.7;
+    }
+  }
+
+  &__input-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    background: #ffffff;
+    border-top: 1px solid #f0f0f0;
+    flex-shrink: 0;
+  }
+
+  &__input {
+    flex: 1 1 auto;
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 20px;
+    border: 1.5px solid #e5e5ea;
+    background: #f5f5f7;
+    font-size: 15px;
+    color: #1a1a1a;
+    outline: none;
+    transition: border-color 0.15s ease;
+
+    &::placeholder {
+      color: #c7c7cc;
+    }
+
+    &:focus {
+      border-color: #582cff;
+      background: #ffffff;
+    }
+  }
+
+  &__send {
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #582cff;
+    border: none;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+
+    &:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    &:not(:disabled):active {
+      opacity: 0.8;
+    }
+  }
+}

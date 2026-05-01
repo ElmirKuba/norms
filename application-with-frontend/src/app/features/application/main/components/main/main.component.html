@@ -1,7 +1,18 @@
 <div class="app-main">
-  <header class="app-main__header">
-    <h1 class="app-main__header-title">Чаты</h1>
-  </header>
+  @if (passwordResetBanner()) {
+    <div class="app-main__reset-banner">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="app-main__reset-banner-icon">
+        <path d="M12 22C12 22 4 18 4 12V5L12 2L20 5V12C20 18 12 22 12 22Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M12 8V12M12 16H12.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      <span class="app-main__reset-banner-text">Пароль был сброшен через восстановление доступа. Смените пароль в настройках.</span>
+      <button class="app-main__reset-banner-close" type="button" (click)="dismissPasswordResetBanner()" aria-label="Закрыть">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+  }
 
   <main class="app-main__content">
     <router-outlet />
@@ -10,8 +21,9 @@
   <nav class="app-main__tabbar">
     <a
       class="app-main__tab"
-      routerLink="chats"
+      [routerLink]="chatsTabLink()"
       routerLinkActive="app-main__tab--active"
+      [routerLinkActiveOptions]="{ exact: false }"
       aria-label="Чаты"
     >
       <svg class="app-main__tab-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">

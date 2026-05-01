@@ -5,11 +5,21 @@ import type { AuthShellComponent } from './auth/components/auth-shell/auth-shell
 import type { InviteCodeApplicationComponent } from './auth/components/invite-code/invite-code.component';
 import type { CreateAccountApplicationComponent } from './auth/components/create-account/create-account.component';
 import type { LoginApplicationComponent } from './auth/components/login/login.component';
+import type { RecoveryApplicationComponent } from './auth/components/recovery/recovery.component';
 import type { UinAssignedApplicationComponent } from './uin/components/uin-assigned/uin-assigned.component';
 import type { ChatsApplicationComponent } from './chats/components/chats/chats.component';
+import type { ChatDetailApplicationComponent } from './chats/components/chat-detail/chat-detail.component';
 import type { SearchApplicationComponent } from './search/components/search/search.component';
 import type { SettingsApplicationComponent } from './settings/components/settings/settings.component';
+import type { SettingsAccountComponent } from './settings/components/account/account.component';
+import type { SettingsDevicesComponent } from './settings/components/devices/devices.component';
+import type { SettingsPrivacyComponent } from './settings/components/privacy/privacy.component';
+import type { SettingsRecoveryQuestionsComponent } from './settings/components/recovery-questions/recovery-questions.component';
+import type { SettingsInvitesComponent } from './settings/components/invites/invites.component';
+import type { SettingsChangePasswordComponent } from './settings/components/change-password/change-password.component';
 import type { ProfileApplicationComponent } from './profile/components/profile/profile.component';
+import type { UserProfileApplicationComponent } from './profile/components/user-profile/user-profile.component';
+import type { NewDeviceApplicationComponent } from './new-device/components/new-device/new-device.component';
 
 /** Основной массив маршрутизации application-составляющей */
 export const APPLICATION_ROUTES: Routes = [
@@ -62,6 +72,13 @@ export const APPLICATION_ROUTES: Routes = [
           return m.LoginApplicationComponent;
         },
       },
+      {
+        path: 'recovery',
+        loadComponent: async (): Promise<typeof RecoveryApplicationComponent> => {
+          const m = await import('./auth/components/recovery/recovery.component');
+          return m.RecoveryApplicationComponent;
+        },
+      },
     ],
   },
 
@@ -77,6 +94,68 @@ export const APPLICATION_ROUTES: Routes = [
         },
       },
     ],
+  },
+
+  // Экран нового устройства — осиротевшие собеседники
+  {
+    path: 'new-device',
+    loadComponent: async (): Promise<typeof NewDeviceApplicationComponent> => {
+      const m = await import('./new-device/components/new-device/new-device.component');
+      return m.NewDeviceApplicationComponent;
+    },
+  },
+
+  // Профиль чужого пользователя — полноэкранный, без таббара
+  {
+    path: 'main/user/:accountId',
+    loadComponent: async (): Promise<typeof UserProfileApplicationComponent> => {
+      const m = await import('./profile/components/user-profile/user-profile.component');
+      return m.UserProfileApplicationComponent;
+    },
+  },
+
+  // Подэкраны Settings — полноэкранные, без таббара
+  {
+    path: 'main/settings/account',
+    loadComponent: async (): Promise<typeof SettingsAccountComponent> => {
+      const m = await import('./settings/components/account/account.component');
+      return m.SettingsAccountComponent;
+    },
+  },
+  {
+    path: 'main/settings/devices',
+    loadComponent: async (): Promise<typeof SettingsDevicesComponent> => {
+      const m = await import('./settings/components/devices/devices.component');
+      return m.SettingsDevicesComponent;
+    },
+  },
+  {
+    path: 'main/settings/privacy',
+    loadComponent: async (): Promise<typeof SettingsPrivacyComponent> => {
+      const m = await import('./settings/components/privacy/privacy.component');
+      return m.SettingsPrivacyComponent;
+    },
+  },
+  {
+    path: 'main/settings/recovery',
+    loadComponent: async (): Promise<typeof SettingsRecoveryQuestionsComponent> => {
+      const m = await import('./settings/components/recovery-questions/recovery-questions.component');
+      return m.SettingsRecoveryQuestionsComponent;
+    },
+  },
+  {
+    path: 'main/settings/invites',
+    loadComponent: async (): Promise<typeof SettingsInvitesComponent> => {
+      const m = await import('./settings/components/invites/invites.component');
+      return m.SettingsInvitesComponent;
+    },
+  },
+  {
+    path: 'main/settings/change-password',
+    loadComponent: async (): Promise<typeof SettingsChangePasswordComponent> => {
+      const m = await import('./settings/components/change-password/change-password.component');
+      return m.SettingsChangePasswordComponent;
+    },
   },
 
   // Основное приложение (мессенджер): shell с таббаром
@@ -97,6 +176,13 @@ export const APPLICATION_ROUTES: Routes = [
         loadComponent: async (): Promise<typeof ChatsApplicationComponent> => {
           const m = await import('./chats/components/chats/chats.component');
           return m.ChatsApplicationComponent;
+        },
+      },
+      {
+        path: 'chats/:chatId',
+        loadComponent: async (): Promise<typeof ChatDetailApplicationComponent> => {
+          const m = await import('./chats/components/chat-detail/chat-detail.component');
+          return m.ChatDetailApplicationComponent;
         },
       },
       {

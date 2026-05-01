@@ -1,0 +1,96 @@
+<header class="settings-sub__header">
+  <button class="settings-sub__back" type="button" (click)="goBack()" aria-label="Назад">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+  <h1 class="settings-sub__title">Устройства</h1>
+</header>
+
+<div class="settings-sub__body">
+  <p class="devices__hint">Активные сессии вашего аккаунта</p>
+
+  <section class="settings-sub__section">
+    @for (device of devices(); track device.id) {
+      <div class="devices__item" [class.devices__item--current]="device.isCurrent">
+        <div class="devices__item-icon">
+          @switch (device.platform) {
+            @case ('ios') {
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <rect x="6" y="1" width="12" height="22" rx="3" stroke="currentColor" stroke-width="1.8"/>
+                <circle cx="12" cy="18" r="1" fill="currentColor"/>
+              </svg>
+            }
+            @case ('android') {
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <rect x="6" y="1" width="12" height="22" rx="3" stroke="currentColor" stroke-width="1.8"/>
+                <circle cx="12" cy="18" r="1" fill="currentColor"/>
+              </svg>
+            }
+            @case ('macos') {
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <rect x="2" y="4" width="20" height="13" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                <path d="M8 21H16M12 17V21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            }
+            @default {
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <rect x="2" y="4" width="20" height="13" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                <path d="M8 21H16M12 17V21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            }
+          }
+        </div>
+
+        <div class="devices__item-info">
+          @if (renamingId() === device.id) {
+            <input
+              class="devices__rename-input"
+              type="text"
+              [(ngModel)]="renameValue"
+              (keydown.enter)="saveRename(device.id)"
+              (keydown.escape)="cancelRename()"
+              autofocus
+            />
+            <div class="devices__rename-actions">
+              <button class="devices__rename-btn devices__rename-btn--save" type="button" (click)="saveRename(device.id)">Сохранить</button>
+              <button class="devices__rename-btn devices__rename-btn--cancel" type="button" (click)="cancelRename()">Отмена</button>
+            </div>
+          } @else {
+            <span class="devices__item-name">
+              {{ device.name }}
+              @if (device.isCurrent) {
+                <span class="devices__item-badge">текущее</span>
+              }
+            </span>
+            <span class="devices__item-seen">{{ device.lastSeen }}</span>
+          }
+        </div>
+
+        <div class="devices__item-actions">
+          <button
+            class="devices__item-action devices__item-action--rename"
+            type="button"
+            (click)="openRename(device)"
+            aria-label="Переименовать"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+              <path d="M11 4H4C3.4 4 3 4.4 3 5V20C3 20.6 3.4 21 4 21H19C19.6 21 20 20.6 20 20V13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M18.5 2.5C19.3 1.7 20.7 1.7 21.5 2.5C22.3 3.3 22.3 4.7 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          @if (!device.isCurrent) {
+            <button
+              class="devices__item-action devices__item-action--terminate"
+              type="button"
+              (click)="confirmTerminate(device)"
+              aria-label="Завершить сессию"
+            >
+              Завершить
+            </button>
+          }
+        </div>
+      </div>
+    }
+  </section>
+</div>

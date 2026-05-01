@@ -108,11 +108,14 @@ application/
   auth/          — auth-флоу (welcome, invite-code, create-account, login)
   uin/           — UIN-флоу (assigned; pending — модалка, не роут)
   main/          — shell: таббар на мобилке, сайдбар на десктопе
-  chats/         — список чатов + экран чата
+  chats/         — список чатов + экран чата + ChatsStateService
   search/        — поиск по UIN / username
   settings/      — настройки аккаунта
   profile/       — профиль пользователя
 ```
+
+**Таббар и навигация внутри раздела:**  
+Таб «Чаты» запоминает последний открытый чат через `ChatsStateService` (`activeChatId` signal). При переключении на другой таб и обратно — возвращает в открытый чат, не в список. `ChatDetailApplicationComponent` вызывает `setActiveChat(chatId)` при инициализации и `clearActiveChat()` при нажатии «назад».
 
 **Адаптив:** mobile-first. На мобилке (Capacitor) — таббар снизу.  
 На десктопе (Electron, широкий экран) — сайдбар слева, контент справа.
@@ -125,25 +128,28 @@ application/
 | `/application/auth/invite-code` | `InviteCodeApplicationComponent` | ✅ готов |
 | `/application/auth/create-account` | `CreateAccountApplicationComponent` | ✅ готов |
 | `/application/auth/login` | `LoginApplicationComponent` | ✅ готов |
+| `/application/auth/recovery` | `RecoveryApplicationComponent` | ✅ 3 шага: UIN → Q&A → новый пароль |
 | `/application/uin/assigned` | `UinAssignedApplicationComponent` | ✅ готов |
 | `/application/main` | `MainApplicationComponent` (shell + таббар) | ✅ готов |
-| `/application/main/chats` | `ChatsApplicationComponent` | 🔲 заглушка |
-| `/application/main/search` | `SearchApplicationComponent` | 🔲 заглушка |
-| `/application/main/settings` | `SettingsApplicationComponent` | 🔲 заглушка |
-| `/application/main/profile` | `ProfileApplicationComponent` | 🔲 заглушка |
+| `/application/main/chats` | `ChatsApplicationComponent` | ✅ список с моками |
+| `/application/main/chats/:chatId` | `ChatDetailApplicationComponent` | ✅ чат с моками, таббар виден |
+| `/application/main/search` | `SearchApplicationComponent` | ✅ с моками |
+| `/application/main/settings` | `SettingsApplicationComponent` | ✅ кликабельные пункты |
+| `/application/main/settings/account` | `SettingsAccountComponent` | ✅ с моками, без таббара |
+| `/application/main/settings/devices` | `SettingsDevicesComponent` | ✅ с моками, без таббара |
+| `/application/main/settings/privacy` | `SettingsPrivacyComponent` | ✅ MVP-инфо, без таббара |
+| `/application/main/settings/recovery` | `SettingsRecoveryQuestionsComponent` | ✅ Q&A + добавление, без таббара |
+| `/application/main/settings/invites` | `SettingsInvitesComponent` | ✅ коды + отзыв + копирование, без таббара |
+| `/application/main/user/:accountId` | `UserProfileApplicationComponent` | ✅ профиль + кнопка «Написать», без таббара |
+| `/application/new-device` | `NewDeviceApplicationComponent` | ✅ список orphan peers |
+| `/application/main/profile` | `ProfileApplicationComponent` | ✅ с моками + mock-триггеры WSS |
+| `/application/main/settings/change-password` | `SettingsChangePasswordComponent` | ✅ форма смены пароля, mock-submit |
 
 **Модалки (не роуты):**
 
 | Триггер | Сервис | Статус |
 |---|---|---|
 | `create-account` → submit → `main` (`state.pendingUin`) | `UinModalService.openUinPending()` | ✅ готов |
-
-**Не реализованные роуты (TODO):**
-
-| Роут | Описание |
-|---|---|
-| `/application/auth/recovery` | Восстановление пароля («Забыли пароль?») |
-| `/application/main/chats/:id` | Экран отдельного чата |
 
 ---
 

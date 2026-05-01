@@ -1,0 +1,53 @@
+<header class="settings-sub__header">
+  <button class="settings-sub__back" type="button" (click)="goBack()" aria-label="Назад">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+  <h1 class="settings-sub__title">Приватность</h1>
+</header>
+
+<div class="settings-sub__body">
+  <div class="privacy__info">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+      <path d="M12 2L4 6V12C4 16.4 7.4 20.5 12 22C16.6 20.5 20 16.4 20 12V6L12 2Z" stroke="#582cff" stroke-width="1.8" stroke-linejoin="round"/>
+      <path d="M9 12L11 14L15 10" stroke="#582cff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <p class="privacy__info-text">
+      В MVP все настройки приватности открыты: профиль и поиск доступны всем пользователям приложения.
+    </p>
+  </div>
+
+  <section class="settings-sub__section">
+    <div class="settings-sub__row settings-sub__row--disabled">
+      <div class="privacy__row-left">
+        <span class="settings-sub__row-label">Кто может писать мне</span>
+        <span class="privacy__row-sub">Запланировано</span>
+      </div>
+      <span class="privacy__row-value">Все</span>
+    </div>
+    <div class="settings-sub__row settings-sub__row--disabled">
+      <div class="privacy__row-left">
+        <span class="settings-sub__row-label">Видимость в поиске</span>
+        <span class="privacy__row-sub">Запланировано</span>
+      </div>
+      <span class="privacy__row-value">Все</span>
+    </div>
+    <div class="settings-sub__row settings-sub__row--disabled">
+      <div class="privacy__row-left">
+        <span class="settings-sub__row-label">Статус онлайн</span>
+        <span class="privacy__row-sub">Запланировано</span>
+      </div>
+      <span class="privacy__row-value">Все</span>
+    </div>
+  </section>
+
+  <section class="settings-sub__section">
+    <button class="settings-sub__action-row" type="button" disabled>
+      <span class="settings-sub__action-label">Заблокированные</span>
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </section>
+</div>

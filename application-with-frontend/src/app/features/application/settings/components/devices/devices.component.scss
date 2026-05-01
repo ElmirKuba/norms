@@ -1,0 +1,154 @@
+@use '../settings-sub';
+
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.devices {
+  &__hint {
+    font-size: 13px;
+    color: #8e8e93;
+    margin: 0;
+    padding: 0 4px;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #f5f5f7;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &--current {
+      .devices__item-name {
+        font-weight: 600;
+      }
+    }
+  }
+
+  &__item-icon {
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    background: #f0edff;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #582cff;
+  }
+
+  &__item-info {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__item-name {
+    font-size: 15px;
+    color: #1a1a1a;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__item-badge {
+    font-size: 11px;
+    font-weight: 500;
+    color: #582cff;
+    background: #f0edff;
+    padding: 2px 7px;
+    border-radius: 6px;
+  }
+
+  &__item-seen {
+    font-size: 13px;
+    color: #8e8e93;
+  }
+
+  &__item-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  &__item-action {
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background 0.1s ease;
+
+    &--rename {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #8e8e93;
+
+      &:active {
+        background: #f5f5f7;
+      }
+    }
+
+    &--terminate {
+      padding: 6px 12px;
+      background: #fff1f0;
+      color: #ff3b30;
+      font-size: 13px;
+      font-weight: 500;
+
+      &:active {
+        background: #ffe0de;
+      }
+    }
+  }
+
+  &__rename-input {
+    width: 100%;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 8px;
+    border: 1.5px solid #582cff;
+    background: #fafaff;
+    font-size: 14px;
+    color: #1a1a1a;
+    outline: none;
+  }
+
+  &__rename-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 5px;
+  }
+
+  &__rename-btn {
+    padding: 4px 12px;
+    border-radius: 7px;
+    border: none;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+
+    &--save {
+      background: #582cff;
+      color: #ffffff;
+    }
+
+    &--cancel {
+      background: #f5f5f7;
+      color: #8e8e93;
+    }
+  }
+}

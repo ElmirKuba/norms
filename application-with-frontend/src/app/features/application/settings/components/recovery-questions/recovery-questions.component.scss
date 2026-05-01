@@ -1,0 +1,265 @@
+@use '../settings-sub';
+
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.rq {
+  &__info {
+    background: #f5f5f7;
+    border-radius: 12px;
+    padding: 12px 14px;
+  }
+
+  &__info-text {
+    font-size: 14px;
+    color: #8e8e93;
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  &__empty {
+    padding: 8px 4px;
+  }
+
+  &__empty-text {
+    font-size: 14px;
+    color: #8e8e93;
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #f5f5f7;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  &__item-info {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__item-question {
+    font-size: 15px;
+    color: #1a1a1a;
+  }
+
+  &__item-date {
+    font-size: 12px;
+    color: #c7c7cc;
+  }
+
+  &__item-delete {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff1f0;
+    border: none;
+    border-radius: 8px;
+    color: #ff3b30;
+    cursor: pointer;
+    transition: background 0.1s ease;
+
+    &:active {
+      background: #ffe0de;
+    }
+  }
+
+  &__add-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 16px;
+    background: #ffffff;
+    border: none;
+    border-radius: 16px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #582cff;
+    cursor: pointer;
+    transition: background 0.1s ease;
+    width: 100%;
+
+    &:active {
+      background: #f0edff;
+    }
+  }
+
+  &__warning {
+    background: #fff8e6;
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__warning-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0;
+  }
+
+  &__warning-text {
+    font-size: 14px;
+    color: #1a1a1a;
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  &__warning-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: #1a1a1a;
+    cursor: pointer;
+
+    input[type='checkbox'] {
+      width: 18px;
+      height: 18px;
+      accent-color: #582cff;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__form-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #8e8e93;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+
+    &--or {
+      text-align: center;
+    }
+  }
+
+  &__preset-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__preset-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid #f5f5f7;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    font-size: 14px;
+    color: #1a1a1a;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.1s ease;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &--selected {
+      color: #582cff;
+      font-weight: 500;
+    }
+
+    &:active {
+      background: #f5f5f7;
+    }
+  }
+
+  &__input {
+    width: 100%;
+    height: 46px;
+    padding: 0 14px;
+    border-radius: 12px;
+    border: 1.5px solid #e5e5ea;
+    background: #f5f5f7;
+    font-size: 15px;
+    color: #1a1a1a;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease, background 0.15s ease;
+
+    &::placeholder {
+      color: #c7c7cc;
+    }
+
+    &:focus {
+      border-color: #582cff;
+      background: #ffffff;
+    }
+  }
+
+  &__form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  &__form-cancel {
+    flex: 1 1 0;
+    height: 46px;
+    border-radius: 12px;
+    background: #f5f5f7;
+    border: none;
+    font-size: 15px;
+    font-weight: 500;
+    color: #8e8e93;
+    cursor: pointer;
+    transition: background 0.1s ease;
+
+    &:active {
+      background: #e5e5ea;
+    }
+  }
+
+  &__form-save {
+    flex: 1 1 0;
+    height: 46px;
+    border-radius: 12px;
+    background: #582cff;
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+    color: #ffffff;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+
+    &:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    &:not(:disabled):active {
+      opacity: 0.85;
+    }
+  }
+}
