@@ -48,11 +48,12 @@ export class SettingsDevicesComponent {
       ...MODAL_BOTTOM_SHEET_PARAMS,
       data: {
         icon: ModalHeaderIcon.Warning,
-        title: 'Завершить сессию?',
-        text: `Устройство «${device.name}» будет отключено. Чтобы войти снова, потребуется пароль.`,
+        title: 'Отключить устройство?',
+        text: `«${device.name}» будет отключено. Сессия завершится, все незавершённые действия — прерваны.`,
         isConfirmModal: true,
-        confirmBtnText: 'Завершить',
+        confirmBtnText: 'Отключить',
         cancelBtnText: 'Отмена',
+        isFooterButtonsVertically: true,
         confirmCallback: () => { this._terminateDevice(device.id); },
       },
     });

@@ -20,12 +20,18 @@
 
   &__reset-banner {
     display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 16px;
+    background: #fff3cd;
+    border-bottom: 1px solid #ffc107;
+    flex-shrink: 0;
+  }
+
+  &__reset-banner-body {
+    display: flex;
     align-items: flex-start;
     gap: 8px;
-    padding: 10px 16px;
-    background: #fff3cd;
-    border-bottom: 1px solid #ffd966;
-    flex-shrink: 0;
   }
 
   &__reset-banner-icon {
@@ -35,28 +41,37 @@
   }
 
   &__reset-banner-text {
-    flex: 1 1 auto;
     font-size: 13px;
     color: #533f00;
     line-height: 1.4;
   }
 
-  &__reset-banner-close {
-    flex-shrink: 0;
-    width: 24px;
-    height: 24px;
+  &__reset-banner-actions {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    background: none;
-    border: none;
-    color: #856404;
-    cursor: pointer;
-    border-radius: 50%;
-    transition: background 0.1s ease;
+    gap: 8px;
+    padding-left: 23px;
+  }
 
-    &:active {
+  &__reset-banner-btn {
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.1s ease;
+
+    &:active { opacity: 0.75; }
+
+    &--change {
+      background: #582cff;
+      color: #ffffff;
+    }
+
+    &--dismiss {
       background: rgba(0, 0, 0, 0.08);
+      color: #533f00;
     }
   }
 

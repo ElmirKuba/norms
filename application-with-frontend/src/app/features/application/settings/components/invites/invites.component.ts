@@ -1,12 +1,11 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { DialogModalComponent } from '../../../../../shared/modals/components/dialog-modal/dialog-modal.component';
 import { MODAL_BOTTOM_SHEET_PARAMS } from '../../../../../shared/modals/constants/modal.constants';
-import { ModalHeaderIcon } from '../../../../../shared/modals/types/modal.types';
+import { InviteSuccessModalComponent } from '../invite-success-modal/invite-success-modal.component';
 import { MOCK_INVITE_CODES, MOCK_INVITED_USERS } from '../../types/invites.types';
 import type { MockInviteCode, MockInvitedUser } from '../../types/invites.types';
-import type { DialogModalData } from '../../../../../shared/modals/types/modal.types';
+import type { InviteSuccessModalData } from '../invite-success-modal/invite-success-modal.component';
 
 /** Подэкран настроек — Инвайты */
 @Component({
@@ -56,15 +55,10 @@ export class SettingsInvitesComponent {
     this.codes.update((list) => [...list, newCode]);
     this.remaining.update((n) => n - 1);
 
-    this._dialog.open<DialogModalComponent, DialogModalData>(DialogModalComponent, {
-      ...MODAL_BOTTOM_SHEET_PARAMS,
-      data: {
-        icon: ModalHeaderIcon.Done,
-        title: 'Инвайт создан',
-        text: `Код: <strong>${formatted}</strong>\n\nПередай его тому, кого хочешь пригласить. Код одноразовый и действует 30 дней.`,
-        closeBtnText: 'Понятно',
-      },
-    });
+    this._dialog.open<InviteSuccessModalComponent, InviteSuccessModalData>(
+      InviteSuccessModalComponent,
+      { ...MODAL_BOTTOM_SHEET_PARAMS, data: { code: formatted } },
+    );
   }
 
   /** Отозвать код (мок) */

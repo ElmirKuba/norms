@@ -22,8 +22,8 @@ export class SessionKickedService {
       data: {
         icon: ModalHeaderIcon.Warning,
         title: 'Сессия завершена',
-        text: `Ваш аккаунт был отключён с устройства «${deviceName}». Войдите заново.`,
-        closeBtnText: 'Войти заново',
+        text: `Ваше устройство было отключено. Войдите снова, чтобы продолжить.`,
+        closeBtnText: 'Войти снова',
         closeCallback: () => {
           void this._router.navigate(['/application/welcome']);
         },

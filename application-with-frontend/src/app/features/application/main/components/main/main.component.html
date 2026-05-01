@@ -1,16 +1,21 @@
 <div class="app-main">
   @if (passwordResetBanner()) {
     <div class="app-main__reset-banner">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="app-main__reset-banner-icon">
-        <path d="M12 22C12 22 4 18 4 12V5L12 2L20 5V12C20 18 12 22 12 22Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-        <path d="M12 8V12M12 16H12.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-      </svg>
-      <span class="app-main__reset-banner-text">Пароль был сброшен через восстановление доступа. Смените пароль в настройках.</span>
-      <button class="app-main__reset-banner-close" type="button" (click)="dismissPasswordResetBanner()" aria-label="Закрыть">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-          <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <div class="app-main__reset-banner-body">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" class="app-main__reset-banner-icon">
+          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+          <path d="M12 9V13M12 17H12.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
         </svg>
-      </button>
+        <span class="app-main__reset-banner-text">Пароль изменён через Recovery. Если это были не вы — смените пароль.</span>
+      </div>
+      <div class="app-main__reset-banner-actions">
+        <button class="app-main__reset-banner-btn app-main__reset-banner-btn--change" type="button" routerLink="/application/main/settings/change-password" (click)="dismissPasswordResetBanner()">
+          Сменить пароль
+        </button>
+        <button class="app-main__reset-banner-btn app-main__reset-banner-btn--dismiss" type="button" (click)="dismissPasswordResetBanner()">
+          Закрыть
+        </button>
+      </div>
     </div>
   }
 
