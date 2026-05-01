@@ -147,9 +147,22 @@ application/
 
 **Модалки (не роуты):**
 
-| Триггер | Сервис | Статус |
+| Модалка | Способ | Триггер / Сервис | Статус |
+|---|---|---|---|
+| UIN Pending («Назначаем UIN...») | A | `UinModalService.openUinPending()` — после регистрации | ✅ |
+| Chat Onboarding («Как работают чаты») | A | `ChatOnboardingService.openIfNeeded()` — первый чат на устройстве | ✅ |
+| Создание чата (выбор устройства → название) | B | `CreateChatModalService.open()` — из профиля собеседника | ✅ |
+| Успешное создание инвайта (код + копирование) | B | `SettingsInvitesComponent.createCode()` | ✅ |
+| Session Kicked («Сессия завершена») | A | `SessionKickedService.showKickedModal()` — WSS `session_kicked` | ✅ |
+| Подтверждение кика устройства | A | `DevicesComponent.confirmTerminate()` — кнопка «Завершить» | ✅ |
+
+**Глобальные UI-события (не модалки):**
+
+| Событие | Где обрабатывается | Визуал |
 |---|---|---|
-| `create-account` → submit → `main` (`state.pendingUin`) | `UinModalService.openUinPending()` | ✅ готов |
+| `uin_assigned` (WSS) | `MainApplicationComponent` → `UinModalService` | Закрывает UIN Pending модалку, navigate → `/uin/assigned` |
+| `session_kicked` (WSS) | `SessionKickedService` | Блокирующая модалка, после «Войти снова» → `/application/welcome` |
+| `password_reset_via_recovery` (WSS) | `MainApplicationComponent.passwordResetBanner` signal | Баннер поверх контента с кнопками «Сменить пароль» / «Закрыть» |
 
 ---
 
@@ -273,3 +286,42 @@ Tree-shaking платформенных реализаций не делаетс
 - `:host` используется для управления flex/grid поведением компонента как flex-item родителя.
 - Глобальные стили — только в `src/styles.scss` (сброс, CSS-переменные, типографика).
 - Цвета пока хардкодятся; CSS-переменные / тема — TODO.
+
+---
+
+## Как расширять
+
+### Новый экран (роут)
+
+1. Создать папку `features/application/{feature}/components/{name}/` с тремя файлами (`.ts`, `.html`, `.scss`).
+2. Добавить роут в `application.routes.ts` (lazy или inline).
+3. Если экран без таббара — компонент рендерится напрямую через роутер, таббар скрывается автоматически (он только внутри `main` shell).
+
+### Новая модалка (Способ A — типовой кейс)
+
+```typescript
+this._dialog.open(DialogModalComponent, {
+  ...MODAL_BOTTOM_SHEET_PARAMS,
+  data: {
+    icon: ModalHeaderIcon.Info,
+    title: 'Заголовок',
+    text: 'Текст сообщения',
+    closeBtnText: 'Понятно',
+  } satisfies DialogModalData,
+});
+```
+
+Если нужна confirm-кнопка — добавить `isConfirmModal: true`, `confirmBtnText`, `confirmCallback`.
+
+### Новая модалка (Способ B — кастомный layout)
+
+1. Создать компонент в `features/application/{feature}/components/{name}-modal/`.
+2. Объявить `export interface {Name}ModalData` и `export interface {Name}ModalResult` рядом с компонентом.
+3. Инжектировать `MAT_DIALOG_DATA` и `MatDialogRef`, закрывать через `this._dialogRef.close(result)`.
+4. Открывать через `this._dialog.open(MyModalComponent, { ...MODAL_BOTTOM_SHEET_PARAMS, data })`.
+5. Если повторно используется — обернуть в доменный сервис (`{feature}-modal.service.ts`).
+
+### Новый глобальный WSS-обработчик
+
+Добавить обработку в `MainApplicationComponent` (или выделить в отдельный `Injectable` сервис).  
+Паттерн: сервис принимает событие → показывает модалку или меняет сигнал в shell-компоненте → shell реагирует через `@if`.
