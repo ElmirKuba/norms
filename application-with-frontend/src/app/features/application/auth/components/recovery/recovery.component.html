@@ -9,7 +9,8 @@
         type="text"
         inputmode="numeric"
         placeholder="UIN"
-        [(ngModel)]="uin"
+        [ngModel]="uin()"
+        (ngModelChange)="uin.set($event)"
         maxlength="10"
         autocomplete="off"
       />
@@ -65,7 +66,8 @@
         class="recovery__input"
         type="text"
         placeholder="Ответ"
-        [(ngModel)]="answer"
+        [ngModel]="answer()"
+        (ngModelChange)="answer.set($event)"
         autocomplete="off"
       />
     </div>
@@ -88,25 +90,63 @@
 
     <div class="recovery__field">
       <input
-        class="recovery__input"
-        type="password"
+        class="recovery__input recovery__input--with-eye"
+        [type]="showNewPassword() ? 'text' : 'password'"
         placeholder="Новый пароль"
-        [(ngModel)]="newPassword"
+        [ngModel]="newPassword()"
+        (ngModelChange)="newPassword.set($event)"
         autocomplete="new-password"
       />
+      <button
+        class="recovery__eye"
+        type="button"
+        (click)="showNewPassword.set(!showNewPassword())"
+        [attr.aria-label]="showNewPassword() ? 'Скрыть пароль' : 'Показать пароль'"
+      >
+        @if (showNewPassword()) {
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M3 3L21 21M10.58 10.58A3 3 0 0013.42 13.42M7.36 7.36A8 8 0 0112 6C16 6 19.6 8.6 21 12C20.3 13.7 19.2 15.2 17.7 16.3M9.9 4.24A9.1 9.1 0 0112 4C16 4 19.6 6.6 21 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M3 10C4.4 7.4 7.4 5 12 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity="0"/>
+          </svg>
+        } @else {
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12C23 12 19 20 12 20C5 20 1 12 1 12Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
+          </svg>
+        }
+      </button>
     </div>
 
     <div class="recovery__field">
       <input
-        class="recovery__input"
-        type="password"
+        class="recovery__input recovery__input--with-eye"
+        [type]="showConfirmPassword() ? 'text' : 'password'"
         placeholder="Повторите пароль"
-        [(ngModel)]="confirmPassword"
+        [ngModel]="confirmPassword()"
+        (ngModelChange)="confirmPassword.set($event)"
         autocomplete="new-password"
       />
+      <button
+        class="recovery__eye"
+        type="button"
+        (click)="showConfirmPassword.set(!showConfirmPassword())"
+        [attr.aria-label]="showConfirmPassword() ? 'Скрыть пароль' : 'Показать пароль'"
+      >
+        @if (showConfirmPassword()) {
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M3 3L21 21M10.58 10.58A3 3 0 0013.42 13.42M7.36 7.36A8 8 0 0112 6C16 6 19.6 8.6 21 12C20.3 13.7 19.2 15.2 17.7 16.3M9.9 4.24A9.1 9.1 0 0112 4C16 4 19.6 6.6 21 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M3 10C4.4 7.4 7.4 5 12 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity="0"/>
+          </svg>
+        } @else {
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12C23 12 19 20 12 20C5 20 1 12 1 12Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
+          </svg>
+        }
+      </button>
     </div>
 
-    @if (confirmPassword && newPassword !== confirmPassword) {
+    @if (confirmPassword() && newPassword() !== confirmPassword()) {
       <p class="recovery__error">Пароли не совпадают</p>
     }
 

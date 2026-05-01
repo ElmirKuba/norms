@@ -25,40 +25,48 @@ export class RecoveryApplicationComponent {
   public readonly step = signal<RecoveryStep>('uin');
 
   /** UIN введённый пользователем */
-  public uin: string = '';
+  public readonly uin = signal<string>('');
 
   /** Выбранный вопрос */
   public readonly selectedQuestion = signal<RecoveryPresetQuestion | null>(null);
 
   /** Ответ */
-  public answer: string = '';
+  public readonly answer = signal<string>('');
 
   /** Новый пароль */
-  public newPassword: string = '';
+  public readonly newPassword = signal<string>('');
 
   /** Подтверждение нового пароля */
-  public confirmPassword: string = '';
+  public readonly confirmPassword = signal<string>('');
 
   /** Показывать список вопросов */
   public readonly showQuestions = signal<boolean>(false);
 
+  /** Показывать новый пароль открытым текстом */
+  public readonly showNewPassword = signal<boolean>(false);
+
+  /** Показывать подтверждение пароля открытым текстом */
+  public readonly showConfirmPassword = signal<boolean>(false);
+
   /** Кнопка шага 1 активна */
-  public readonly isStep1Valid = computed(() => this.uin.trim().length >= 4);
+  public readonly isStep1Valid = computed(() => this.uin().trim().length >= 4);
 
   /** Кнопка шага 2 активна */
   public readonly isStep2Valid = computed(
-    () => this.selectedQuestion() !== null && this.answer.trim().length > 0,
+    () => this.selectedQuestion() !== null && this.answer().trim().length > 0,
   );
 
   /** Кнопка шага 3 активна */
   public readonly isStep3Valid = computed(
-    () => this.newPassword.length >= 8 && this.newPassword === this.confirmPassword,
+    () => this.newPassword().length >= 8 && this.newPassword() === this.confirmPassword(),
   );
 
   /** Шаг 1 → 2 */
   public submitUin(): void {
     if (!this.isStep1Valid()) return;
     this.step.set('answer');
+    this.answer.set('');
+    this.selectedQuestion.set(null);
   }
 
   /** Выбрать вопрос */

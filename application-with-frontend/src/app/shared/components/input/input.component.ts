@@ -17,6 +17,9 @@ export class InputSharedComponent {
   /** Текущее значение */
   @Input() public value: string = '';
 
+  /** Максимальная длина (символов) */
+  @Input() public maxlength: number | null = null;
+
   /** Эмит при изменении значения */
   @Output() public readonly valueChange: EventEmitter<string> = new EventEmitter<string>();
 

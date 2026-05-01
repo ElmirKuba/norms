@@ -50,6 +50,32 @@
       border-color: #582cff;
       background: #ffffff;
     }
+
+    &--with-eye {
+      padding-right: 48px;
+    }
+  }
+
+  &__eye {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: #8e8e93;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.1s ease;
+
+    &:active {
+      color: #582cff;
+    }
   }
 
   &__question-select {
