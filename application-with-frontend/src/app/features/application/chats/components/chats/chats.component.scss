@@ -97,6 +97,15 @@
     gap: 8px;
   }
 
+  &__item-device {
+    font-size: 12px;
+    color: #8e8e93;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 1px;
+  }
+
   &__item-last-row {
     display: flex;
     align-items: center;

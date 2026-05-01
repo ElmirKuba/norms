@@ -10,7 +10,10 @@
       <span class="chat-detail__avatar-initials">{{ chat()!.initials }}</span>
     </div>
 
-    <span class="chat-detail__name">{{ chat()!.name }}</span>
+    <div class="chat-detail__title-block">
+      <span class="chat-detail__name">{{ chat()!.chatName }}</span>
+      <span class="chat-detail__subtitle">{{ chat()!.name }} · {{ chat()!.deviceLabel }}</span>
+    </div>
   </header>
 
   @if (chat()!.pendingKey) {

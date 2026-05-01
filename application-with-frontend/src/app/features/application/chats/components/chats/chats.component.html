@@ -11,9 +11,10 @@
 
       <div class="chats__item-body">
         <div class="chats__item-top">
-          <span class="chats__item-name">{{ chat.name }}</span>
+          <span class="chats__item-name">{{ chat.chatName }}</span>
           <span class="chats__item-time">{{ chat.time }}</span>
         </div>
+        <div class="chats__item-device">{{ chat.name }} · {{ chat.deviceLabel }}</div>
         <div class="chats__item-bottom">
           <div class="chats__item-last-row">
             @if (chat.pendingKey) {

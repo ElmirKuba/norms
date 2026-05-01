@@ -52,10 +52,25 @@
     color: #ffffff;
   }
 
+  &__title-block {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+
   &__name {
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 600;
     color: #1a1a1a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__subtitle {
+    font-size: 12px;
+    color: #8e8e93;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
