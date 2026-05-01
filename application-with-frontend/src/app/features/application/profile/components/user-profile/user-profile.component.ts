@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ChatOnboardingService } from '../../../chats/services/chat-onboarding.service';
@@ -15,6 +16,7 @@ import type { MockSearchUser } from '../../../search/types/search.types';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UserProfileApplicationComponent implements OnInit {
+  private readonly _location: Location = inject(Location);
   private readonly _route: ActivatedRoute = inject(ActivatedRoute);
   private readonly _router: Router = inject(Router);
   private readonly _onboarding: ChatOnboardingService = inject(ChatOnboardingService);
@@ -30,9 +32,9 @@ export class UserProfileApplicationComponent implements OnInit {
     this.user.set(found);
   }
 
-  /** Назад */
+  /** Назад — возвращаемся туда откуда пришли (чат или поиск) */
   public goBack(): void {
-    void this._router.navigate(['/application/main/search']);
+    this._location.back();
   }
 
   /** Написать — онбординг → выбор устройства → переход в чат */
