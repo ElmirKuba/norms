@@ -3,10 +3,14 @@ export interface MockChat {
   readonly id: string;
   /** Имя контакта (аккаунт) */
   readonly name: string;
-  /** Название чата (тема, задаётся при создании) */
-  readonly chatName: string;
+  /** UIN контакта */
+  readonly uin: string;
+  /** Username контакта (опционально) */
+  readonly username?: string;
   /** Устройство собеседника (прозвище) */
   readonly deviceLabel: string;
+  /** Название чата (тема, задаётся при создании) */
+  readonly chatName: string;
   readonly lastMessage: string;
   readonly time: string;
   readonly unread: number;
@@ -33,8 +37,10 @@ export const MOCK_CHATS: MockChat[] = [
   {
     id: '0195f3a2-1b4c-7e2d-9f1a-3c8b0d4e5f6a_1746000000000',
     name: 'Алексей К.',
-    chatName: 'Поход в кино',
+    uin: '10042',
+    username: 'alex_k',
     deviceLabel: 'iPhone 15 Pro',
+    chatName: 'Поход в кино',
     lastMessage: 'Привет! Как дела?',
     time: '14:32',
     unread: 2,
@@ -44,8 +50,9 @@ export const MOCK_CHATS: MockChat[] = [
   {
     id: '0195f3a2-2c5d-7f3e-a02b-4d9c1e5f6a7b_1746000001000',
     name: 'Мария В.',
-    chatName: 'Рабочие вопросы',
+    uin: '20817',
     deviceLabel: 'Samsung Galaxy S24',
+    chatName: 'Рабочие вопросы',
     lastMessage: 'Увидимся завтра',
     time: 'вчера',
     unread: 0,
@@ -55,8 +62,9 @@ export const MOCK_CHATS: MockChat[] = [
   {
     id: '0195f3a2-3d6e-7a4f-b13c-5e0d2f6a7b8c_1746000002000',
     name: 'Дмитрий Н.',
-    chatName: 'Конференция',
+    uin: '33190',
     deviceLabel: 'iPhone 14',
+    chatName: 'Конференция',
     lastMessage: 'Не отправлено',
     time: '10:15',
     unread: 0,
@@ -66,8 +74,9 @@ export const MOCK_CHATS: MockChat[] = [
   {
     id: '0195f3a2-4e7f-7b50-c24d-6f1e3a7b8c9d_1746000003000',
     name: 'Анна С.',
-    chatName: 'Проект',
+    uin: '44561',
     deviceLabel: 'Pixel 8',
+    chatName: 'Проект',
     lastMessage: 'Жду ответа...',
     time: 'только что',
     unread: 0,
