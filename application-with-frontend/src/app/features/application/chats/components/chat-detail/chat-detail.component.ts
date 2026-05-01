@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit, signal, inject } from '@ang
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MOCK_CHATS, MOCK_MESSAGES } from '../../types/chats.types';
+import { MOCK_SEARCH_USERS } from '../../../search/types/search.types';
 import { ChatsStateService } from '../../services/chats-state.service';
 import type { MockChat, MockMessage } from '../../types/chats.types';
 
@@ -45,6 +46,16 @@ export class ChatDetailApplicationComponent implements OnInit {
 
     this._chatsState.setActiveChat(chatId);
     this.messages.set(MOCK_MESSAGES[chatId] ?? []);
+  }
+
+  /** Открыть профиль собеседника */
+  public openContactProfile(): void {
+    const currentChat = this.chat();
+    if (!currentChat) return;
+    const user = MOCK_SEARCH_USERS.find((u) => u.uin === currentChat.uin);
+    if (user) {
+      void this._router.navigate(['/application/main/user', user.id]);
+    }
   }
 
   /** Назад к списку чатов */

@@ -6,14 +6,16 @@
       </svg>
     </button>
 
-    <div class="chat-detail__avatar" [style.background]="chat()!.avatarColor">
-      <span class="chat-detail__avatar-initials">{{ chat()!.initials }}</span>
-    </div>
+    <button class="chat-detail__contact-btn" type="button" (click)="openContactProfile()" aria-label="Профиль собеседника">
+      <div class="chat-detail__avatar" [style.background]="chat()!.avatarColor">
+        <span class="chat-detail__avatar-initials">{{ chat()!.initials }}</span>
+      </div>
 
-    <div class="chat-detail__title-block">
-      <span class="chat-detail__name">{{ chat()!.chatName }}</span>
-      <span class="chat-detail__subtitle">{{ chat()!.name }} · {{ chat()!.deviceLabel }}</span>
-    </div>
+      <div class="chat-detail__title-block">
+        <span class="chat-detail__name">{{ chat()!.chatName }}</span>
+        <span class="chat-detail__subtitle">{{ chat()!.name }} · {{ chat()!.deviceLabel }}</span>
+      </div>
+    </button>
   </header>
 
   @if (chat()!.pendingKey) {
