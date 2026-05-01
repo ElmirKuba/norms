@@ -18,22 +18,62 @@
     @if (qaList().length > 0) {
       <section class="settings-sub__section">
         @for (qa of qaList(); track qa.id) {
-          <div class="rq__item">
-            <div class="rq__item-info">
-              <span class="rq__item-question">{{ qa.question }}</span>
-              <span class="rq__item-date">Добавлен {{ qa.createdAt }}</span>
+          @if (editingId() === qa.id) {
+            <div class="rq__item-edit">
+              <div class="rq__form-label">Вопрос</div>
+              <input
+                class="rq__input"
+                type="text"
+                [(ngModel)]="editQuestion"
+                autocomplete="off"
+              />
+              <div class="rq__form-label">Новый ответ (обязателен для сохранения)</div>
+              <input
+                class="rq__input"
+                type="text"
+                placeholder="Ваш ответ"
+                [(ngModel)]="editAnswer"
+                autocomplete="off"
+              />
+              <div class="rq__form-actions">
+                <button class="rq__form-cancel" type="button" (click)="cancelEdit()">Отмена</button>
+                <button
+                  class="rq__form-save"
+                  type="button"
+                  [disabled]="!editQuestion.trim() || !editAnswer.trim()"
+                  (click)="saveEdit()"
+                >Сохранить</button>
+              </div>
             </div>
-            <button
-              class="rq__item-delete"
-              type="button"
-              (click)="deleteQA(qa.id)"
-              aria-label="Удалить"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M3 6H21M8 6V4H16V6M19 6L18 20H6L5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-          </div>
+          } @else {
+            <div class="rq__item">
+              <div class="rq__item-info">
+                <span class="rq__item-question">{{ qa.question }}</span>
+                <span class="rq__item-date">Добавлен {{ qa.createdAt }}</span>
+              </div>
+              <button
+                class="rq__item-edit-btn"
+                type="button"
+                (click)="openEdit(qa)"
+                aria-label="Редактировать"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                  <path d="M11 4H4C3.4 4 3 4.4 3 5V20C3 20.6 3.4 21 4 21H19C19.6 21 20 20.6 20 20V13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M18.5 2.5C19.3 1.7 20.7 1.7 21.5 2.5C22.3 3.3 22.3 4.7 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              <button
+                class="rq__item-delete"
+                type="button"
+                (click)="deleteQA(qa.id)"
+                aria-label="Удалить"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M3 6H21M8 6V4H16V6M19 6L18 20H6L5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          }
         }
       </section>
     } @else {

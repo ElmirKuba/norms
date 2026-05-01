@@ -36,6 +36,15 @@ export class SettingsRecoveryQuestionsComponent {
   /** Принято предупреждение */
   public readonly warningAccepted = signal<boolean>(false);
 
+  /** ID редактируемого Q&A */
+  public readonly editingId = signal<string | null>(null);
+
+  /** Вопрос в форме редактирования */
+  public editQuestion: string = '';
+
+  /** Ответ в форме редактирования */
+  public editAnswer: string = '';
+
   /** Назад к настройкам */
   public goBack(): void {
     void this._router.navigate(['/application/main/settings']);
@@ -69,5 +78,34 @@ export class SettingsRecoveryQuestionsComponent {
   /** Удалить Q&A (мок) */
   public deleteQA(id: string): void {
     this.qaList.update((list) => list.filter((qa) => qa.id !== id));
+  }
+
+  /** Открыть форму редактирования Q&A */
+  public openEdit(qa: MockRecoveryQA): void {
+    this.editingId.set(qa.id);
+    this.editQuestion = qa.question;
+    this.editAnswer = '';
+  }
+
+  /** Отменить редактирование */
+  public cancelEdit(): void {
+    this.editingId.set(null);
+    this.editQuestion = '';
+    this.editAnswer = '';
+  }
+
+  /** Сохранить изменения Q&A (мок) */
+  public saveEdit(): void {
+    const id = this.editingId();
+    const question = this.editQuestion.trim();
+    const answer = this.editAnswer.trim();
+    if (!id || !question || !answer) return;
+
+    this.qaList.update((list) =>
+      list.map((qa) =>
+        qa.id === id ? { ...qa, question } : qa,
+      ),
+    );
+    this.cancelEdit();
   }
 }

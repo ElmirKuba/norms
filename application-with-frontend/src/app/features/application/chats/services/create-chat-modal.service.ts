@@ -13,11 +13,11 @@ export class CreateChatModalService {
   private readonly _dialog: MatDialog = inject(MatDialog);
 
   /**
-   * Открывает модалку выбора устройства собеседника.
+   * Открывает модалку создания чата (выбор устройства → название).
    * @param user — пользователь, которому пишем
-   * @param onDeviceSelected — вызывается с выбранным deviceId
+   * @param onCreated — вызывается с deviceId и chatName после подтверждения
    */
-  public open(user: MockSearchUser, onDeviceSelected: (deviceId: string) => void): void {
+  public open(user: MockSearchUser, onCreated: (deviceId: string, chatName: string) => void): void {
     const ref = this._dialog.open<
       CreateChatModalComponent,
       CreateChatModalData,
@@ -28,8 +28,8 @@ export class CreateChatModalService {
     });
 
     ref.afterClosed().subscribe((result: CreateChatModalResult | undefined) => {
-      if (result?.deviceId) {
-        onDeviceSelected(result.deviceId);
+      if (result?.deviceId && result.chatName) {
+        onCreated(result.deviceId, result.chatName);
       }
     });
   }

@@ -41,13 +41,12 @@ export class UserProfileApplicationComponent implements OnInit {
     if (!currentUser) return;
 
     this._onboarding.openIfNeeded(() => {
-      this._createChatModal.open(currentUser, (deviceId) => {
-        // Ищем существующий мок-чат или переходим в список
+      this._createChatModal.open(currentUser, (_deviceId, _chatName) => {
+        // Мок: ищем существующий чат или открываем список
         const existingChat = MOCK_CHATS.find((c) => c.id.startsWith(currentUser.id.split('_')[0] ?? ''));
         if (existingChat) {
           void this._router.navigate(['/application/main/chats', existingChat.id]);
         } else {
-          // Мок: просто открываем первый чат из списка если нет совпадения
           const firstChat = MOCK_CHATS[0];
           if (firstChat) {
             void this._router.navigate(['/application/main/chats', firstChat.id]);
