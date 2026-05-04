@@ -17,6 +17,7 @@ export class UinModalService {
    * Закрывается при нажатии «Понятно» (колбек onAcknowledge) или
    * программно из WSS-обработчика при получении события uin_assigned.
    * @param onAcknowledge - колбек при нажатии кнопки «Понятно»
+   * @returns ссылка на открытый диалог
    */
   public openUinPending(onAcknowledge: () => void): MatDialogRef<DialogModalComponent> {
     return this._dialog.open<DialogModalComponent, DialogModalData>(
@@ -24,7 +25,7 @@ export class UinModalService {
       {
         ...MODAL_BOTTOM_SHEET_PARAMS,
         data: {
-          icon: ModalHeaderIcon.Preloader,
+          icon: ModalHeaderIcon.PRELOADER,
           title: 'Назначаем UIN...',
           text: 'Это займёт несколько секунд. Пожалуйста, подождите.',
           closeBtnText: 'Понятно',

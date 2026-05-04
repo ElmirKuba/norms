@@ -9,10 +9,16 @@ import type { DialogModalData } from '../../../../shared/modals/types/modal.type
 /** Сервис глобального события «сессия завершена» (WSS session_kicked) */
 @Injectable({ providedIn: 'root' })
 export class SessionKickedService {
+  /** Сервис диалогов Angular Material */
   private readonly _dialog: MatDialog = inject(MatDialog);
+
+  /** Роутер для навигации после разлогина */
   private readonly _router: Router = inject(Router);
 
-  /** Показать модалку кика и разлогинить пользователя */
+  /**
+   * Показать модалку кика и разлогинить пользователя.
+   * @param deviceName - название устройства, инициировавшего кик
+   */
   public showKickedModal(deviceName: string = 'другого устройства'): void {
     this._dialog.closeAll();
 
@@ -20,11 +26,11 @@ export class SessionKickedService {
       ...MODAL_BOTTOM_SHEET_PARAMS,
       disableClose: true,
       data: {
-        icon: ModalHeaderIcon.Warning,
+        icon: ModalHeaderIcon.WARNING,
         title: 'Сессия завершена',
-        text: `Ваше устройство было отключено. Войдите снова, чтобы продолжить.`,
+        text: `Устройство «${deviceName}» завершило вашу сессию. Войдите снова, чтобы продолжить.`,
         closeBtnText: 'Войти снова',
-        closeCallback: () => {
+        closeCallback: (): void => {
           void this._router.navigate(['/application/welcome']);
         },
         preventDialogClose: true,

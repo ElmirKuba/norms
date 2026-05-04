@@ -10,6 +10,7 @@ import type { MockSearchUser } from '../../search/types/search.types';
 /** Сервис открытия модалки выбора устройства при создании чата */
 @Injectable({ providedIn: 'root' })
 export class CreateChatModalService {
+  /** Сервис диалогов Angular Material */
   private readonly _dialog: MatDialog = inject(MatDialog);
 
   /**
@@ -27,8 +28,8 @@ export class CreateChatModalService {
       data: { user },
     });
 
-    ref.afterClosed().subscribe((result: CreateChatModalResult | undefined) => {
-      if (result?.deviceId && result.chatName) {
+    ref.afterClosed().subscribe((result: CreateChatModalResult | undefined): void => {
+      if (result !== undefined && result.deviceId.length > 0 && result.chatName.length > 0) {
         onCreated(result.deviceId, result.chatName);
       }
     });

@@ -1,5 +1,6 @@
 /** Элемент списка чатов */
 export interface MockChat {
+  /** Уникальный идентификатор чата */
   readonly id: string;
   /** Имя контакта (аккаунт) */
   readonly name: string;
@@ -11,10 +12,15 @@ export interface MockChat {
   readonly deviceLabel: string;
   /** Название чата (тема, задаётся при создании) */
   readonly chatName: string;
+  /** Последнее сообщение */
   readonly lastMessage: string;
+  /** Время последнего сообщения */
   readonly time: string;
+  /** Количество непрочитанных */
   readonly unread: number;
+  /** Инициалы для аватара */
   readonly initials: string;
+  /** Цвет аватара */
   readonly avatarColor: string;
   /** Ключ ещё не обменян — чат только что создан */
   readonly pendingKey?: boolean;
@@ -25,10 +31,15 @@ export type MessageStatus = 'pending_key' | 'sent' | 'delivered' | 'read' | 'fai
 
 /** Сообщение в чате */
 export interface MockMessage {
+  /** Уникальный идентификатор сообщения */
   readonly id: string;
+  /** Текст сообщения */
   readonly text: string;
+  /** Время отправки */
   readonly time: string;
+  /** Является ли сообщение нашим */
   readonly isOwn: boolean;
+  /** Статус доставки */
   readonly status: MessageStatus;
 }
 
@@ -130,6 +141,7 @@ export const MOCK_CHATS: MockChat[] = [
   },
 ];
 
+/* eslint-disable @typescript-eslint/naming-convention */
 /** Мок-сообщения по chat id */
 export const MOCK_MESSAGES: Record<string, MockMessage[]> = {
   '0195f3a2-1b4c-7e2d-9f1a-3c8b0d4e5f6a_1746000000000': [
@@ -172,3 +184,4 @@ export const MOCK_MESSAGES: Record<string, MockMessage[]> = {
     { id: '0195f3b3-4d5e-7f6a-b17c-3d4e5f6a7b8c_1746000073000', text: 'Едем в субботу?', time: 'вт', isOwn: false, status: 'delivered' },
   ],
 };
+/* eslint-enable @typescript-eslint/naming-convention */

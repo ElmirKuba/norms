@@ -11,7 +11,10 @@ import { MainApplicationComponent } from '../../../main/components/main/main.com
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProfileApplicationComponent {
+  /** Сервис модалки кика сессии */
   private readonly _sessionKicked: SessionKickedService = inject(SessionKickedService);
+
+  /** Shell основного экрана для управления баннером */
   private readonly _mainShell: MainApplicationComponent = inject(MainApplicationComponent);
 
   /** [МОК] Симулировать получение WSS события session_kicked */

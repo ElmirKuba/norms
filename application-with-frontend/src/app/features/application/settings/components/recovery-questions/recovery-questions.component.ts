@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import type { WritableSignal } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MOCK_RECOVERY_QA, RECOVERY_PRESET_QUESTIONS } from '../../types/settings.types';
@@ -13,19 +14,17 @@ import type { MockRecoveryQA, RecoveryPresetQuestion } from '../../types/setting
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsRecoveryQuestionsComponent {
-  private readonly _router: Router = inject(Router);
-
   /** Preset-вопросы */
   public readonly presetQuestions: RecoveryPresetQuestion[] = RECOVERY_PRESET_QUESTIONS;
 
   /** Список настроенных Q&A (мок) */
-  public readonly qaList = signal<MockRecoveryQA[]>(MOCK_RECOVERY_QA);
+  public readonly qaList: WritableSignal<MockRecoveryQA[]> = signal(MOCK_RECOVERY_QA);
 
   /** Показывать форму добавления */
-  public readonly showAddForm = signal<boolean>(false);
+  public readonly showAddForm: WritableSignal<boolean> = signal(false);
 
   /** Выбранный preset-вопрос или свой */
-  public readonly selectedPreset = signal<RecoveryPresetQuestion | null>(null);
+  public readonly selectedPreset: WritableSignal<RecoveryPresetQuestion | null> = signal(null);
 
   /** Свой вопрос */
   public customQuestion: string = '';
@@ -34,10 +33,10 @@ export class SettingsRecoveryQuestionsComponent {
   public newAnswer: string = '';
 
   /** Принято предупреждение */
-  public readonly warningAccepted = signal<boolean>(false);
+  public readonly warningAccepted: WritableSignal<boolean> = signal(false);
 
   /** ID редактируемого Q&A */
-  public readonly editingId = signal<string | null>(null);
+  public readonly editingId: WritableSignal<string | null> = signal(null);
 
   /** Вопрос в форме редактирования */
   public editQuestion: string = '';
@@ -45,12 +44,18 @@ export class SettingsRecoveryQuestionsComponent {
   /** Ответ в форме редактирования */
   public editAnswer: string = '';
 
+  /** Роутер для навигации */
+  private readonly _router: Router = inject(Router);
+
   /** Назад к настройкам */
   public goBack(): void {
     void this._router.navigate(['/application/main/settings']);
   }
 
-  /** Выбрать preset */
+  /**
+   * Выбрать preset.
+   * @param q - выбранный preset-вопрос
+   */
   public selectPreset(q: RecoveryPresetQuestion): void {
     this.selectedPreset.set(q);
     this.customQuestion = '';
@@ -59,15 +64,15 @@ export class SettingsRecoveryQuestionsComponent {
   /** Сохранить новый Q&A (мок) */
   public saveQA(): void {
     const question = this.selectedPreset()?.text ?? this.customQuestion.trim();
-    if (!question || !this.newAnswer.trim()) return;
+    if (question === '' || this.newAnswer.trim() === '') return;
 
     const newQA: MockRecoveryQA = {
-      id: `mock_${Date.now()}`,
+      id: `mock_${String(Date.now())}`,
       question,
       createdAt: new Date().toLocaleDateString('ru', { day: 'numeric', month: 'short', year: 'numeric' }),
     };
 
-    this.qaList.update((list) => [...list, newQA]);
+    this.qaList.update((list: MockRecoveryQA[]): MockRecoveryQA[] => [...list, newQA]);
     this.showAddForm.set(false);
     this.selectedPreset.set(null);
     this.customQuestion = '';
@@ -75,12 +80,18 @@ export class SettingsRecoveryQuestionsComponent {
     this.warningAccepted.set(false);
   }
 
-  /** Удалить Q&A (мок) */
+  /**
+   * Удалить Q&A (мок).
+   * @param id - идентификатор Q&A для удаления
+   */
   public deleteQA(id: string): void {
-    this.qaList.update((list) => list.filter((qa) => qa.id !== id));
+    this.qaList.update((list: MockRecoveryQA[]): MockRecoveryQA[] => list.filter((qa: MockRecoveryQA): boolean => qa.id !== id));
   }
 
-  /** Открыть форму редактирования Q&A */
+  /**
+   * Открыть форму редактирования Q&A.
+   * @param qa - Q&A для редактирования
+   */
   public openEdit(qa: MockRecoveryQA): void {
     this.editingId.set(qa.id);
     this.editQuestion = qa.question;
@@ -99,10 +110,10 @@ export class SettingsRecoveryQuestionsComponent {
     const id = this.editingId();
     const question = this.editQuestion.trim();
     const answer = this.editAnswer.trim();
-    if (!id || !question || !answer) return;
+    if (id === null || question === '' || answer === '') return;
 
-    this.qaList.update((list) =>
-      list.map((qa) =>
+    this.qaList.update((list: MockRecoveryQA[]): MockRecoveryQA[] =>
+      list.map((qa: MockRecoveryQA): MockRecoveryQA =>
         qa.id === id ? { ...qa, question } : qa,
       ),
     );

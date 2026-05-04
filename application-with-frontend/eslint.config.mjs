@@ -14,7 +14,7 @@ export default tseslint.config(
 
   // ─── TypeScript ──────────────────────────────────────────────────────────────
   {
-    files: ['*.component.ts', '*.service.ts', '*.directive.ts'],
+    files: ['src/**/*.ts'],
     extends: [
       eslint.configs.recommended,
       ...tseslint.configs.strictTypeChecked,
@@ -150,18 +150,22 @@ export default tseslint.config(
       ],
 
       // ── Type imports / exports ───────────────────────────────────────────────
-      // import type { Foo } — для типов используем type-import
+      // import type { Foo } — для типов используем type-import.
+      // fixStyle: 'separate-type-imports' (не inline) — Angular DI через inject()
+      // требует чтобы класс-токен был value-импортом. Inline-стиль может ввести
+      // в заблуждение авто-фикс в IDE и случайно превратить value-import в type.
+      // Separate-стиль явно разделяет: import { inject } и import type { Foo }.
       '@typescript-eslint/consistent-type-imports': [
         'error',
         {
           prefer: 'type-imports',
-          fixStyle: 'inline-type-imports',
-          disallowTypeAnnotations: false,
+          fixStyle: 'separate-type-imports',
+          disallowTypeAnnotations: true,
         },
       ],
       '@typescript-eslint/consistent-type-exports': [
         'error',
-        { fixMixedExportsWithInlineTypeSpecifier: true },
+        { fixMixedExportsWithInlineTypeSpecifier: false },
       ],
 
       // ── Промисы и async ──────────────────────────────────────────────────────

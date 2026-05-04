@@ -10,6 +10,7 @@ import { Router, RouterLink } from '@angular/router';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsAccountComponent {
+  /** Роутер для навигации */
   private readonly _router: Router = inject(Router);
 
   /** Назад к настройкам */

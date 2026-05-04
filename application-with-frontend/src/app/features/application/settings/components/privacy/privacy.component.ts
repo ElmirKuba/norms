@@ -10,6 +10,7 @@ import { Router } from '@angular/router';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsPrivacyComponent {
+  /** Роутер для навигации */
   private readonly _router: Router = inject(Router);
 
   /** Назад к настройкам */

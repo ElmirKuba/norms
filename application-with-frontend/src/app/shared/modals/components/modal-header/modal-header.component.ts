@@ -13,5 +13,5 @@ export class ModalHeaderSharedComponent {
   @Input() public icon: ModalHeaderIcon | undefined = undefined;
 
   /** Enum иконок — доступен в шаблоне */
-  public readonly ModalHeaderIcon: typeof ModalHeaderIcon = ModalHeaderIcon;
+  public readonly modalHeaderIcon: typeof ModalHeaderIcon = ModalHeaderIcon;
 }

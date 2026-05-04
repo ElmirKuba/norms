@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import type { WritableSignal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
@@ -11,8 +12,6 @@ import { Router } from '@angular/router';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsChangePasswordComponent {
-  private readonly _router: Router = inject(Router);
-
   /** Текущий пароль */
   public currentPassword: string = '';
 
@@ -23,16 +22,19 @@ export class SettingsChangePasswordComponent {
   public confirmPassword: string = '';
 
   /** Показать текущий пароль */
-  public readonly showCurrent = signal<boolean>(false);
+  public readonly showCurrent: WritableSignal<boolean> = signal(false);
 
   /** Показать новый пароль */
-  public readonly showNew = signal<boolean>(false);
+  public readonly showNew: WritableSignal<boolean> = signal(false);
 
   /** Показать подтверждение */
-  public readonly showConfirm = signal<boolean>(false);
+  public readonly showConfirm: WritableSignal<boolean> = signal(false);
 
   /** Статус отправки */
-  public readonly submitState = signal<'idle' | 'loading' | 'success' | 'error'>('idle');
+  public readonly submitState: WritableSignal<'idle' | 'loading' | 'success' | 'error'> = signal('idle');
+
+  /** Роутер для навигации */
+  private readonly _router: Router = inject(Router);
 
   /** Проверка: форма заполнена корректно */
   public get isFormValid(): boolean {
@@ -55,7 +57,7 @@ export class SettingsChangePasswordComponent {
     this.submitState.set('loading');
 
     // Мок: через 1.2 с — успех
-    setTimeout(() => {
+    setTimeout((): void => {
       this.submitState.set('success');
     }, 1200);
   }

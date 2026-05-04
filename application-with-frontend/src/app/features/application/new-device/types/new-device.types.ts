@@ -1,10 +1,16 @@
 /** Осиротевший собеседник — аккаунт, с которым были чаты с других устройств */
 export interface MockOrphanPeer {
+  /** Уникальный идентификатор аккаунта */
   readonly id: string;
+  /** Имя пользователя */
   readonly name: string;
+  /** UIN пользователя */
   readonly uin: string;
+  /** Инициалы для аватара */
   readonly initials: string;
+  /** Цвет аватара */
   readonly avatarColor: string;
+  /** Когда последний раз общались */
   readonly lastChatAt: string;
 }
 

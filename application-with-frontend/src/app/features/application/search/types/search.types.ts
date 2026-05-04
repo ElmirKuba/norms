@@ -1,15 +1,22 @@
 /** Устройство пользователя (для выбора при создании чата) */
 export interface MockUserDevice {
+  /** Уникальный идентификатор устройства */
   readonly deviceId: string;
+  /** Метка устройства (системное название или прозвище) */
   readonly label: string;
 }
 
 /** Результат поиска пользователя */
 export interface MockSearchUser {
+  /** Уникальный идентификатор пользователя */
   readonly id: string;
+  /** Имя пользователя */
   readonly name: string;
+  /** UIN пользователя */
   readonly uin: string;
+  /** Инициалы для аватара */
   readonly initials: string;
+  /** Цвет аватара */
   readonly avatarColor: string;
   /** Устройства пользователя */
   readonly devices: readonly MockUserDevice[];

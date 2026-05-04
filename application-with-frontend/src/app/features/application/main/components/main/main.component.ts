@@ -1,10 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import type { OnInit, WritableSignal, Signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Router } from '@angular/router';
 import { UinModalService } from '../../../uin/services/uin-modal.service';
 import { ChatsStateService } from '../../../chats/services/chats-state.service';
 import { SessionKickedService } from '../../services/session-kicked.service';
-import type { Signal } from '@angular/core';
 
 /** Основной shell приложения: таббар + router-outlet для дочерних экранов */
 @Component({
@@ -15,15 +15,10 @@ import type { Signal } from '@angular/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MainApplicationComponent implements OnInit {
-  private readonly _router: Router = inject(Router);
-  private readonly _uinModal: UinModalService = inject(UinModalService);
-  private readonly _chatsState: ChatsStateService = inject(ChatsStateService);
-  private readonly _sessionKicked: SessionKickedService = inject(SessionKickedService);
-
   /** Ссылка для таба «Чаты»: открытый чат или список */
-  public readonly chatsTabLink: Signal<string[]> = computed(() => {
+  public readonly chatsTabLink: Signal<string[]> = computed((): string[] => {
     const chatId = this._chatsState.activeChatId();
-    return chatId
+    return chatId !== null
       ? ['/application/main/chats', chatId]
       : ['/application/main/chats'];
   });
@@ -32,7 +27,19 @@ export class MainApplicationComponent implements OnInit {
    * Баннер сброса пароля (WSS password_reset_via_recovery).
    * true — показать баннер. В продакшне управляется WSS-событием.
    */
-  public readonly passwordResetBanner = signal<boolean>(false);
+  public readonly passwordResetBanner: WritableSignal<boolean> = signal(false);
+
+  /** Роутер для навигации и чтения navigation state */
+  private readonly _router: Router = inject(Router);
+
+  /** Сервис модалок UIN-флоу */
+  private readonly _uinModal: UinModalService = inject(UinModalService);
+
+  /** Сервис состояния чатов */
+  private readonly _chatsState: ChatsStateService = inject(ChatsStateService);
+
+  /** Сервис модалки кика сессии */
+  private readonly _sessionKicked: SessionKickedService = inject(SessionKickedService);
 
   /** @inheritdoc */
   public ngOnInit(): void {

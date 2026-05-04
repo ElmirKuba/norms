@@ -1,10 +1,12 @@
-import { ChangeDetectionStrategy, Component, OnInit, signal, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal, inject } from '@angular/core';
+import type { OnInit, WritableSignal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MOCK_CHATS, MOCK_MESSAGES } from '../../types/chats.types';
 import { MOCK_SEARCH_USERS } from '../../../search/types/search.types';
 import { ChatsStateService } from '../../services/chats-state.service';
 import type { MockChat, MockMessage } from '../../types/chats.types';
+import type { MockSearchUser } from '../../../search/types/search.types';
 
 /** Экран отдельного чата */
 @Component({
@@ -15,31 +17,36 @@ import type { MockChat, MockMessage } from '../../types/chats.types';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatDetailApplicationComponent implements OnInit {
-  private readonly _route: ActivatedRoute = inject(ActivatedRoute);
-  private readonly _router: Router = inject(Router);
-  private readonly _chatsState: ChatsStateService = inject(ChatsStateService);
-
   /** Данные чата */
-  public readonly chat = signal<MockChat | null>(null);
+  public readonly chat: WritableSignal<MockChat | null> = signal(null);
 
   /** Сообщения */
-  public readonly messages = signal<MockMessage[]>([]);
+  public readonly messages: WritableSignal<MockMessage[]> = signal([]);
 
   /** Текст нового сообщения */
   public messageText: string = '';
 
+  /** Роутер для навигации */
+  private readonly _route: ActivatedRoute = inject(ActivatedRoute);
+
+  /** Роутер для навигации */
+  private readonly _router: Router = inject(Router);
+
+  /** Сервис состояния чатов */
+  private readonly _chatsState: ChatsStateService = inject(ChatsStateService);
+
   /** @inheritdoc */
   public ngOnInit(): void {
     const chatId = this._route.snapshot.paramMap.get('chatId');
-    if (!chatId) {
+    if (chatId === null) {
       void this._router.navigate(['/application/main/chats']);
       return;
     }
 
-    const found = MOCK_CHATS.find((c) => c.id === chatId) ?? null;
+    const found = MOCK_CHATS.find((c: MockChat): boolean => c.id === chatId) ?? null;
     this.chat.set(found);
 
-    if (!found) {
+    if (found === null) {
       void this._router.navigate(['/application/main/chats']);
       return;
     }
@@ -51,9 +58,9 @@ export class ChatDetailApplicationComponent implements OnInit {
   /** Открыть профиль собеседника */
   public openContactProfile(): void {
     const currentChat = this.chat();
-    if (!currentChat) return;
-    const user = MOCK_SEARCH_USERS.find((u) => u.uin === currentChat.uin);
-    if (user) {
+    if (currentChat === null) return;
+    const user = MOCK_SEARCH_USERS.find((u: MockSearchUser): boolean => u.uin === currentChat.uin);
+    if (user !== undefined) {
       void this._router.navigate(['/application/main/user', user.id]);
     }
   }
@@ -67,7 +74,7 @@ export class ChatDetailApplicationComponent implements OnInit {
   /** Отправка сообщения (мок) */
   public sendMessage(): void {
     const text = this.messageText.trim();
-    if (!text) return;
+    if (text === '') return;
 
     const newMessage: MockMessage = {
       id: String(Date.now()),
@@ -77,14 +84,17 @@ export class ChatDetailApplicationComponent implements OnInit {
       status: 'sent',
     };
 
-    this.messages.update((msgs) => [...msgs, newMessage]);
+    this.messages.update((msgs: MockMessage[]): MockMessage[] => [...msgs, newMessage]);
     this.messageText = '';
   }
 
-  /** Повторная отправка упавшего сообщения (мок) */
+  /**
+   * Повторная отправка упавшего сообщения (мок).
+   * @param messageId - идентификатор сообщения для повторной отправки
+   */
   public retryMessage(messageId: string): void {
-    this.messages.update((msgs) =>
-      msgs.map((m) => (m.id === messageId ? { ...m, status: 'sent' as const } : m)),
+    this.messages.update((msgs: MockMessage[]): MockMessage[] =>
+      msgs.map((m: MockMessage): MockMessage => (m.id === messageId ? { ...m, status: 'sent' as const } : m)),
     );
   }
 }

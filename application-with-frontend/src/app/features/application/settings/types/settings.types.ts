@@ -1,22 +1,32 @@
 /** Активное устройство/сессия */
 export interface MockDevice {
+  /** Уникальный идентификатор устройства */
   readonly id: string;
+  /** Название устройства (прозвище или системное) */
   readonly name: string;
+  /** Платформа устройства */
   readonly platform: 'ios' | 'android' | 'windows' | 'macos' | 'linux';
+  /** Время последней активности */
   readonly lastSeen: string;
+  /** Является ли текущим устройством */
   readonly isCurrent: boolean;
 }
 
 /** Preset-вопрос восстановления доступа */
 export interface RecoveryPresetQuestion {
+  /** Уникальный идентификатор вопроса */
   readonly id: string;
+  /** Текст вопроса */
   readonly text: string;
 }
 
 /** Настроенная Q&A пара */
 export interface MockRecoveryQA {
+  /** Уникальный идентификатор */
   readonly id: string;
+  /** Текст вопроса */
   readonly question: string;
+  /** Дата создания */
   readonly createdAt: string;
 }
 

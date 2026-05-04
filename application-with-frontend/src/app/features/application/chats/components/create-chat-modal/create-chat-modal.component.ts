@@ -1,16 +1,20 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import type { WritableSignal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import type { MockSearchUser, MockUserDevice } from '../../../search/types/search.types';
 
 /** Данные, передаваемые в модалку выбора устройства */
 export interface CreateChatModalData {
+  /** Пользователь, которому пишем */
   readonly user: MockSearchUser;
 }
 
 /** Результат создания чата */
 export interface CreateChatModalResult {
+  /** Идентификатор выбранного устройства */
   readonly deviceId: string;
+  /** Название чата */
   readonly chatName: string;
 }
 
@@ -26,20 +30,21 @@ type CreateChatStep = 'device' | 'name';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CreateChatModalComponent {
-  private readonly _dialogRef: MatDialogRef<CreateChatModalComponent, CreateChatModalResult> =
-    inject(MatDialogRef);
-
   /** Данные из диалога */
   public readonly data: CreateChatModalData = inject<CreateChatModalData>(MAT_DIALOG_DATA);
 
   /** Текущий шаг модалки */
-  public readonly step = signal<CreateChatStep>('device');
+  public readonly step: WritableSignal<CreateChatStep> = signal('device');
 
   /** Выбранное устройство */
-  public readonly selectedDevice = signal<MockUserDevice | null>(null);
+  public readonly selectedDevice: WritableSignal<MockUserDevice | null> = signal(null);
 
   /** Название чата */
-  public chatName = '';
+  public chatName: string = '';
+
+  /** Ссылка на диалог для программного закрытия */
+  private readonly _dialogRef: MatDialogRef<CreateChatModalComponent, CreateChatModalResult> =
+    inject<MatDialogRef<CreateChatModalComponent, CreateChatModalResult>>(MatDialogRef);
 
   /** Закрыть без результата */
   public close(): void {
@@ -53,7 +58,10 @@ export class CreateChatModalComponent {
     this.chatName = '';
   }
 
-  /** Выбрать устройство — переход к вводу названия */
+  /**
+   * Выбрать устройство — переход к вводу названия.
+   * @param device - выбранное устройство
+   */
   public selectDevice(device: MockUserDevice): void {
     this.selectedDevice.set(device);
     this.step.set('name');
@@ -63,7 +71,7 @@ export class CreateChatModalComponent {
   public confirmCreate(): void {
     const device = this.selectedDevice();
     const name = this.chatName.trim();
-    if (!device || !name) return;
+    if (device === null || name === '') return;
     this._dialogRef.close({ deviceId: device.deviceId, chatName: name });
   }
 }

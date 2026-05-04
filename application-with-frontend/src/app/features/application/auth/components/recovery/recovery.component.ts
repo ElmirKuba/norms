@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, signal, inject } from '@angular/core';
+import type { WritableSignal, Signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { RECOVERY_PRESET_QUESTIONS } from '../../../settings/types/settings.types';
@@ -16,50 +17,51 @@ type RecoveryStep = 'uin' | 'answer' | 'password';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RecoveryApplicationComponent {
-  private readonly _router: Router = inject(Router);
-
   /** Preset-вопросы (мок) */
   public readonly presetQuestions: RecoveryPresetQuestion[] = RECOVERY_PRESET_QUESTIONS;
 
   /** Текущий шаг */
-  public readonly step = signal<RecoveryStep>('uin');
+  public readonly step: WritableSignal<RecoveryStep> = signal('uin');
 
   /** UIN введённый пользователем */
-  public readonly uin = signal<string>('');
+  public readonly uin: WritableSignal<string> = signal('');
 
   /** Выбранный вопрос */
-  public readonly selectedQuestion = signal<RecoveryPresetQuestion | null>(null);
+  public readonly selectedQuestion: WritableSignal<RecoveryPresetQuestion | null> = signal(null);
 
   /** Ответ */
-  public readonly answer = signal<string>('');
+  public readonly answer: WritableSignal<string> = signal('');
 
   /** Новый пароль */
-  public readonly newPassword = signal<string>('');
+  public readonly newPassword: WritableSignal<string> = signal('');
 
   /** Подтверждение нового пароля */
-  public readonly confirmPassword = signal<string>('');
+  public readonly confirmPassword: WritableSignal<string> = signal('');
 
   /** Показывать список вопросов */
-  public readonly showQuestions = signal<boolean>(false);
+  public readonly showQuestions: WritableSignal<boolean> = signal(false);
 
   /** Показывать новый пароль открытым текстом */
-  public readonly showNewPassword = signal<boolean>(false);
+  public readonly showNewPassword: WritableSignal<boolean> = signal(false);
 
   /** Показывать подтверждение пароля открытым текстом */
-  public readonly showConfirmPassword = signal<boolean>(false);
+  public readonly showConfirmPassword: WritableSignal<boolean> = signal(false);
 
   /** Кнопка шага 1 активна */
-  public readonly isStep1Valid = computed(() => this.uin().trim().length >= 4);
+  public readonly isStep1Valid: Signal<boolean> = computed((): boolean => this.uin().trim().length >= 4);
 
   /** Кнопка шага 2 активна */
-  public readonly isStep2Valid = computed(
-    () => this.selectedQuestion() !== null && this.answer().trim().length > 0,
+  public readonly isStep2Valid: Signal<boolean> = computed(
+    (): boolean => this.selectedQuestion() !== null && this.answer().trim().length > 0,
   );
 
   /** Кнопка шага 3 активна */
-  public readonly isStep3Valid = computed(
-    () => this.newPassword().length >= 8 && this.newPassword() === this.confirmPassword(),
+  public readonly isStep3Valid: Signal<boolean> = computed(
+    (): boolean => this.newPassword().length >= 8 && this.newPassword() === this.confirmPassword(),
   );
+
+  /** Роутер для навигации */
+  private readonly _router: Router = inject(Router);
 
   /** Шаг 1 → 2 */
   public submitUin(): void {
@@ -69,7 +71,10 @@ export class RecoveryApplicationComponent {
     this.selectedQuestion.set(null);
   }
 
-  /** Выбрать вопрос */
+  /**
+   * Выбрать вопрос.
+   * @param q - выбранный preset-вопрос
+   */
   public selectQuestion(q: RecoveryPresetQuestion): void {
     this.selectedQuestion.set(q);
     this.showQuestions.set(false);

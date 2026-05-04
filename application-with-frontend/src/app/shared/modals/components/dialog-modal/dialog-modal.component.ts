@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import type { OnInit } from '@angular/core';
 import { NgComponentOutlet } from '@angular/common';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import type { DialogModalData } from '../../types/modal.types';
@@ -12,7 +13,7 @@ import { ButtonSharedComponent } from '../../../components/button/button.compone
  * Конфигурируется через DialogModalData<T>, переданный в MAT_DIALOG_DATA.
  * Используется для 80% модалок (Способ A).
  *
- * Намеренно ChangeDetectionStrategy.Default — колбеки из data могут
+ * Намеренно ChangeDetectionStrategy.Default (Eager) — колбеки из data могут
  * менять внешнее состояние без Angular-сигналов.
  */
 @Component({
@@ -26,25 +27,27 @@ import { ButtonSharedComponent } from '../../../components/button/button.compone
   ],
   templateUrl: './dialog-modal.component.html',
   styleUrl: './dialog-modal.component.scss',
-  changeDetection: ChangeDetectionStrategy.Default,
+  // eslint-disable-next-line @angular-eslint/prefer-on-push-component-change-detection
+  changeDetection: ChangeDetectionStrategy.Eager,
 })
 export class DialogModalComponent<T = unknown> implements OnInit {
   /** Данные конфигурации диалога */
   public readonly data: DialogModalData<T> = inject<DialogModalData<T>>(MAT_DIALOG_DATA);
 
   /** Ссылка на диалог для программного закрытия */
-  private readonly _dialogRef: MatDialogRef<DialogModalComponent<T>> = inject(MatDialogRef);
+  private readonly _dialogRef: MatDialogRef<DialogModalComponent<T>> =
+    inject<MatDialogRef<DialogModalComponent<T>>>(MatDialogRef);
 
   /** @inheritdoc */
   public ngOnInit(): void {
-    if (this.data.preventDialogClose) {
+    if (this.data.preventDialogClose === true) {
       this._dialogRef.disableClose = true;
     }
   }
 
   /** Нажатие кнопки подтверждения (sync или async) */
   public async onConfirm(): Promise<void> {
-    if (this.data.confirmCallbackAsync) {
+    if (this.data.confirmCallbackAsync !== undefined) {
       await this.data.confirmCallbackAsync();
     } else {
       this.data.confirmCallback?.();
@@ -54,7 +57,7 @@ export class DialogModalComponent<T = unknown> implements OnInit {
 
   /** Нажатие кнопки отмены (sync или async) */
   public async onCancel(): Promise<void> {
-    if (this.data.cancelCallbackAsync) {
+    if (this.data.cancelCallbackAsync !== undefined) {
       await this.data.cancelCallbackAsync();
     } else {
       this.data.cancelCallback?.();
@@ -68,8 +71,11 @@ export class DialogModalComponent<T = unknown> implements OnInit {
     this._dialogRef.close();
   }
 
-  /** Проверяет, заблокирована ли кнопка подтверждения */
+  /**
+   * Проверяет, заблокирована ли кнопка подтверждения.
+   * @returns true если кнопка заблокирована
+   */
   public isConfirmDisabled(): boolean {
-    return this.data.isConfirmButtonDisabled ? this.data.isConfirmButtonDisabled() : false;
+    return this.data.isConfirmButtonDisabled !== undefined ? this.data.isConfirmButtonDisabled() : false;
   }
 }

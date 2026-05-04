@@ -1,17 +1,26 @@
 /** Активный инвайт-код */
 export interface MockInviteCode {
+  /** Уникальный идентификатор кода */
   readonly id: string;
+  /** Строка инвайт-кода (формат: XXXX-XXXX-XX) */
   readonly code: string;
+  /** Дата истечения */
   readonly expiresAt: string;
 }
 
 /** Приглашённый пользователь */
 export interface MockInvitedUser {
+  /** Уникальный идентификатор */
   readonly id: string;
+  /** Имя пользователя */
   readonly name: string;
+  /** UIN пользователя */
   readonly uin: string;
+  /** Инициалы для аватара */
   readonly initials: string;
+  /** Цвет аватара */
   readonly avatarColor: string;
+  /** Дата приглашения */
   readonly invitedAt: string;
 }
 

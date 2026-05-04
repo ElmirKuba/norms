@@ -3,15 +3,15 @@ import type { Type } from '@angular/core';
 /** Иконки заголовка модального окна */
 export enum ModalHeaderIcon {
   /** Анимированная крутилка */
-  Preloader = 'preloader',
+  PRELOADER = 'preloader',
   /** Зелёная галочка */
-  Done = 'done',
+  DONE = 'done',
   /** Красный крестик */
-  Error = 'error',
+  ERROR = 'error',
   /** Синяя информация */
-  Info = 'info',
+  INFO = 'info',
   /** Жёлтый треугольник */
-  Warning = 'warning',
+  WARNING = 'warning',
 }
 
 /**

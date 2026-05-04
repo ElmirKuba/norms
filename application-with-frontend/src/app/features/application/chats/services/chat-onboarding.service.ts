@@ -1,4 +1,5 @@
 import { Injectable, inject, signal } from '@angular/core';
+import type { WritableSignal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { DialogModalComponent } from '../../../../shared/modals/components/dialog-modal/dialog-modal.component';
 import { MODAL_BOTTOM_SHEET_PARAMS } from '../../../../shared/modals/constants/modal.constants';
@@ -8,12 +9,16 @@ import type { DialogModalData } from '../../../../shared/modals/types/modal.type
 /** Сервис онбординг-модалки при создании первого чата */
 @Injectable({ providedIn: 'root' })
 export class ChatOnboardingService {
+  /** Сервис диалогов Angular Material */
   private readonly _dialog: MatDialog = inject(MatDialog);
 
   /** Флаг: модалка уже была показана в этой сессии */
-  private readonly _shown = signal<boolean>(false);
+  private readonly _shown: WritableSignal<boolean> = signal(false);
 
-  /** Показать модалку, если ещё не показывалась. Вызывает onAcknowledge после закрытия. */
+  /**
+   * Показать модалку, если ещё не показывалась. Вызывает onAcknowledge после закрытия.
+   * @param onAcknowledge - колбек, вызываемый после подтверждения
+   */
   public openIfNeeded(onAcknowledge: () => void): void {
     if (this._shown()) {
       onAcknowledge();
@@ -34,7 +39,7 @@ export class ChatOnboardingService {
       },
     );
     // Если закрыли без кнопки (клик по backdrop) — всё равно выполняем callback
-    ref.afterClosed().subscribe((result: unknown) => {
+    ref.afterClosed().subscribe((result: unknown): void => {
       if (result === undefined) onAcknowledge();
     });
   }

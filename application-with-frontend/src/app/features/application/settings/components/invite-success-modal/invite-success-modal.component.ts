@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import type { WritableSignal } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 /** Данные модалки успешного создания инвайта */
 export interface InviteSuccessModalData {
+  /** Строка созданного инвайт-кода */
   readonly code: string;
 }
 
@@ -15,13 +17,15 @@ export interface InviteSuccessModalData {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InviteSuccessModalComponent {
-  private readonly _dialogRef: MatDialogRef<InviteSuccessModalComponent> = inject(MatDialogRef);
-
   /** Данные из диалога */
   public readonly data: InviteSuccessModalData = inject<InviteSuccessModalData>(MAT_DIALOG_DATA);
 
   /** Скопирован? */
-  public readonly copied = signal<boolean>(false);
+  public readonly copied: WritableSignal<boolean> = signal(false);
+
+  /** Ссылка на диалог для программного закрытия */
+  private readonly _dialogRef: MatDialogRef<InviteSuccessModalComponent> =
+    inject<MatDialogRef<InviteSuccessModalComponent>>(MatDialogRef);
 
   /** Закрыть */
   public close(): void {
@@ -30,9 +34,9 @@ export class InviteSuccessModalComponent {
 
   /** Скопировать код */
   public copyCode(): void {
-    void navigator.clipboard.writeText(this.data.code).then(() => {
+    void navigator.clipboard.writeText(this.data.code).then((): void => {
       this.copied.set(true);
-      setTimeout(() => { this.copied.set(false); }, 1500);
+      setTimeout((): void => { this.copied.set(false); }, 1500);
     });
   }
 }

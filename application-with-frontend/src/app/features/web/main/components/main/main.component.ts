@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import type { OnDestroy, OnInit, WritableSignal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
@@ -52,7 +52,8 @@ export class MainWebComponent implements OnInit, OnDestroy {
   /** Подписка на события роутера для закрытия мобильного меню */
   private _routerSub: Subscription | null = null;
 
-  public constructor(private readonly _router: Router) {}
+  /** Роутер для подписки на события навигации */
+  private readonly _router: Router = inject(Router);
 
   /** @inheritdoc */
   public ngOnInit(): void {

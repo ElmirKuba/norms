@@ -12,12 +12,16 @@ import type { MockOrphanPeer } from '../../types/new-device.types';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NewDeviceApplicationComponent {
-  private readonly _router: Router = inject(Router);
-
   /** Осиротевшие собеседники (мок) */
   public readonly peers: MockOrphanPeer[] = MOCK_ORPHAN_PEERS;
 
-  /** Перейти к профилю пользователя */
+  /** Роутер для навигации */
+  private readonly _router: Router = inject(Router);
+
+  /**
+   * Перейти к профилю пользователя.
+   * @param peer - осиротевший собеседник
+   */
   public openProfile(peer: MockOrphanPeer): void {
     void this._router.navigate(['/application/main/user', peer.id]);
   }
