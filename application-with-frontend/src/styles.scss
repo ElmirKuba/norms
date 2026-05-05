@@ -164,6 +164,13 @@ body {
   --clr-contact-hover: #3a3a3c; // hover контакт-кнопки
 }
 
+// ─── Тёмная тема: глобальные правила (обходят Angular view encapsulation) ────────
+
+// SVG-иконки карточек хардкожены цветом #1A1A1A — инвертируем в белый на тёмном фоне
+.dark .features__card-icon {
+  filter: brightness(0) invert(1);
+}
+
 // ─── Angular Material Dialog: сброс стилей Material ───────────────────────────
 
 .mat-mdc-dialog-container .mdc-dialog__surface {

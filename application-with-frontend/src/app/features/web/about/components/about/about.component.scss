@@ -87,9 +87,5 @@
       }
     }
 
-    // тёмная тема: SVG-иконки (#1A1A1A) невидимы на тёмном фоне — инвертируем в белый
-    :host-context(.dark) &__card-icon {
-      filter: brightness(0) invert(1);
-    }
   }
 }
