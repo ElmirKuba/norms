@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { ButtonSharedComponent } from '../../../../../shared/components/button/button.component';
 import type { FeatureFlags } from '../../types/auth.types';
 import { MOCK_FEATURE_FLAGS } from '../../types/auth.types';
+import { ThemeService } from '../../../../../core/services/theme/theme.service';
 
 /** Welcome-экран: стартовая точка входа в приложение */
 @Component({
@@ -19,6 +20,9 @@ export class WelcomeApplicationComponent {
   /** Роутер для навигации между экранами */
   private readonly _router: Router = inject(Router);
 
+  /** Сервис управления цветовой темой */
+  private readonly _themeService: ThemeService = inject(ThemeService);
+
   /** Переход на регистрацию: инвайт-код или сразу создание аккаунта */
   public onRegister(): void {
     if (this._flags.freeRegistration) {
@@ -33,8 +37,8 @@ export class WelcomeApplicationComponent {
     void this._router.navigate(['/application/auth/login']);
   }
 
-  /** Переключение темы (TODO) */
+  /** Переключает цветовую тему интерфейса */
   public toggleTheme(): void {
-    // TODO: реализовать переключение темы
+    this._themeService.toggle();
   }
 }

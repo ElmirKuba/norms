@@ -4,6 +4,7 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { filter } from 'rxjs';
 import type { Subscription } from 'rxjs';
 import { type NavItem, type NavLink } from '../../types/main.types';
+import { ThemeService } from '../../../../../core/services/theme/theme.service';
 
 /** Основной компонент web-составляющей */
 @Component({
@@ -55,6 +56,9 @@ export class MainWebComponent implements OnInit, OnDestroy {
   /** Роутер для подписки на события навигации */
   private readonly _router: Router = inject(Router);
 
+  /** Сервис управления цветовой темой */
+  private readonly _themeService: ThemeService = inject(ThemeService);
+
   /** @inheritdoc */
   public ngOnInit(): void {
     this._routerSub = this._router.events
@@ -76,7 +80,6 @@ export class MainWebComponent implements OnInit, OnDestroy {
 
   /** Переключает цветовую тему интерфейса */
   public toggleTheme(): void {
-    // TODO: ElmirKuba 2026-04-22: реализовать переключение темы
-    alert('Когда-то в будущем');
+    this._themeService.toggle();
   }
 }
