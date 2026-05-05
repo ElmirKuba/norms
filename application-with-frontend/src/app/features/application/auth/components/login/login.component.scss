@@ -20,7 +20,7 @@
   &__title {
     font-size: 26px;
     font-weight: 700;
-    color: #1a1a1a;
+    color: var(--clr-text-primary);
     letter-spacing: -0.5px;
     margin: 0;
   }
@@ -28,7 +28,7 @@
   &__description {
     font-size: 15px;
     font-weight: 400;
-    color: #8e8e93;
+    color: var(--clr-text-secondary);
     margin: 0;
   }
 
@@ -47,7 +47,7 @@
   &__forgot-btn {
     background: none;
     border: none;
-    color: #582cff;
+    color: var(--clr-primary);
     font-size: 14px;
     font-weight: 500;
     font-family: inherit;

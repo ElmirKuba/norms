@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   min-height: 100%;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--clr-overlay);
 }
 
 .uin-pending {
@@ -12,7 +12,7 @@
   justify-content: flex-end;
 
   &__sheet {
-    background: #ffffff;
+    background: var(--clr-surface);
     border-radius: 24px 24px 0 0;
     padding: 12px 24px 40px;
     display: flex;
@@ -24,7 +24,7 @@
   &__handle {
     width: 36px;
     height: 4px;
-    background: #e0e0e0;
+    background: var(--clr-divider-handle);
     border-radius: 2px;
     margin-bottom: 4px;
   }
@@ -32,7 +32,7 @@
   &__icon {
     width: 56px;
     height: 56px;
-    background: #fff3e0;
+    background: var(--clr-icon-bg-warning);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -42,7 +42,7 @@
   &__title {
     font-size: 20px;
     font-weight: 700;
-    color: #1a1a1a;
+    color: var(--clr-text-primary);
     margin: 0;
     text-align: center;
   }
@@ -50,7 +50,7 @@
   &__text {
     font-size: 14px;
     font-weight: 400;
-    color: #8e8e93;
+    color: var(--clr-text-secondary);
     text-align: center;
     line-height: 1.5;
     margin: 0;

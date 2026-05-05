@@ -23,7 +23,7 @@
     &__title {
       font-size: 40px;
       font-weight: 700;
-      color: #1a1a1a;
+      color: var(--clr-text-primary);
       letter-spacing: -1.5px;
 
       @media (min-width: 768px) {
@@ -35,7 +35,7 @@
     &__description {
       font-size: 16px;
       font-weight: 400;
-      color: #8e8e93;
+      color: var(--clr-text-secondary);
       max-width: 480px;
 
       @media (min-width: 768px) {
@@ -60,7 +60,7 @@
     }
 
     &__card {
-      background: #f5f5f7;
+      background: var(--clr-bg-page);
       border-radius: 16px;
       padding: 24px;
       display: flex;
@@ -75,13 +75,13 @@
       &-title {
         font-size: 15px;
         font-weight: 600;
-        color: #1a1a1a;
+        color: var(--clr-text-primary);
       }
 
       &-description {
         font-size: 14px;
         font-weight: 400;
-        color: #8e8e93;
+        color: var(--clr-text-secondary);
         line-height: 1.5;
         margin: 0;
       }

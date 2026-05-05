@@ -24,12 +24,12 @@
   }
 
   &--primary {
-    background: #582cff;
-    color: #ffffff;
+    background: var(--clr-primary);
+    color: var(--clr-text-on-primary);
   }
 
   &--secondary {
-    background: #f5f5f7;
-    color: #1a1a1a;
+    background: var(--clr-bg-page);
+    color: var(--clr-text-primary);
   }
 }

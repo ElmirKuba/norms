@@ -15,7 +15,7 @@
   padding-right: 14px;
   padding-top: 6px;
   padding-bottom: 6px;
-  background-color: #f0ebff;
+  background-color: var(--clr-primary-tint);
   border-radius: 20px;
 
   &__icon {
@@ -24,7 +24,7 @@
   }
 
   &__text {
-    color: #582cff;
+    color: var(--clr-primary);
     font-weight: 500;
   }
 }

@@ -4,8 +4,8 @@
   flex-direction: column;
 
   .web-header {
-    background-color: #ffffff;
-    border: 1px solid #f0f0f0;
+    background-color: var(--clr-surface);
+    border: 1px solid var(--clr-border-light);
     padding-left: 16px;
     padding-right: 16px;
     padding-top: 16px;
@@ -47,7 +47,7 @@
         font-size: 18px;
         font-weight: bold;
         letter-spacing: -0.5px;
-        color: #1a1a1a;
+        color: var(--clr-text-primary);
       }
     }
 
@@ -59,9 +59,9 @@
 
       a {
         display: none;
-        color: #8e8e93;
+        color: var(--clr-text-secondary);
         text-decoration: none;
-        border-bottom: 1px solid #fff;
+        border-bottom: 1px solid var(--clr-surface); // невидимая рамка — анимирует в hover
         transition: border-color 0.3s ease;
 
         @media (min-width: 640px) {
@@ -69,18 +69,18 @@
         }
 
         &:hover {
-          border-bottom: 1px solid #1a1a1a;
+          border-bottom: 1px solid var(--clr-text-primary);
         }
 
         &.active {
-          border-bottom-color: #1a1a1a;
+          border-bottom-color: var(--clr-text-primary);
           font-weight: 500;
         }
       }
 
       button.web-header__nav-theme {
         border: none;
-        border-bottom: 1px solid #fff;
+        border-bottom: 1px solid var(--clr-surface); // невидимая рамка — анимирует в hover
         background-color: inherit;
         width: fit-content;
         height: fit-content;
@@ -90,7 +90,7 @@
         cursor: pointer;
 
         &:hover {
-          border-bottom: 1px solid #1a1a1a;
+          border-bottom: 1px solid var(--clr-text-primary);
         }
       }
     }
@@ -117,7 +117,7 @@
         display: block;
         width: 22px;
         height: 2px;
-        background-color: #1a1a1a;
+        background-color: var(--clr-text-primary);
         border-radius: 2px;
         transition:
           transform 0.25s ease,
@@ -143,8 +143,8 @@
   .web-mobile-nav {
     display: flex;
     flex-direction: column;
-    background-color: #ffffff;
-    border-bottom: 1px solid #f0f0f0;
+    background-color: var(--clr-surface);
+    border-bottom: 1px solid var(--clr-border-light);
     padding: 4px 16px 12px;
 
     @media (min-width: 640px) {
@@ -152,12 +152,12 @@
     }
 
     a {
-      color: #1a1a1a;
+      color: var(--clr-text-primary);
       text-decoration: none;
       font-size: 17px;
       font-weight: 400;
       padding: 14px 0;
-      border-bottom: 1px solid #f0f0f0;
+      border-bottom: 1px solid var(--clr-border-light);
 
       &:last-child {
         border-bottom: none;
@@ -176,8 +176,8 @@
   }
 
   .web-footer {
-    background-color: #ffffff;
-    border: 1px solid #f0f0f0;
+    background-color: var(--clr-surface);
+    border: 1px solid var(--clr-border-light);
     padding-left: 16px;
     padding-right: 16px;
     padding-top: 16px;
@@ -206,7 +206,7 @@
       font-size: 14px;
       font-weight: 400;
       letter-spacing: 0;
-      color: #8e8e93;
+      color: var(--clr-text-secondary);
     }
 
     &__nav {
@@ -221,17 +221,17 @@
       }
 
       a {
-        color: #8e8e93;
+        color: var(--clr-text-secondary);
         text-decoration: none;
-        border-bottom: 1px solid #fff;
+        border-bottom: 1px solid var(--clr-surface); // невидимая рамка — анимирует в hover
         transition: border-color 0.3s ease;
 
         &:hover {
-          border-bottom: 1px solid #1a1a1a;
+          border-bottom: 1px solid var(--clr-text-primary);
         }
 
         &.active {
-          border-bottom-color: #1a1a1a;
+          border-bottom-color: var(--clr-text-primary);
           font-weight: 500;
         }
       }

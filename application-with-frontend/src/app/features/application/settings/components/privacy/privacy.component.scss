@@ -9,7 +9,7 @@
 
 .privacy {
   &__info {
-    background: #f0edff;
+    background: var(--clr-primary-tint);
     border-radius: 16px;
     padding: 16px;
     display: flex;
@@ -19,7 +19,7 @@
 
   &__info-text {
     font-size: 14px;
-    color: #1a1a1a;
+    color: var(--clr-text-primary);
     margin: 0;
     line-height: 1.5;
   }
@@ -32,12 +32,12 @@
 
   &__row-sub {
     font-size: 12px;
-    color: #c7c7cc;
+    color: var(--clr-text-tertiary);
   }
 
   &__row-value {
     font-size: 14px;
-    color: #8e8e93;
+    color: var(--clr-text-secondary);
     flex-shrink: 0;
   }
 }
