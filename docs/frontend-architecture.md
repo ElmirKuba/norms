@@ -8,21 +8,20 @@
 ## Платформы и роутинг
 
 - **Capacitor** (iOS, Android) и **Electron** (Windows, macOS, Linux) — webview/Chromium без адресной строки, грузят `dist/` через `file://`.
-- Из-за `file://` нужен `HashLocationStrategy` (`/#/path`) — HTML5 history API там не работает. **TODO:** добавить `withHashLocation()` в `provideRouter(...)` в `app.config.ts` перед началом работы с Capacitor/Electron.
+- Из-за `file://` нужен `HashLocationStrategy` (`/#/path`) — HTML5 history API там не работает. Подключается через `withHashLocation()` в `provideRouter(...)` в `app.config.ts`.
 - Браузер грузит тот же Angular, но видит только веб-заглушку (`/web/*`) — никакого мессенджера, регистрации или настроек.
 
 ### Корневой роутинг и разделение web / application
 
 `app.routes.ts` объявляет два lazy-loaded модуля маршрутов:
-- `/web/*` — публичная веб-заглушка (лендинг, about, security)
-- `/application/*` — мессенджер (только для нативных платформ)
+- `/web/*` — публичная веб-заглушка (лендинг, about, security). Защищён `webOnlyGuard`.
+- `/application/*` — мессенджер. Защищён `nativeOnlyGuard` (только Capacitor/Electron, в браузере → redirect на `/web/welcome`).
 
-**Разделение по платформе (TODO):**
-Сейчас обе секции доступны с любой платформы. При реализации application-части нужен **guard**, который:
-- В браузере (`PlatformDetectorService.isWeb`) — разрешает только `/web/*`, при попытке зайти в `/application/*` — redirect на `/web/welcome`.
-- В Capacitor/Electron — разрешает только `/application/*`, при попытке зайти в `/web/*` — redirect на `/application/main`.
+**Корневой redirect** (`path: ''`) — платформо-зависимый: в браузере `→ /web/welcome`, в нативе `→ /application/welcome`. Реализован через функцию-redirect внутри `app.routes.ts`, которая инжектит `PlatformDetectorService`.
 
-**Корневой redirect:** `app.routes.ts` содержит `path: '**', redirectTo: ''`. При реализации guard'а заменить на платформо-зависимый redirect (в guard или через `APP_INITIALIZER`).
+**Fallback `path: '**'`** — `redirectTo: ''` (попадёт обратно в платформо-зависимый redirect).
+
+Гарды лежат в `core/guards/platform.guard.ts`.
 
 ---
 
@@ -285,7 +284,20 @@ Tree-shaking платформенных реализаций не делаетс
 - Стили компонента — в его `.scss` файле, Angular `ViewEncapsulation` (по умолчанию Emulated).
 - `:host` используется для управления flex/grid поведением компонента как flex-item родителя.
 - Глобальные стили — только в `src/styles.scss` (сброс, CSS-переменные, типографика).
-- Цвета пока хардкодятся; CSS-переменные / тема — TODO.
+- **Цвета — через CSS-переменные** (`var(--clr-*)`) из `:root` в `styles.scss`. ~45 семантических токенов: brand, backgrounds/surfaces, text, borders, status (danger/warning/success), modal-icon-bg, settings-icons, miscellaneous.
+- **Тёмная тема** — через `:root.dark { }` каскад (override светлых токенов). Класс `.dark` добавляется на `<html>` сервисом `ThemeService`.
+
+### `ThemeService` (`core/services/theme/`)
+
+- Приоритет применения: `localStorage('theme')` → `prefers-color-scheme` → светлая по умолчанию.
+- Слушает изменения системной темы (только если пользователь не выбирал явно).
+- Инициализируется через `provideAppInitializer(...)` в `app.config.ts` — до первого рендера, без FOUC.
+- Реактивный сигнал `isDark`, метод `toggle()`.
+- `DOCUMENT` injection token для платформо-безопасного доступа к `document`.
+
+### Глобальные правила в обход view encapsulation
+
+Когда нужно повлиять на дочерний компонент из глобальных стилей (`styles.scss`) — `:host-context()` в Angular 21 работает нестабильно. Используем правила в `styles.scss` напрямую: они не получают `[_ngcontent-xxx]` атрибуты и видят все элементы по имени класса. Пример: `.dark .features__card-icon { filter: brightness(0) invert(1); }` инвертирует SVG-иконки в тёмной теме.
 
 ---
 

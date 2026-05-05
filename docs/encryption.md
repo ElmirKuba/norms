@@ -28,12 +28,36 @@
 Гибридная схема (стандарт для всех E2E мессенджеров):
 
 1. **ECDH (X25519)** — каждая сторона чата генерирует пару ключей. Из двух публичных ключей математически выводится общий секрет. Секрет никогда не передаётся по сети. Web Crypto API, требует iOS 15+.
-2. **AES-256-GCM** — из общего секрета выводится симметричный ключ. Все сообщения шифруются им. Быстро, любой размер, невзламываемо (2^256 комбинаций).
+2. **HKDF-SHA256** — из общего секрета выводится симметричный AES-ключ.
+3. **AES-256-GCM** — все сообщения шифруются этим ключом. Быстро, любой размер, аутентификация встроена.
 
 Два уровня защиты: TLS (транспорт WSS) + E2E (содержимое AES-256-GCM).
 
+### Спецификация криптопримитивов
+
+| Параметр | Значение |
+|---|---|
+| ECDH curve | **X25519** (Web Crypto API: `{ name: 'ECDH', namedCurve: 'X25519' }`) |
+| Shared secret | 32 байта |
+| KDF | **HKDF-SHA256**. Inputs: `IKM = shared_secret`, `salt = empty (zero-length)`, `info = utf8("normisy-chat-key-v1")`, `length = 32 bytes` |
+| Symmetric algo | **AES-256-GCM** |
+| IV | 12 байт случайных, **новый на каждое сообщение** (никогда не переиспользуется в рамках одного ключа) |
+| Auth tag | 16 байт (стандарт GCM) |
+| Версионирование | строка `"normisy-chat-key-v1"` в HKDF info — при смене схемы → `v2` без обратной совместимости |
+
+### Формат `encrypted_blob`
+
+```
+[iv: 12 bytes][ciphertext: N bytes][auth_tag: 16 bytes]
+```
+
+Web Crypto API (`crypto.subtle.encrypt({ name: 'AES-GCM', iv, tagLength: 128 }, ...)`) возвращает `ciphertext + auth_tag` склеенными — клиент префиксит их IV. Получатель срезает первые 12 байт как IV, остальное передаёт в `decrypt`.
+
 ### Почему не чистая асимметрика
 RSA-4096 шифрует максимум ~446 байт. ECC (ECDH) вообще не шифрует данные — только вычисляет общий секрет. Поэтому гибридная схема: асимметрика для обмена секретом, симметрика для данных.
+
+### Почему HKDF, а не SHA-256(shared_secret)
+HKDF — стандартизованный (RFC 5869) KDF. Преимущества над «голым» хешем: разделение Extract/Expand, поддержка контекста (`info`), возможность вывести **несколько ключей** из одного секрета (для будущих расширений: ratchet, MAC-ключ и т.д.). Накладные расходы — нулевые.
 
 ## Ключи
 
@@ -58,28 +82,39 @@ RSA-4096 шифрует максимум ~446 байт. ECC (ECDH) вообще 
 
 ## Таблицы
 
+> Полное DDL, индексы и constraints — в [`database-schema.md`](database-schema.md).
+
 ### chats (на сервере)
 
 | Поле | Тип | Заметки |
 |---|---|---|
-| `id` | string PK | Универсальный ID |
-| `name` | string | Название чата (не шифруется). Unique в пределах пары устройств (case-insensitive) |
-| `session_a_id` | string FK | → `sessions.id`. Всегда `min(id)` из пары (нормализация, `CHECK session_a_id < session_b_id`) |
-| `session_b_id` | string FK | → `sessions.id`. Всегда `max(id)` из пары (нормализация) |
-| `created_by_session_id` | string FK | → `sessions.id` — кто инициировал создание чата |
-| `status` | string | `pending_key` / `active` |
-| `public_key_a` | string nullable | X25519 публичный ключ session_a. NULL после обмена |
-| `public_key_b` | string nullable | X25519 публичный ключ session_b. NULL после обмена |
-| `created_at` | timestamp | |
-| `updated_at` | timestamp | |
+| `id` | `text` PK | Универсальный ID |
+| `name` | `text` | Название чата (не шифруется) |
+| `session_a_id` | `text` FK | → `sessions.id`, `ON DELETE CASCADE`. Всегда `min(id)` из пары |
+| `session_b_id` | `text` FK | → `sessions.id`, `ON DELETE CASCADE`. Всегда `max(id)` из пары |
+| `created_by_session_id` | `text` FK | → `sessions.id` — кто инициировал создание чата |
+| `status` | `pgEnum('chat_status')` | `pending_key` / `active` |
+| `public_key_a` | `text` nullable | X25519 публичный ключ session_a (base64). NULL после обмена |
+| `public_key_b` | `text` nullable | X25519 публичный ключ session_b. NULL после обмена |
+| `created_at`, `updated_at` | `timestamptz` | |
+
+**Constraints:**
+- `CHECK (session_a_id < session_b_id)` — нормализация порядка пары: `(A,B)` и `(B,A)` это одна пара, дубль через перестановку невозможен.
+- `UNIQUE (session_a_id, session_b_id, LOWER(name))` — уникальность названия в пределах пары устройств, case-insensitive.
 
 ### pending_messages (на сервере, временное хранилище)
 
 | Поле | Тип | Заметки |
 |---|---|---|
-| `id` | string PK | Универсальный ID |
-| `chat_id` | string FK | → `chats.id` |
-| `sender_session_id` | string FK | → `sessions.id` |
-| `receiver_session_id` | string FK | → `sessions.id`. Для быстрой выборки при доставке |
-| `encrypted_blob` | blob | Зашифрованное сообщение |
-| `created_at` | timestamp | |
+| `id` | `text` PK | Универсальный ID |
+| `chat_id` | `text` FK | → `chats.id`, `ON DELETE CASCADE` |
+| `sender_session_id` | `text` FK | → `sessions.id`, `ON DELETE CASCADE` |
+| `receiver_session_id` | `text` FK | → `sessions.id`, `ON DELETE CASCADE`. Для быстрой выборки при доставке |
+| `encrypted_blob` | `bytea` | Зашифрованное сообщение. `CHECK (octet_length <= 1048576)` — лимит 1MB |
+| `created_at` | `timestamptz` | |
+
+## Удаление сессии / аккаунта — что происходит с чатом
+
+При удалении одной из двух сессий пары (кик или удаление аккаунта одной из сторон):
+- Сервер: `chats` и `pending_messages` каскадно удаляются (FK CASCADE).
+- На устройстве оставшейся стороны (выжившей сессии): чат остаётся в локальной SQLite, но помечается как **мёртвый**. Подробнее — в [`devices-and-chats.md`](devices-and-chats.md#мёртвые-чаты-на-устройстве-собеседника).

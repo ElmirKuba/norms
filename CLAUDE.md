@@ -15,6 +15,7 @@ See [TODO.md](TODO.md) for what's done, in progress, and planned.
 - `docs/` — детальная проектная документация (наполняется по мере обсуждения).
   - `backend-stack.md` — NestJS, PostgreSQL, Drizzle, Redis, BullMQ, SessionStore-абстракция, структура репо, docker-compose
   - `database.md` — универсальный формат ID, общие конвенции БД
+  - `database-schema.md` — **канон DDL**: все таблицы (Drizzle TS), индексы, cascade-правила, транзакционные сценарии. Источник правды для миграций
   - `encryption.md` — чаты, E2E шифрование (ECDH + AES-256-GCM), создание чата, доставка
   - `api-contracts.md` — HTTP-ручки (account/auth/session/invite/recovery/uin/chat/admin/system) и WSS-события (auth, ping, session_kicked, password_reset_via_recovery, uin_assigned)
   - `platform-services.md` — DI-сервисы и их платформенные реализации

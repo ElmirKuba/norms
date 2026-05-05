@@ -4,10 +4,14 @@
 
 JWT-пара: access + refresh.
 
-| Токен | TTL по умолчанию | Заметки |
-|---|---|---|
-| access | 15 секунд | Конфигурируется через env (`JWT_ACCESS_TTL`) |
-| refresh | 30 дней | Конфигурируется через env |
+| Токен | TTL по умолчанию | Формат | Заметки |
+|---|---|---|---|
+| access | 15 секунд | JWT (HS256), payload: `{ sub: account_id, sid: session_id }` | TTL через env `JWT_ACCESS_TTL`. Подпись через `JWT_ACCESS_SECRET` (≥ 32 байта) |
+| refresh | 30 дней | **32 случайных байта**, base64url (~43 символа) | TTL через env `JWT_REFRESH_TTL`. На сервере хранится **SHA-256 хеш**, не plain. Зачем JWT не используется: refresh не требует payload, а opaque-токен дешевле/безопаснее (нечего парсить, нечего ротировать в payload) |
+
+**Длины секретов:**
+- `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` — минимум 32 байта (256 бит). Генерируются один раз через `openssl rand -base64 32`, кладутся в env.
+- `refresh_token` — `crypto.randomBytes(32)`, отдаётся клиенту как `base64url`.
 
 **Ротация — два контекста:**
 
@@ -24,22 +28,24 @@ JWT-пара: access + refresh.
 
 ## Таблица sessions (устройства/сессии)
 
-Одна таблица — и сессия, и устройство. Концепт как в `nest-backend-example`.
+Одна таблица — и сессия, и устройство. Полное DDL и индексы — в [`database-schema.md`](database-schema.md).
 
 | Поле | Тип | Заметки |
 |---|---|---|
-| `id` | string PK | Универсальный ID |
-| `account_id` | string FK | → `accounts.id` |
-| `system_name` | string | Системное имя (`iPhone 14 Pro`, `MacBook Air`). Обновляется при каждом подключении |
-| `platform` | string | `ios` / `android` / `electron` |
-| `nickname` | string nullable | Прозвище устройства, установленное владельцем. Приоритет над `system_name` при показе другим юзерам |
-| `refresh_token` | string | Текущий refresh token |
-| `created_at` | timestamp | |
-| `updated_at` | timestamp | Обновляется при каждой ротации токенов (~каждые `JWT_ACCESS_TTL` при активном использовании). Заменяет `last_active_at` |
+| `id` | `text` PK | Универсальный ID |
+| `account_id` | `text` FK | → `accounts.id`. `ON DELETE CASCADE` |
+| `system_name` | `text` | Системное имя (`iPhone 14 Pro`, `MacBook Air`). Обновляется при каждом подключении |
+| `platform` | `pgEnum('platform')` | `ios` / `android` / `electron` |
+| `nickname` | `text` nullable | Прозвище устройства, установленное владельцем. Приоритет над `system_name` при показе другим юзерам |
+| `refresh_token_hash` | `text` | **SHA-256 хеш** текущего refresh-токена (hex, 64 символа). Plain-text токен хранится только у клиента |
+| `created_at` | `timestamptz` | |
+| `updated_at` | `timestamptz` | Обновляется при каждой ротации токенов. Заменяет `last_active_at` |
+
+**Почему хеш, а не plain-text refresh:** утечка БД ≠ угон сессий. SHA-256 (не argon2 — это не пароль) даёт O(1)-сравнение при ротации/reuse-detection. Сам токен — случайные 32+ байта, перебирать бессмысленно.
 
 ## Хранение сессий
 
-Через абстракцию `SessionStore` с двумя реализациями (`PostgresSessionStore` и `RedisSessionStore`). Активная реализация выбирается через env `SESSION_STORE=postgres|redis`. Подробнее: [`backend-stack.md`](backend-stack.md) → SessionStore.
+Только в PostgreSQL — таблица `sessions` (см. [`database-schema.md`](database-schema.md#sessions)). Подробнее о причинах отказа от Redis-варианта: [`backend-stack.md`](backend-stack.md#хранение-сессий).
 
 ## Нейминг устройств
 
@@ -66,6 +72,27 @@ JWT-пара: access + refresh.
 Эндпоинт `PATCH /api/v1/session/update-nickname` (см. [`api-contracts.md`](api-contracts.md)) — установка/снятие `nickname` для текущей сессии. Передача `null` снимает прозвище.
 
 Прозвища чужих устройств (только локально, не на сервер) — через локальный SQLite в таблице `peer_devices.my_local_nickname` (см. [`local-storage.md`](local-storage.md)).
+
+## Rate-limit
+
+**Защита от brute-force на пароль.** Реализация — Redis-счётчик, аналогично recovery (см. [`recovery.md`](recovery.md#защита-от-brute-force)):
+
+```
+# Ключ: login_attempts:{account_id}
+INCR login_attempts:{account_id}
+EXPIRE login_attempts:{account_id} {lock_period_seconds}
+```
+
+**Эскалация блокировок:**
+- 5 неудач за 5 минут → блок логина на **1 час**.
+- 5 неудач после разблокировки → блок на **24 часа**.
+- 5 неудач ещё раз → блок на **7 дней**.
+
+**Сброс счётчика:** при успешном логине — `DEL login_attempts:{account_id}`.
+
+**Что считается «неудачей»:** только `401 invalid_credentials` (неверный пароль). Запросы с битым форматом тела или несуществующим логином не инкрементируют счётчик (иначе можно DoS-нуть аккаунт по UIN, угадывая случайные UIN). Если логин не найден — отвечаем `401 invalid_credentials` (тот же код, что и при неверном пароле — не раскрываем существование аккаунта), но счётчик не трогаем.
+
+**API:** при превышении лимита `/api/v1/account/auth` возвращает `423 login_rate_limited` с `retry_after` в response (unixtime ms когда блок снимется).
 
 ## Login flow
 

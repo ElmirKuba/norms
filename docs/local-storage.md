@@ -41,6 +41,7 @@ ID во всех таблицах — формат `uuid-v7_unixtime-13ms` (см
 | `peer_account_id` | с каким аккаунтом |
 | `peer_session_id` | с каким устройством собеседника |
 | `status` | `pending_key` / `active` |
+| `is_dead` | boolean, default 0. Помечается true когда серверный чат удалён (собеседник кикнул сессию или удалил аккаунт). См. [`devices-and-chats.md`](devices-and-chats.md#мёртвые-чаты-на-устройстве-собеседника) |
 | `created_at`, `updated_at` | |
 
 `my_session_id` не нужен — это устройство и есть моё.

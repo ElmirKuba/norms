@@ -28,6 +28,21 @@ Apple/Google видят только: "пришло уведомление в а
 
 Capacitor собирает универсальный iOS-бандл — работает и на iPhone, и на iPad из коробки. Нужно протестить адаптивность UI. Watch — отдельная история (WatchKit), в "потом-потом".
 
+## Регистрация push-токенов
+
+Push-токен (APNs / FCM) **per-сессия, не per-аккаунт**: токен — характеристика установки прилы на конкретном устройстве. У одного аккаунта на 3 устройствах будет 3 разных токена.
+
+**Хранение:** колонки в таблице `sessions` (добавляются при реализации этой фичи, не в MVP-схеме):
+
+| Поле | Тип | Заметки |
+|---|---|---|
+| `push_token` | `text` nullable | APNs device token / FCM registration token |
+| `push_provider` | `pgEnum('push_provider')` nullable | `apns` / `fcm` / `unifiedpush` |
+
+**API:** `POST /api/v1/push/register-token` (auth required) — клиент отправляет свой токен после получения от системы. Бэк апдейтит `push_token`/`push_provider` для текущей сессии. При смене токена (iOS APNs может менять) клиент шлёт повторно.
+
+**Кик сессии = инвалидация push-токена:** при удалении строки из `sessions` push-токен уходит каскадом. Apple/Google последующие push на этот токен будут возвращать `unregistered`/`invalid` — бэк может игнорировать.
+
 ## Сервис
 
 `NotificationService` (см. [`platform-services.md`](platform-services.md)):

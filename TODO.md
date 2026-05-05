@@ -115,12 +115,16 @@ _Nothing yet._
 - Запрос ссылок у бэка `GET /api/v1/app/downloads` при инициализации (только если `platform.isWeb`)
 
 ### Идентификация / аккаунты
-См. [`docs/identity.md`](docs/identity.md), [`docs/database.md`](docs/database.md).
-- Бэк: таблицы `accounts` и `uins` (раздельные, 1:1 через `uins.account_id`).
-- Бэк: универсальный формат ID (`uuid-v7 + "_" + 13-char unixtime ms`) во всех таблицах + `created_at` / `updated_at` где имеет смысл.
+См. [`docs/identity.md`](docs/identity.md), [`docs/database.md`](docs/database.md), [`docs/database-schema.md`](docs/database-schema.md).
+- Бэк: таблицы `accounts` (с `is_admin boolean default false`) и `uins` (раздельные, 1:1 через `uins.account_id`).
+- Бэк: `AdminGuard` для всех `/api/v1/admin/*` эндпоинтов — проверка `accounts.is_admin = true` для аккаунта из текущего токена. Назначение через миграцию или ручной UPDATE.
+- Бэк: валидация username регексом `^[a-zA-Z][a-zA-Z0-9]{2,29}$` (первый символ — буква, иначе путаница с UIN при логине/поиске).
+- Бэк: столбец `uins.is_premium` (boolean) — флаг «красивости». При удалении аккаунта премиум-UIN отвязывается (account_id = NULL), обычный — удаляется (логика в use-case удаления, не FK).
+- Бэк: универсальный формат ID (`uuid-v7 + "_" + 13-char unixtime ms`) во всех таблицах + `created_at` / `updated_at` (`timestamptz`) где имеет смысл. Утилита `generateId()`.
 - Бэк: задача-генератор UIN (рандом, авторасширение длины 4→10, unique-индекс + retry на коллизии).
-- Бэк: скрипт резервирования "красивых" UIN (`1111`, `2222`, `12345`, повторы/лесенки) со `account_id = NULL`. Список паттернов — отдельный подпункт.
+- Бэк: скрипт резервирования "красивых" UIN (`1111`, `2222`, `12345`, повторы/лесенки) со `account_id = NULL` и `is_premium = true`. Список паттернов — отдельный подпункт.
 - Бэк: эндпоинт статуса готовности UIN (поллинг или WSS push).
+- Бэк: use-case удаления аккаунта в транзакции (см. [`docs/database-schema.md`](docs/database-schema.md#удаление-аккаунта)) + WSS `session_kicked` всем активным сессиям.
 - Фронт: регистрация → сразу авторизация (до готовности UIN).
 - Фронт: модалка/баннер "не выходите, пока UIN не выдан".
 - Фронт: мульти-аккаунт — несколько Account залогинено одновременно, переключение в UI.
@@ -140,8 +144,9 @@ _Nothing yet._
 
 ### Авторизация и устройства
 См. [`docs/auth-devices.md`](docs/auth-devices.md).
-- Бэк: таблица `sessions` (id, account_id, system_name, platform, nickname, refresh_token, created_at, updated_at).
-- Бэк: JWT-пара access (15 сек) + refresh (30 дней), ротация, TTL через env. Refresh token rotation + reuse detection. WSS-ротация через `token_refresh`/`tokens_updated` (без реконнекта).
+- Бэк: таблица `sessions` (id, account_id, system_name, platform (`pgEnum`), nickname, **refresh_token_hash** (SHA-256 hex), created_at, updated_at).
+- Бэк: JWT-пара access (15 сек, JWT HS256) + refresh (30 дней, opaque 32 random bytes → base64url). Ротация, TTL через env. Refresh token rotation + reuse detection. WSS-ротация через `token_refresh`/`tokens_updated` (без реконнекта).
+- Бэк: rate-limit неудачных login-попыток (Redis-счётчик, эскалация 1ч → 24ч → 7д, см. [`docs/auth-devices.md`](docs/auth-devices.md#rate-limit)).
 - Бэк: лимит устройств через env (default 20).
 - Бэк: эндпоинты логина, refresh, кика устройства, "выйти на всех кроме текущего".
 - Бэк: эндпоинт `PATCH /api/v1/session/update-nickname` — установка/снятие прозвища текущей сессии.
@@ -172,13 +177,16 @@ _Nothing yet._
 ### Мульти-девайс UX
 См. [`docs/devices-and-chats.md`](docs/devices-and-chats.md).
 - Бэк: эндпоинт `GET /api/v1/chat/read-orphan-peers` — список `account_id` собеседников из чужих сессий моего же аккаунта.
+- Бэк: send-эндпоинт сообщений возвращает `404 chat_not_found` если чат удалён каскадом (см. [`docs/devices-and-chats.md`](docs/devices-and-chats.md#мёртвые-чаты-на-устройстве-собеседника)).
 - Фронт: экран «Welcome» при первом логине новой сессии — список осиротевших собеседников + кнопка «понял, больше не показывать».
 - Фронт: onboarding-модалка при создании первого чата на каждом устройстве (флаг в локальном key-value).
+- Фронт: локальная пометка мёртвых чатов (`chats.is_dead`) — детект через `404 chat_not_found` при отправке + сравнение списка чатов на sync. UX: затемнённый чат, disabled input, кнопка «Удалить локально».
 
 ## Decisions deferred
 - **Список паттернов "красивых" UIN** для стартового резервирования.
 
 ## Decisions fixed (recent)
+- **Database schema** — DDL-канон в [`docs/database-schema.md`](docs/database-schema.md). PostgreSQL: `text` для ID, `timestamptz` везде, `citext` для username, `pgEnum` для platform/chat_status, `bytea` для зашифрованных blob'ов, schema `public`. Cascade-правила фиксированы по сущностям. SHA-256 хеш для refresh-токенов.
 - **Backend stack** — NestJS + PostgreSQL 16 + Drizzle + Redis (BullMQ + опц. SessionStore). См. [`docs/backend-stack.md`](docs/backend-stack.md).
 - **Очередь UIN-задач** — BullMQ на Redis. См. [`docs/backend-stack.md`](docs/backend-stack.md).
 - **Хранение сессий** — абстракция `SessionStore`, реализации Postgres/Redis, выбор через `SESSION_STORE` env. См. [`docs/backend-stack.md`](docs/backend-stack.md).
@@ -193,6 +201,16 @@ _Nothing yet._
 - **Бэк-API `GET /api/v1/app/downloads`** — возвращает `{ ios, android, windows, macos, linux: string }`. Источник ссылок (env vars / БД / GitHub Releases) — на усмотрение бэка.
 - **Universal Links / App Links** — `apple-app-site-association` (iOS) и `assetlinks.json` (Android) кладутся на бэк по фиксированным путям. Чтобы инвайт-ссылка `https://normisy.app/invite/...` открывалась в установленной приле.
 - **Хостинг фронта** — Docker рядом с бэком на vds/vps (CI/CD позже) либо ручной деплой `dist/` на старте.
+- **CORS на бэке** — белый список `Origin` для фронта (`https://normisy.app`, dev-host). Bearer-header API → CSRF не релевантен, но CORS нужен для веб-лендинга (`GET /api/v1/app/downloads`, `/feature-flags`).
+- **Логирование** — структурированные JSON-логи (Pino/nestjs-pino). Уровни: `error`, `warn`, `info`, `debug`. Чувствительные поля (passwords, refresh-токены, encrypted_blob) — никогда. Retention TBD при выборе хостинга.
+- **Мониторинг** — Sentry для error tracking. Метрики (request rate, latency, queue depth) — Prometheus/Grafana или managed-аналог. На старте можно отложить — но Sentry подключаем сразу.
+- **PostgreSQL backup-стратегия** — автоматизированный snapshot + WAL archiving (или managed PG с встроенным backup). Тестировать восстановление до prod-релиза.
+
+### Push-уведомления (часть будущей фичи)
+См. [`docs/push-notifications.md`](docs/push-notifications.md).
+- Бэк: добавить колонки `sessions.push_token` и `sessions.push_provider` (`pgEnum('apns','fcm','unifiedpush')`) когда дойдём до пушей.
+- Бэк: эндпоинт `POST /api/v1/push/register-token`.
+- Бэк: APNs / FCM отправка только `chat_id` в payload.
 
 ## Backlog
 _Идеи и не-приоритетные фичи._

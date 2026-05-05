@@ -63,8 +63,18 @@ HTTP 4xx/5xx
 
 ### Конвенции тел
 - Универсальный ID — строка `{uuid-v7}_{unixtime-ms-13}` (см. [`database.md`](database.md)).
-- Timestamps — ISO-8601 строкой (`"2026-04-17T13:45:01.123Z"`) или unixtime ms (`bigint`) — в каждом эндпоинте явно.
+- **Timestamps — ISO-8601 строкой** (`"2026-04-17T13:45:01.123Z"`). На бэке хранятся как `timestamptz` в UTC. Раньше в инвайтах было `bigint` unixtime ms — заменено на ISO везде для единообразия.
 - Поля snake_case в JSON. (Внутри NestJS — camelCase, через `class-transformer`.)
+
+### Derived-поля в response
+
+Некоторые поля в ответах **не хранятся в БД** — они аггрегируются/вычисляются на бэке при формировании DTO:
+
+| Поле | Источник |
+|---|---|
+| `account.uin` (string) | JOIN с таблицей `uins`, отдаётся `uins.number`, не `uins.id`. `null` если UIN ещё не сгенерирован |
+| `session.is_current` (bool) | Сравнение `session.id` с `id` сессии текущего токена |
+| `account.is_admin` | Соответствует `accounts.is_admin`, **возвращается только в `account/read` для своего аккаунта**. Чужим — никогда |
 
 ---
 
@@ -180,6 +190,7 @@ Response 200:
 Errors:
 - 401 `invalid_credentials`
 - 403 `device_limit_reached` (превышен `DEVICE_LIMIT`)
+- 423 `login_rate_limited` — слишком много неудачных попыток (см. [`auth-devices.md`](auth-devices.md#rate-limit)). Response содержит `retry_after` (ISO-8601) когда блок снимется
 
 ### `POST /api/v1/account/logout`
 Выход из аккаунта на текущем устройстве. Удаляет текущую сессию.
@@ -341,17 +352,17 @@ Auth required.
 
 Request:
 ```json
-{ "expires_at": 1729012345678 }
+{ "expires_at": "2026-05-17T13:45:01.123Z" }
 ```
 
-`expires_at` — unixtime ms. Минимальный TTL — час, максимальный — 30 дней (валидируется бэком).
+`expires_at` — ISO-8601. Минимальный TTL — час, максимальный — 30 дней (валидируется бэком).
 
 Response 201:
 ```json
 {
   "id": "...",
   "code": "1234567890",
-  "expires_at": 1729012345678,
+  "expires_at": "2026-05-17T13:45:01.123Z",
   "created_at": "..."
 }
 ```
@@ -369,7 +380,7 @@ Auth required.
 Response 200:
 ```json
 [
-  { "id": "...", "code": "1234567890", "expires_at": 1729012345678, "created_at": "..." },
+  { "id": "...", "code": "1234567890", "expires_at": "2026-05-17T...", "created_at": "..." },
   ...
 ]
 ```
@@ -566,7 +577,11 @@ Response 200:
 ]
 ```
 
-`q` сначала проверяется как UIN (только цифры) → exact match по `uins.number`. Иначе → `pg_trgm` поиск по `accounts.username` (case-insensitive).
+**Логика разбора `q`** (соответствует правилам логина из [`identity.md`](identity.md#login)):
+- Первый символ — цифра → UIN, exact match по `uins.number`.
+- Первый символ — буква → username, `pg_trgm`-поиск по `accounts.username` (case-insensitive через CITEXT).
+
+Эти множества не пересекаются, потому что username не может начинаться с цифры (регекс `^[a-zA-Z][a-zA-Z0-9]{2,29}$`).
 
 ---
 
@@ -598,10 +613,12 @@ Response 200:
 
 ## HTTP — Admin
 
+Все админ-эндпоинты защищены `AdminGuard` — проверяет `accounts.is_admin = true` для аккаунта из текущего токена. Назначение `is_admin` — только напрямую в БД (не через API). См. [`identity.md`](identity.md), [`database-schema.md`](database-schema.md#accounts).
+
 ### `POST /api/v1/admin/account/grant-username`
 Выдать username аккаунту (только админ).
 
-Auth required + admin-роль (определение роли — TODO при реализации).
+Auth required + admin-роль.
 
 Request:
 ```json
@@ -613,7 +630,7 @@ Response 204.
 Errors:
 - 403 `not_admin`
 - 409 `username_taken`
-- 400 `username_invalid` (длина / алфавит)
+- 400 `username_invalid` (формат `^[a-zA-Z][a-zA-Z0-9]{2,29}$`)
 
 ---
 
@@ -664,6 +681,8 @@ Access TTL = `JWT_ACCESS_TTL` (default 15s). WSS-соединение живёт
 ### Heartbeat
 Сервер шлёт `{ "type": "ping" }` каждые 30 сек. Клиент должен ответить `{ "type": "pong" }`. Иначе через 90 сек коннект закрывается.
 
+**Background на мобилке:** при переходе прилы в фон (`AppLifecycleService` → `pause`) iOS/Android приостанавливают JavaScript → клиент не успевает отвечать на ping → сервер закроет коннект. Это нормально. При возврате прилы в foreground (`resume`) клиент сам устанавливает новое WSS-соединение и шлёт `auth` заново — накопленные `pending_messages` получит при следующей синхронизации (см. [`server.md`](server.md#синхронизация-при-выходе-онлайн)).
+
 ### События (server → client)
 
 #### `session_kicked`
@@ -700,7 +719,7 @@ UIN сгенерирован для текущего аккаунта. Сним�
 Когда дойдём до чатов, сообщений, push:
 - `POST /api/v1/chat/create`, `GET /api/v1/chat/read-list`, `DELETE /api/v1/chat/delete/:id`
 - `POST /api/v1/chat/exchange-key` — публичный ключ при создании чата (см. [`encryption.md`](encryption.md))
-- `POST /api/v1/message/send` (или WSS-команда `send_message`)
+- `POST /api/v1/message/send` (или WSS-команда `send_message`) — при отправке в удалённый чат вернёт `404 chat_not_found` (см. [`devices-and-chats.md`](devices-and-chats.md#мёртвые-чаты-на-устройстве-собеседника)). Клиент по этому коду помечает локальный чат `is_dead = true`.
 - WSS `message_received`, `message_status_update`, `key_exchange_request`, `key_exchange_complete`
 - `POST /api/v1/push/register-token` — регистрация APNs/FCM токена (см. [`push-notifications.md`](push-notifications.md))
 - Privacy modes ([`privacy.md`](privacy.md) → TODO)

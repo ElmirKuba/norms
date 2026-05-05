@@ -43,30 +43,32 @@ UIN генерируется асинхронно после создания а
 
 ## Таблицы
 
+> Полное DDL — в [`database-schema.md`](database-schema.md).
+
 ### invites (коды приглашений)
 
 | Поле | Тип | Заметки |
 |---|---|---|
-| `id` | string PK | Универсальный ID (см. [`database.md`](database.md)) |
-| `account_id` | string FK | Кто создал (→ `accounts.id`) |
-| `code` | string unique | 10-значный код |
-| `expires_at` | bigint | unixtime ms — до какого момента код валиден (включительно) |
-| `created_at` | timestamp | |
+| `id` | `text` PK | Универсальный ID (см. [`database.md`](database.md)) |
+| `account_id` | `text` FK | Кто создал (→ `accounts.id`). `ON DELETE CASCADE` — активные коды инвалидируются при удалении создателя |
+| `code` | `text` unique | 10-значный код |
+| `expires_at` | `timestamptz` | До какого момента код валиден (включительно) |
+| `created_at` | `timestamptz` | |
 
 ### referrals (кто кого пригласил)
 
 | Поле | Тип | Заметки |
 |---|---|---|
-| `id` | string PK | Универсальный ID |
-| `inviter_id` | string FK | Кто пригласил (→ `accounts.id`). One-to-many: один инвайтер — много записей |
-| `invitee_id` | string FK unique | Кого пригласили (→ `accounts.id`). One-to-one: один аккаунт приглашён один раз |
-| `created_at` | timestamp | Когда приглашение принято |
+| `id` | `text` PK | Универсальный ID |
+| `inviter_id` | `text` FK nullable | Кто пригласил (→ `accounts.id`). `ON DELETE SET NULL` — приглашённый остаётся, инвайтер показывается как «удалённый аккаунт» |
+| `invitee_id` | `text` FK unique | Кого пригласили (→ `accounts.id`). `ON DELETE CASCADE` — приглашённый удалил аккаунт = запись бесполезна |
+| `created_at` | `timestamptz` | Когда приглашение принято |
 
-### accounts — новый столбец
+### accounts — столбец
 
 | Поле | Тип | Заметки |
 |---|---|---|
-| `invites_remaining` | integer, default 3 | Сколько инвайтов осталось. Декремент при создании кода, инкремент при отзыве. Админ может пополнить через БД / админку |
+| `invites_remaining` | `integer`, default 3 | Сколько инвайтов осталось. Декремент при создании кода, инкремент при отзыве. Админ может пополнить через БД / админку |
 
 ## Логика
 

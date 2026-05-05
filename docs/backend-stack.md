@@ -9,8 +9,7 @@
 | Фреймворк | **NestJS** | TypeScript, модульная архитектура, DI, decorator-based. Архитектурный референс: [`nest-backend-example/`](../nest-backend-example/) (⚠ MySQL, bcrypt, cookies — **не копировать**, см. предупреждения в корневом `CLAUDE.md`) |
 | БД | **PostgreSQL 16** | LISTEN/NOTIFY, JSONB, `pg_trgm` для поиска по `username`, партиционирование `pending_messages` на будущее |
 | ORM | **Drizzle** (`drizzle-orm/postgres-js` + `drizzle-kit`) | Лёгкий, миграции в TS, без магии |
-| Очередь задач | **BullMQ + Redis** | Генерация UIN, возможные будущие job'ы (cleanup просроченных blob'ов, push-sender) |
-| Кеш / сессии | **Redis** (опционально, через env) | См. «SessionStore» ниже |
+| Очередь задач | **BullMQ + Redis** | Генерация UIN, rate-limit-счётчики (login/recovery), TTL-хранилище одноразовых токенов (`reset_token`), будущие job'ы (cleanup просроченных blob'ов, push-sender) |
 | Транспорт | HTTPS (REST) + WSS (реалтайм) | См. [`server.md`](server.md) |
 
 ### Почему не MySQL
@@ -21,32 +20,16 @@
 ### Почему не TypeORM
 `nest-backend-example` использует Drizzle — берём оттуда. Type-safety на уровне схемы, миграции через `drizzle-kit`, без скрытого SQL.
 
-## SessionStore — абстракция
+## Хранение сессий
 
-Сессии (`sessions`: refresh_token, updated_at ~каждые 15 сек) хранятся через абстракцию. Одна реализация активна в рантайме, выбирается через env.
+Сессии (`sessions`: refresh_token_hash, updated_at ~каждые 15 сек при активной WSS-ротации) хранятся **только в PostgreSQL**.
 
-```typescript
-// backend/src/modules/sessions/session-store.abstract.ts
-export abstract class SessionStore {
-  abstract get(id: string): Promise<Session | null>;
-  abstract set(session: Session): Promise<void>;
-  abstract delete(id: string): Promise<void>;
-  abstract findByRefreshToken(token: string): Promise<Session | null>;
-  abstract listByAccount(accountId: string): Promise<Session[]>;
-}
+Почему не Redis:
+- `chats.session_a_id` / `session_b_id` / `pending_messages.sender/receiver_session_id` — FK на `sessions.id`. Если sessions не в PG — FK-целостность невозможна.
+- Write-нагрузка на UPDATE одной строки `sessions` каждые 15 сек на сессию — для PG это ничто на нашем масштабе.
+- Принцип «одна точка правды, один способ делать вещи».
 
-// Две реализации:
-//   PostgresSessionStore — таблица sessions (см. auth-devices.md)
-//   RedisSessionStore    — key `session:{id}`, TTL = refresh_ttl
-```
-
-Выбор:
-```
-SESSION_STORE=postgres  # dev, дебаг через pgweb
-SESSION_STORE=redis     # prod, частые обновления
-```
-
-**Без dual-write.** Единая точка правды. Если когда-нибудь понадобится cache-aside (PG truth + Redis cache) — добавим третью реализацию `HybridSessionStore`.
+Если в далёком будущем профиль покажет, что чтение sessions становится bottleneck — добавим **cache-aside** (PG = truth, Redis = read cache, инвалидация on write). Не делаем заранее.
 
 ## Архитектура бэкенда (4 слоя)
 
@@ -139,11 +122,8 @@ PORT=3000
 # Database
 DATABASE_URL=postgres://norms:norms@localhost:5432/norms
 
-# Redis (BullMQ + optional SessionStore)
+# Redis (BullMQ, rate-limit, reset_token TTL)
 REDIS_URL=redis://localhost:6379
-
-# Sessions
-SESSION_STORE=postgres  # postgres | redis
 
 # Auth (см. auth-devices.md)
 JWT_ACCESS_TTL=15s

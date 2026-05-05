@@ -1,5 +1,7 @@
 # Идентификация пользователей
 
+> Полное DDL обеих таблиц — в [`database-schema.md`](database-schema.md).
+
 ## Сущности
 
 ### Account
@@ -7,23 +9,25 @@
 
 | Поле | Тип | Заметки |
 |---|---|---|
-| `id` | string PK | Универсальный ID (см. [`database.md`](database.md)) |
-| `password_hash` | string | argon2id (хешируется на сервере, см. ниже Login) |
-| `username` | string nullable, unique (case-insensitive) | См. ниже — выдаётся только админом |
-| `invites_remaining` | integer, default 3 | Сколько инвайтов осталось (см. [`invites.md`](invites.md)) |
-| `created_at` | timestamp | |
-| `updated_at` | timestamp | |
+| `id` | `text` PK | Универсальный ID (см. [`database.md`](database.md)) |
+| `password_hash` | `text` | argon2id (хешируется на сервере, см. ниже Login) |
+| `username` | `citext` nullable, unique | CITEXT даёт регистронезависимую уникальность нативно. Выдаётся только админом. Формат — см. ниже |
+| `invites_remaining` | `integer`, default 3 | Сколько инвайтов осталось (см. [`invites.md`](invites.md)) |
+| `is_admin` | `boolean`, default false | Флаг админа. Защищает `/api/v1/admin/*` эндпоинты. Назначается напрямую через БД |
+| `created_at`, `updated_at` | `timestamptz` | |
 
 ### UIN
 Числовой публичный идентификатор. 1:1 с Account. Хранится отдельной таблицей — изолируем логику генерации, резервирования "красивых" номеров и потенциального обмена/продажи.
 
 | Поле | Тип | Заметки |
 |---|---|---|
-| `id` | string PK | Универсальный ID |
-| `account_id` | string FK nullable, unique | NULL — зарезервированный UIN, ещё не выдан |
-| `number` | string unique | Сама последовательность цифр |
-| `created_at` | timestamp | |
-| `updated_at` | timestamp | |
+| `id` | `text` PK | Универсальный ID |
+| `account_id` | `text` FK nullable | Partial unique (`WHERE account_id IS NOT NULL`). NULL — зарезервированный UIN, ещё не выдан или возвращён в пул |
+| `number` | `text` unique | Сама последовательность цифр |
+| `is_premium` | `boolean`, default false | «Красивый» UIN. При удалении аккаунта — отвязывается (account_id = NULL), а не удаляется |
+| `created_at`, `updated_at` | `timestamptz` | |
+
+**FK-стратегия:** `ON DELETE NO ACTION` — удаление аккаунта обрабатывается в коде в транзакции (см. [`database-schema.md`](database-schema.md#удаление-аккаунта)). Премиум возвращается в пул, обычный удаляется.
 
 ## UIN — генерация
 
@@ -41,7 +45,8 @@
 
 - **Длина:** 3–30 символов включительно.
 - **Алфавит:** `a-z`, `A-Z`, `0-9`.
-- **Регистронезависимый** — `Petya` и `petya` считаются одним именем (для поиска и уникальности).
+- **Первый символ — не цифра** (буква). Регекс: `^[a-zA-Z][a-zA-Z0-9]{2,29}$`. Иначе `12345` парсилось бы и как UIN, и как username — поиск/login не отличили бы их.
+- **Регистронезависимый** — `Petya` и `petya` считаются одним именем (для поиска и уникальности через `CITEXT`).
 - **Кому выдаётся:** только своим — вручную админом через БД или через админ-панель в приложении. Юзер сам username не выбирает.
 
 Username — **не login**. Это "ник для своих", фича доверенных аккаунтов.
@@ -58,9 +63,15 @@ Username — **не login**. Это "ник для своих", фича дов�
 
 ## Login
 
-**Login = UIN.** Username опционален и есть не у всех.
+**Login = UIN или username.** Бэк определяет тип по первому символу:
+- Первый символ — цифра → UIN, exact match по `uins.number`.
+- Первый символ — буква → username, exact match по `accounts.username` (CITEXT).
+
+Регекс username (`^[a-zA-Z]...`) гарантирует, что эти два множества не пересекаются.
+
 - Клиент поддерживает **мульти-аккаунт**: несколько Account залогинено одновременно, переключение в UI.
 - Восстановление пароля — через секретные вопросы. Подробнее: [`recovery.md`](recovery.md).
+- **Rate-limit на неудачные login-попытки** — см. [`auth-devices.md`](auth-devices.md#rate-limit).
 
 ## Регистрация — flow
 
