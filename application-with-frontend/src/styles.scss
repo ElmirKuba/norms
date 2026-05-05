@@ -26,142 +26,142 @@ body {
 
 :root {
   // Brand
-  --clr-primary: #582cff;                    // основной акцент — кнопки, иконки, ссылки
-  --clr-primary-tint: #f0ebff;               // светлый оттенок primary — фоны значков, бейджи
-  --clr-primary-tint-subtle: #fafaff;        // едва заметный фиолетовый — фон поля переименования
-  --clr-primary-tint-active: #e0d9ff;        // нажатое состояние primary-tint
+  --clr-primary: #582cff; // основной акцент — кнопки, иконки, ссылки
+  --clr-primary-tint: #f0ebff; // светлый оттенок primary — фоны значков, бейджи
+  --clr-primary-tint-subtle: #fafaff; // едва заметный фиолетовый — фон поля переименования
+  --clr-primary-tint-active: #e0d9ff; // нажатое состояние primary-tint
 
   // Backgrounds / Surfaces
-  --clr-bg-root: #fafafa;                    // корневой фон приложения
-  --clr-bg-page: #f5f5f7;                    // фон экранов / страниц
-  --clr-surface: #ffffff;                    // белые поверхности — карточки, шапки, панели
-  --clr-surface-inverse: #1a1a1a;            // инвертированная поверхность — тёмная карточка лендинга
-  --clr-surface-active: #ebebf0;             // hover/active фон dev-кнопок в профиле
+  --clr-bg-root: #fafafa; // корневой фон приложения
+  --clr-bg-page: #f5f5f7; // фон экранов / страниц
+  --clr-surface: #ffffff; // белые поверхности — карточки, шапки, панели
+  --clr-surface-inverse: #1a1a1a; // инвертированная поверхность — тёмная карточка лендинга
+  --clr-surface-active: #ebebf0; // hover/active фон dev-кнопок в профиле
 
   // Text
-  --clr-text-primary: #1a1a1a;              // основной текст — заголовки, контент
-  --clr-text-secondary: #8e8e93;            // вторичный текст — подписи, мета
-  --clr-text-tertiary: #c7c7cc;             // третичный — плейсхолдеры, пустые значения
-  --clr-text-muted: #aaaaaa;               // приглушённый — тёмные карточки лендинга
-  --clr-text-on-primary: #ffffff;           // текст поверх primary-цвета — кнопки, бейджи
+  --clr-text-primary: #1a1a1a; // основной текст — заголовки, контент
+  --clr-text-secondary: #8e8e93; // вторичный текст — подписи, мета
+  --clr-text-tertiary: #c7c7cc; // третичный — плейсхолдеры, пустые значения
+  --clr-text-muted: #aaaaaa; // приглушённый — тёмные карточки лендинга
+  --clr-text-on-primary: #ffffff; // текст поверх primary-цвета — кнопки, бейджи
 
   // Borders / Dividers
-  --clr-border-light: #f0f0f0;              // лёгкие разделители между секциями
-  --clr-border-medium: #e5e5ea;             // рамки инпутов, разделители
-  --clr-divider-handle: #e0e0e0;            // ручка-полоска нижнего sheet (UIN pending)
-  --clr-border-dashed: #d0d0d8;             // пунктирная рамка dev-кнопок в профиле
+  --clr-border-light: #f0f0f0; // лёгкие разделители между секциями
+  --clr-border-medium: #e5e5ea; // рамки инпутов, разделители
+  --clr-divider-handle: #e0e0e0; // ручка-полоска нижнего sheet (UIN pending)
+  --clr-border-dashed: #d0d0d8; // пунктирная рамка dev-кнопок в профиле
 
   // Status: danger / error
-  --clr-danger: #ff3b30;                    // красный — ошибки, удаление, опасность
-  --clr-danger-tint: #fff1f0;               // светлый фон опасных кнопок и элементов
-  --clr-danger-tint-active: #ffe0de;        // нажатое состояние danger-tint
-  --clr-danger-input-bg: #fff5f5;           // фон инпута в состоянии ошибки
-  --clr-danger-bubble-bg: #fff0f0;          // фон недоставленного сообщения
-  --clr-danger-bubble-border: #ffcdd2;      // рамка недоставленного сообщения
+  --clr-danger: #ff3b30; // красный — ошибки, удаление, опасность
+  --clr-danger-tint: #fff1f0; // светлый фон опасных кнопок и элементов
+  --clr-danger-tint-active: #ffe0de; // нажатое состояние danger-tint
+  --clr-danger-input-bg: #fff5f5; // фон инпута в состоянии ошибки
+  --clr-danger-bubble-bg: #fff0f0; // фон недоставленного сообщения
+  --clr-danger-bubble-border: #ffcdd2; // рамка недоставленного сообщения
 
   // Status: warning / amber
-  --clr-warning: #c28a00;                   // иконка/статус ожидания (pending key в чате)
-  --clr-warning-tint: #fff8e6;              // фон предупреждающих блоков и баннеров
-  --clr-warning-border: #ffe9a0;            // рамка предупреждающих баннеров
-  --clr-warning-text-dark: #7a5800;         // тёмный текст внутри warning-блоков
+  --clr-warning: #c28a00; // иконка/статус ожидания (pending key в чате)
+  --clr-warning-tint: #fff8e6; // фон предупреждающих блоков и баннеров
+  --clr-warning-border: #ffe9a0; // рамка предупреждающих баннеров
+  --clr-warning-text-dark: #7a5800; // тёмный текст внутри warning-блоков
 
   // Reset-password banner (app main screen)
-  --clr-banner-bg: #fff3cd;                 // фон баннера принудительной смены пароля
-  --clr-banner-border: #ffc107;             // рамка баннера
-  --clr-banner-icon: #856404;               // иконка баннера
-  --clr-banner-text: #533f00;               // текст баннера
+  --clr-banner-bg: #fff3cd; // фон баннера принудительной смены пароля
+  --clr-banner-border: #ffc107; // рамка баннера
+  --clr-banner-icon: #856404; // иконка баннера
+  --clr-banner-text: #533f00; // текст баннера
 
   // Status: success
-  --clr-success: #34c759;                   // зелёный — успешные действия
+  --clr-success: #34c759; // зелёный — успешные действия
 
   // Modal icon backgrounds
-  --clr-icon-bg-success: #e8f8ed;           // фон зелёной иконки в модалке
-  --clr-icon-bg-error: #ffe5e5;             // фон красной иконки в модалке
-  --clr-icon-bg-warning: #fff3e0;           // фон оранжевой иконки в модалке (и UIN pending)
-  --clr-icon-bg-info: #e5f0ff;              // фон синей иконки в модалке
+  --clr-icon-bg-success: #e8f8ed; // фон зелёной иконки в модалке
+  --clr-icon-bg-error: #ffe5e5; // фон красной иконки в модалке
+  --clr-icon-bg-warning: #fff3e0; // фон оранжевой иконки в модалке (и UIN pending)
+  --clr-icon-bg-info: #e5f0ff; // фон синей иконки в модалке
 
   // Settings row icon colors
-  --clr-settings-blue: #3b82f6;             // иконка настройки — аккаунт
-  --clr-settings-teal: #14b8a6;             // иконка настройки — приватность
-  --clr-settings-orange: #f97316;           // иконка настройки — восстановление
+  --clr-settings-blue: #3b82f6; // иконка настройки — аккаунт
+  --clr-settings-teal: #14b8a6; // иконка настройки — приватность
+  --clr-settings-orange: #f97316; // иконка настройки — восстановление
 
   // Miscellaneous
-  --clr-overlay: rgba(0, 0, 0, 0.3);        // затемнение под sheet (UIN pending)
+  --clr-overlay: rgba(0, 0, 0, 0.3); // затемнение под sheet (UIN pending)
   --clr-shadow-bubble: rgba(0, 0, 0, 0.06); // тень входящего сообщения в чате
-  --clr-btn-overlay: rgba(0, 0, 0, 0.08);   // фон кнопки dismiss в баннере
+  --clr-btn-overlay: rgba(0, 0, 0, 0.08); // фон кнопки dismiss в баннере
   --clr-spinner-overlay: rgba(255, 255, 255, 0.35); // полупрозрачная рамка спиннера кнопки
-  --clr-contact-hover: #f0f0f5;             // hover фон кнопки перехода к контакту в чате
+  --clr-contact-hover: #f0f0f5; // hover фон кнопки перехода к контакту в чате
 }
 
 // ─── Тёмная тема — раскомментировать и закомментировать блок выше ─────────────
-//
+
 // :root {
 //   // Brand
-//   --clr-primary: #7c4dff;                    // primary чуть светлее для тёмного фона
-//   --clr-primary-tint: #2d1f6e;               // тёмный фон значков
-//   --clr-primary-tint-subtle: #1e1629;        // едва заметный purple на тёмном
-//   --clr-primary-tint-active: #3d2d8a;        // нажатое состояние primary-tint
-//
+//   --clr-primary: #7c4dff; // primary чуть светлее для тёмного фона
+//   --clr-primary-tint: #2d1f6e; // тёмный фон значков
+//   --clr-primary-tint-subtle: #1e1629; // едва заметный purple на тёмном
+//   --clr-primary-tint-active: #3d2d8a; // нажатое состояние primary-tint
+
 //   // Backgrounds / Surfaces
-//   --clr-bg-root: #0f0f0f;                    // корневой фон
-//   --clr-bg-page: #1c1c1e;                    // фон экранов (iOS dark)
-//   --clr-surface: #2c2c2e;                    // поверхности — карточки, шапки
-//   --clr-surface-inverse: #f5f5f7;            // инвертированная (теперь светлая карточка)
-//   --clr-surface-active: #3a3a3c;             // hover/active поверхность
-//
+//   --clr-bg-root: #0f0f0f; // корневой фон
+//   --clr-bg-page: #1c1c1e; // фон экранов (iOS dark)
+//   --clr-surface: #2c2c2e; // поверхности — карточки, шапки
+//   --clr-surface-inverse: #3a3a3c; // контрастная тёмная карточка (выделяется на фоне surface)
+//   --clr-surface-active: #3a3a3c; // hover/active поверхность
+
 //   // Text
-//   --clr-text-primary: #f2f2f7;              // основной текст
-//   --clr-text-secondary: #8e8e93;            // вторичный (нейтральный, не меняется)
-//   --clr-text-tertiary: #636366;             // третичный — плейсхолдеры
-//   --clr-text-muted: #636366;               // приглушённый
-//   --clr-text-on-primary: #ffffff;           // поверх primary (не меняется)
-//
+//   --clr-text-primary: #f2f2f7; // основной текст
+//   --clr-text-secondary: #8e8e93; // вторичный (нейтральный, не меняется)
+//   --clr-text-tertiary: #636366; // третичный — плейсхолдеры
+//   --clr-text-muted: #636366; // приглушённый
+//   --clr-text-on-primary: #ffffff; // поверх primary (не меняется)
+
 //   // Borders / Dividers
-//   --clr-border-light: #38383a;              // лёгкие разделители
-//   --clr-border-medium: #48484a;             // рамки инпутов
-//   --clr-divider-handle: #48484a;            // ручка sheet
-//   --clr-border-dashed: #48484a;             // пунктирная рамка
-//
+//   --clr-border-light: #38383a; // лёгкие разделители
+//   --clr-border-medium: #48484a; // рамки инпутов
+//   --clr-divider-handle: #48484a; // ручка sheet
+//   --clr-border-dashed: #48484a; // пунктирная рамка
+
 //   // Status: danger / error
-//   --clr-danger: #ff453a;                    // красный (iOS dark)
-//   --clr-danger-tint: #3a1c1a;               // фон опасных кнопок
-//   --clr-danger-tint-active: #4a2420;        // нажатое
-//   --clr-danger-input-bg: #2d1a1a;           // фон ошибочного инпута
-//   --clr-danger-bubble-bg: #2d1a1a;          // фон failed-сообщения
-//   --clr-danger-bubble-border: #5a2d30;      // рамка failed-сообщения
-//
+//   --clr-danger: #ff453a; // красный (iOS dark)
+//   --clr-danger-tint: #3a1c1a; // фон опасных кнопок
+//   --clr-danger-tint-active: #4a2420; // нажатое
+//   --clr-danger-input-bg: #2d1a1a; // фон ошибочного инпута
+//   --clr-danger-bubble-bg: #2d1a1a; // фон failed-сообщения
+//   --clr-danger-bubble-border: #5a2d30; // рамка failed-сообщения
+
 //   // Status: warning / amber
-//   --clr-warning: #ffd60a;                   // amber (iOS dark)
-//   --clr-warning-tint: #2d2410;              // фон предупреждений
-//   --clr-warning-border: #4a3c1a;            // рамка баннеров
-//   --clr-warning-text-dark: #ffd60a;         // текст в warning-блоках
-//
+//   --clr-warning: #ffd60a; // amber (iOS dark)
+//   --clr-warning-tint: #2d2410; // фон предупреждений
+//   --clr-warning-border: #4a3c1a; // рамка баннеров
+//   --clr-warning-text-dark: #ffd60a; // текст в warning-блоках
+
 //   // Reset-password banner
-//   --clr-banner-bg: #2d2410;                 // фон баннера
-//   --clr-banner-border: #ffc107;             // рамка (не меняется)
-//   --clr-banner-icon: #ffd60a;               // иконка
-//   --clr-banner-text: #ffe58a;               // текст
-//
+//   --clr-banner-bg: #2d2410; // фон баннера
+//   --clr-banner-border: #ffc107; // рамка (не меняется)
+//   --clr-banner-icon: #ffd60a; // иконка
+//   --clr-banner-text: #ffe58a; // текст
+
 //   // Status: success
-//   --clr-success: #30d158;                   // зелёный (iOS dark)
-//
+//   --clr-success: #30d158; // зелёный (iOS dark)
+
 //   // Modal icon backgrounds
-//   --clr-icon-bg-success: #1a3a24;           // фон зелёной иконки
-//   --clr-icon-bg-error: #3a1c1c;             // фон красной иконки
-//   --clr-icon-bg-warning: #2d2010;           // фон оранжевой иконки
-//   --clr-icon-bg-info: #1a2a3a;              // фон синей иконки
-//
+//   --clr-icon-bg-success: #1a3a24; // фон зелёной иконки
+//   --clr-icon-bg-error: #3a1c1c; // фон красной иконки
+//   --clr-icon-bg-warning: #2d2010; // фон оранжевой иконки
+//   --clr-icon-bg-info: #1a2a3a; // фон синей иконки
+
 //   // Settings row icon colors
-//   --clr-settings-blue: #0a84ff;             // синий (iOS dark)
-//   --clr-settings-teal: #5ac8fa;             // голубой (iOS dark)
-//   --clr-settings-orange: #ff9500;           // оранжевый (iOS dark)
-//
+//   --clr-settings-blue: #0a84ff; // синий (iOS dark)
+//   --clr-settings-teal: #5ac8fa; // голубой (iOS dark)
+//   --clr-settings-orange: #ff9500; // оранжевый (iOS dark)
+
 //   // Miscellaneous
-//   --clr-overlay: rgba(0, 0, 0, 0.6);        // overlay темнее на тёмном фоне
-//   --clr-shadow-bubble: rgba(0, 0, 0, 0.3);  // тень bubble
+//   --clr-overlay: rgba(0, 0, 0, 0.6); // overlay темнее на тёмном фоне
+//   --clr-shadow-bubble: rgba(0, 0, 0, 0.3); // тень bubble
 //   --clr-btn-overlay: rgba(255, 255, 255, 0.12); // dismiss-кнопка на тёмном
 //   --clr-spinner-overlay: rgba(255, 255, 255, 0.35); // (не меняется)
-//   --clr-contact-hover: #3a3a3c;             // hover контакт-кнопки
+//   --clr-contact-hover: #3a3a3c; // hover контакт-кнопки
 // }
 
 // ─── Angular Material Dialog: сброс стилей Material ───────────────────────────
