@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import type { Routes } from '@angular/router';
 import { PlatformDetectorService } from './core/services/platform/platform.service';
-import { /* nativeOnlyGuard, */ webOnlyGuard } from './core/guards/platform.guard';
+import { nativeOnlyGuard, webOnlyGuard } from './core/guards/platform.guard';
 
 /** Основной массив маршрутизации продукта */
 export const routes: Routes = [
@@ -31,20 +31,19 @@ export const routes: Routes = [
   },
 
   // Приложение-мессенджер — только нативные платформы (Capacitor / Electron)
-  // TODO: временно убран nativeOnlyGuard для проверки тёмной темы в браузере
   {
     path: 'application',
-    // canMatch: [nativeOnlyGuard],
+    canMatch: [nativeOnlyGuard],
     loadChildren: async (): Promise<Routes> => {
       const content = await import('./features/application/application.routes');
       return content.APPLICATION_ROUTES;
     },
   },
   // Fallback: если зашёл на /application/* из браузера → лендинг
-  // {
-  //   path: 'application',
-  //   redirectTo: '/web/welcome',
-  // },
+  {
+    path: 'application',
+    redirectTo: '/web/welcome',
+  },
 
   // Любой несуществующий путь → корень (который уже редиректит по платформе)
   {
