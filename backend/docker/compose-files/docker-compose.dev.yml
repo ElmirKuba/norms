@@ -1,0 +1,37 @@
+services:
+
+  # ── PostgreSQL 16 ────────────────────────────────────────────────────────────
+  postgres_norms_dev:
+    container_name: postgres_norms_dev
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: norms
+      POSTGRES_USER: norms
+      POSTGRES_PASSWORD: norms
+    volumes:
+      - ./../volumes/pg_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  # ── Redis 7 ──────────────────────────────────────────────────────────────────
+  redis_norms_dev:
+    container_name: redis_norms_dev
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - ./../volumes/redis_data:/data
+    ports:
+      - "6379:6379"
+
+  # ── pgweb (PostgreSQL UI) ────────────────────────────────────────────────────
+  pgweb_norms_dev:
+    container_name: pgweb_norms_dev
+    image: sosedoff/pgweb
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://norms:norms@postgres_norms_dev:5432/norms?sslmode=disable
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres_norms_dev

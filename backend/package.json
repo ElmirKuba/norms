@@ -15,7 +15,10 @@
     "test:cov": "jest --coverage",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "docker:up": "docker compose -f docker/compose-files/docker-compose.dev.yml up -d",
+    "docker:down": "docker compose -f docker/compose-files/docker-compose.dev.yml down",
+    "docker:logs": "docker compose -f docker/compose-files/docker-compose.dev.yml logs -f"
   },
   "dependencies": {
     "@nestjs/bullmq": "^11.0.0",

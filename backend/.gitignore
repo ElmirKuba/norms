@@ -5,3 +5,7 @@ dist/
 coverage/
 *.tsbuildinfo
 .DS_Store
+
+# Docker local volumes (created on first docker compose up)
+docker/volumes/*
+!docker/volumes/.gitkeep
