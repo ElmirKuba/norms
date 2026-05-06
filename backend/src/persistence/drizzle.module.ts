@@ -5,13 +5,13 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import * as schema from './schemas';
 
-/** DI token for the Drizzle database instance. */
+/** DI-токен для инстанса базы данных Drizzle. */
 export const DRIZZLE_DB = 'DRIZZLE_DB';
 
-/** Drizzle database type with full schema awareness. */
+/** Тип базы данных Drizzle со всеми схемами. */
 export type DrizzleDb = NodePgDatabase<typeof schema>;
 
-/** NestJS module that creates and provides the Drizzle ORM database instance. */
+/** NestJS-модуль, создающий и предоставляющий инстанс Drizzle ORM. */
 @Module({
   providers: [
     {

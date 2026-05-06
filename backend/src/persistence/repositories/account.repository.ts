@@ -7,7 +7,7 @@ import { accounts } from '../schemas';
 import { DRIZZLE_DB } from '../drizzle.module';
 import type { DrizzleDb } from '../drizzle.module';
 
-/** Drizzle ORM implementation of the AccountRepository port. */
+/** Реализация порта AccountRepository через Drizzle ORM. */
 @Injectable()
 export class DrizzleAccountRepository extends AccountRepository {
   public constructor(
@@ -17,8 +17,8 @@ export class DrizzleAccountRepository extends AccountRepository {
   }
 
   /**
-   * Returns all accounts.
-   * @returns Array of account entities.
+   * Возвращает все аккаунты.
+   * @returns Массив сущностей аккаунтов.
    */
   public async findAll(): Promise<AccountEntity[]> {
     const rows = await this._db.select().from(accounts);
@@ -26,9 +26,9 @@ export class DrizzleAccountRepository extends AccountRepository {
   }
 
   /**
-   * Finds an account by ID.
-   * @param id - Account ID.
-   * @returns Account entity or null if not found.
+   * Находит аккаунт по ID.
+   * @param id - ID аккаунта.
+   * @returns Сущность аккаунта или null если не найден.
    */
   public async findById(id: string): Promise<AccountEntity | null> {
     const rows = await this._db.select().from(accounts).where(eq(accounts.id, id)).limit(1);
@@ -37,10 +37,10 @@ export class DrizzleAccountRepository extends AccountRepository {
   }
 
   /**
-   * Creates and persists a new account.
-   * @param data - Account creation data.
-   * @returns Created account entity.
-   * @throws Error if the database insert returned no rows.
+   * Создаёт и сохраняет новый аккаунт.
+   * @param data - Данные для создания.
+   * @returns Созданная сущность аккаунта.
+   * @throws Error если INSERT не вернул строк.
    */
   public async create(data: CreateAccountData): Promise<AccountEntity> {
     const rows = await this._db
@@ -55,16 +55,16 @@ export class DrizzleAccountRepository extends AccountRepository {
       .returning();
     const row = rows[0];
     if (row === undefined) {
-      throw new Error('Insert returned no rows');
+      throw new Error('INSERT не вернул строк');
     }
     return this._toEntity(row);
   }
 
   /**
-   * Updates specified fields on an existing account.
-   * @param id - Account ID.
-   * @param data - Fields to update.
-   * @returns Updated account entity or null if not found.
+   * Обновляет указанные поля существующего аккаунта.
+   * @param id - ID аккаунта.
+   * @param data - Поля для обновления.
+   * @returns Обновлённая сущность или null если не найден.
    */
   public async update(id: string, data: UpdateAccountData): Promise<AccountEntity | null> {
     const setValues = {
@@ -83,17 +83,17 @@ export class DrizzleAccountRepository extends AccountRepository {
   }
 
   /**
-   * Deletes an account by ID.
-   * @param id - Account ID.
+   * Удаляет аккаунт по ID.
+   * @param id - ID аккаунта.
    */
   public async delete(id: string): Promise<void> {
     await this._db.delete(accounts).where(eq(accounts.id, id));
   }
 
   /**
-   * Maps a raw database row to a domain entity.
-   * @param row - Raw Drizzle row.
-   * @returns Account domain entity.
+   * Преобразует строку из БД в доменную сущность.
+   * @param row - Строка из Drizzle-запроса.
+   * @returns Доменная сущность аккаунта.
    */
   private _toEntity(row: typeof accounts.$inferSelect): AccountEntity {
     return {

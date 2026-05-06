@@ -3,20 +3,20 @@ import type { OnModuleInit } from '@nestjs/common';
 import { AccountRepository } from '../domain/ports/account.repository.port';
 
 /**
- * Demo use-case that runs basic CRUD on AccountRepository at startup.
+ * Демо-сценарий для проверки работы CRUD через AccountRepository.
  * Раскомментируй нужные блоки — результат появится в консоли.
- * Удалить после того как убедишься что всё работает.
+ * Удалить после проверки работоспособности.
  */
 @Injectable()
 export class AccountDemoUseCase implements OnModuleInit {
-  /** NestJS logger instance. */
+  /** Инстанс NestJS-логгера. */
   private readonly _logger: Logger = new Logger(AccountDemoUseCase.name);
 
   public constructor(
     private readonly _accountRepository: AccountRepository,
   ) {}
 
-  /** Runs CRUD demo after module initialisation. */
+  /** Запускает CRUD-демо после инициализации модуля. */
   public async onModuleInit(): Promise<void> {
     // ── CREATE ───────────────────────────────────────────────────────────────────
     const account = await this._accountRepository.create({
@@ -39,6 +39,6 @@ export class AccountDemoUseCase implements OnModuleInit {
 
     // ── DELETE ───────────────────────────────────────────────────────────────────
     // await this._accountRepository.delete(account.id);
-    // this._logger.log(`[DELETE] done — id: ${account.id}`);
+    // this._logger.log(`[DELETE] готово — id: ${account.id}`);
   }
 }

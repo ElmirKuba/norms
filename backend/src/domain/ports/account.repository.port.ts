@@ -1,38 +1,38 @@
 import type { AccountEntity, CreateAccountData, UpdateAccountData } from '../entities/account.entity';
 
-/** Port (abstract) for account persistence — implemented in the persistence layer. */
+/** Порт (абстракция) для операций с аккаунтами — реализуется в слое персистентности. */
 export abstract class AccountRepository {
   /**
-   * Returns all accounts.
-   * @returns Array of account entities.
+   * Возвращает все аккаунты.
+   * @returns Массив сущностей аккаунтов.
    */
   public abstract findAll(): Promise<AccountEntity[]>;
 
   /**
-   * Finds an account by ID.
-   * @param id - Account ID.
-   * @returns Account entity or null if not found.
+   * Находит аккаунт по ID.
+   * @param id - ID аккаунта.
+   * @returns Сущность аккаунта или null если не найден.
    */
   public abstract findById(id: string): Promise<AccountEntity | null>;
 
   /**
-   * Creates and persists a new account.
-   * @param data - Account creation data.
-   * @returns Created account entity.
+   * Создаёт и сохраняет новый аккаунт.
+   * @param data - Данные для создания.
+   * @returns Созданная сущность аккаунта.
    */
   public abstract create(data: CreateAccountData): Promise<AccountEntity>;
 
   /**
-   * Updates specified fields on an existing account.
-   * @param id - Account ID.
-   * @param data - Fields to update.
-   * @returns Updated account entity or null if not found.
+   * Обновляет указанные поля существующего аккаунта.
+   * @param id - ID аккаунта.
+   * @param data - Поля для обновления.
+   * @returns Обновлённая сущность аккаунта или null если не найден.
    */
   public abstract update(id: string, data: UpdateAccountData): Promise<AccountEntity | null>;
 
   /**
-   * Deletes an account by ID.
-   * @param id - Account ID.
+   * Удаляет аккаунт по ID.
+   * @param id - ID аккаунта.
    */
   public abstract delete(id: string): Promise<void>;
 }

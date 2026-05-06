@@ -1,39 +1,39 @@
-/** Domain entity representing a user account. */
+/** Доменная сущность аккаунта пользователя. */
 export interface AccountEntity {
-  /** Unique account ID in `{uuid-v7}_{unix-ms}` format. */
+  /** Уникальный ID аккаунта в формате {uuid-v7}_{unix-ms}. */
   readonly id: string;
-  /** Optional case-insensitive username. */
+  /** Опциональный юзернейм без учёта регистра. */
   readonly username: string | null;
-  /** Argon2id password hash. */
+  /** Хеш пароля (Argon2id). */
   readonly passwordHash: string;
-  /** Remaining invites the account can send. */
+  /** Оставшееся количество инвайтов. */
   readonly invitesRemaining: number;
-  /** Whether the account has admin privileges. */
+  /** Флаг администратора. */
   readonly isAdmin: boolean;
-  /** ISO timestamp of creation. */
+  /** ISO-timestamp создания аккаунта. */
   readonly createdAt: string;
-  /** ISO timestamp of last update. */
+  /** ISO-timestamp последнего обновления. */
   readonly updatedAt: string;
 }
 
-/** Data required to create a new account. */
+/** Данные для создания нового аккаунта. */
 export interface CreateAccountData {
-  /** Argon2id password hash. */
+  /** Хеш пароля (Argon2id). */
   readonly passwordHash: string;
-  /** Optional username. */
+  /** Опциональный юзернейм. */
   readonly username?: string;
-  /** Starting invite count — defaults to 3. */
+  /** Начальное количество инвайтов — по умолчанию 3. */
   readonly invitesRemaining?: number;
-  /** Admin flag — defaults to false. */
+  /** Флаг администратора — по умолчанию false. */
   readonly isAdmin?: boolean;
 }
 
-/** Partial account data for updates — only provided fields are changed. */
+/** Частичные данные аккаунта для обновления — изменяются только переданные поля. */
 export interface UpdateAccountData {
-  /** New username, or null to remove it. */
+  /** Новый юзернейм, или null чтобы удалить его. */
   readonly username?: string | null;
-  /** New password hash. */
+  /** Новый хеш пароля. */
   readonly passwordHash?: string;
-  /** New invite count. */
+  /** Новое количество инвайтов. */
   readonly invitesRemaining?: number;
 }
