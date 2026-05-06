@@ -18,6 +18,7 @@
     "db:studio": "drizzle-kit studio",
     "docker:dev": "docker compose -f docker/compose-files/docker-compose.dev.yml up",
     "docker:up": "docker compose -f docker/compose-files/docker-compose.dev.yml up -d",
+    "docker:rebuild": "docker compose -f docker/compose-files/docker-compose.dev.yml up --build",
     "docker:down": "docker compose -f docker/compose-files/docker-compose.dev.yml down",
     "docker:logs": "docker compose -f docker/compose-files/docker-compose.dev.yml logs -f"
   },
