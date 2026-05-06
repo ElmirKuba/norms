@@ -186,4 +186,27 @@ export default tseslint.config(
       'jsdoc/require-returns-type': 'off',
     },
   },
+
+  // ─── Drizzle schema files ───────────────────────────────────────────────────
+  // pgTable extra-config callback has complex internal Drizzle types that cannot
+  // be expressed without circular references or unexported Drizzle generics.
+  {
+    files: ['src/persistence/schemas/*.ts'],
+    rules: {
+      '@typescript-eslint/typedef': ['error', {
+        arrowParameter: false,
+        memberVariableDeclaration: true,
+        parameter: true,
+        propertyDeclaration: true,
+        variableDeclaration: false,
+      }],
+      '@typescript-eslint/explicit-function-return-type': ['error', {
+        allowExpressions: true,
+        allowTypedFunctionExpressions: true,
+        allowHigherOrderFunctions: true,
+        allowDirectConstAssertionInArrowFunctions: true,
+      }],
+      'jsdoc/require-jsdoc': 'off',
+    },
+  },
 );
