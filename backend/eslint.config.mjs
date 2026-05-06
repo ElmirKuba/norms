@@ -1,0 +1,189 @@
+// @ts-check
+import eslint from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import jsdoc from 'eslint-plugin-jsdoc';
+
+export default tseslint.config(
+  // ─── Исключения ─────────────────────────────────────────────────────────────
+  {
+    ignores: ['dist/**', 'node_modules/**', '**/*.spec.ts', 'drizzle.config.ts'],
+  },
+
+  // ─── TypeScript ──────────────────────────────────────────────────────────────
+  {
+    files: ['src/**/*.ts'],
+    extends: [
+      eslint.configs.recommended,
+      ...tseslint.configs.strictTypeChecked,
+      ...tseslint.configs.stylisticTypeChecked,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: './tsconfig.json',
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    plugins: {
+      jsdoc,
+    },
+    rules: {
+      // ── Базовые JS ──────────────────────────────────────────────────────────
+      'no-console': 'error',
+      'no-debugger': 'error',
+      eqeqeq: ['error', 'always'],
+      'prefer-const': 'error',
+      'no-unused-vars': 'off',
+
+      // ── Явные типы везде ────────────────────────────────────────────────────
+      '@typescript-eslint/explicit-function-return-type': [
+        'error',
+        {
+          allowExpressions: false,
+          allowTypedFunctionExpressions: false,
+          allowHigherOrderFunctions: false,
+          allowDirectConstAssertionInArrowFunctions: true,
+        },
+      ],
+      '@typescript-eslint/explicit-module-boundary-types': 'error',
+      '@typescript-eslint/explicit-member-accessibility': ['error', { accessibility: 'explicit' }],
+      '@typescript-eslint/typedef': [
+        'error',
+        {
+          arrowParameter: true,
+          memberVariableDeclaration: true,
+          parameter: true,
+          propertyDeclaration: true,
+          variableDeclaration: false,
+        },
+      ],
+      '@typescript-eslint/no-inferrable-types': 'off',
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-extraneous-class': ['error', { allowWithDecorator: true }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
+
+      // ── Именование ──────────────────────────────────────────────────────────
+      '@typescript-eslint/naming-convention': [
+        'error',
+        { selector: 'typeLike', format: ['PascalCase'] },
+        { selector: 'enumMember', format: ['UPPER_CASE'] },
+        {
+          selector: 'memberLike',
+          modifiers: ['public'],
+          format: ['camelCase'],
+          leadingUnderscore: 'forbid',
+        },
+        {
+          selector: 'memberLike',
+          modifiers: ['private'],
+          format: ['camelCase'],
+          leadingUnderscore: 'require',
+        },
+        {
+          selector: 'memberLike',
+          modifiers: ['protected'],
+          format: ['camelCase'],
+          leadingUnderscore: 'require',
+        },
+        { selector: 'variable', format: ['camelCase', 'UPPER_CASE'] },
+        { selector: 'parameter', format: ['camelCase'], leadingUnderscore: 'allow' },
+        { selector: 'function', format: ['camelCase'] },
+      ],
+
+      // ── Порядок членов класса ────────────────────────────────────────────────
+      '@typescript-eslint/member-ordering': [
+        'error',
+        {
+          default: [
+            'static-field',
+            'static-method',
+            'public-field',
+            'protected-field',
+            'private-field',
+            'constructor',
+            'public-method',
+            'protected-method',
+            'private-method',
+          ],
+        },
+      ],
+
+      // ── Readonly ─────────────────────────────────────────────────────────────
+      '@typescript-eslint/prefer-readonly': 'error',
+
+      // ── Strict boolean expressions ───────────────────────────────────────────
+      '@typescript-eslint/strict-boolean-expressions': [
+        'error',
+        {
+          allowNullableBoolean: true,
+          allowNullableString: false,
+          allowNullableNumber: false,
+          allowNullableObject: false,
+          allowAny: false,
+        },
+      ],
+
+      // ── Type imports / exports ───────────────────────────────────────────────
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        {
+          prefer: 'type-imports',
+          fixStyle: 'separate-type-imports',
+          disallowTypeAnnotations: true,
+        },
+      ],
+      '@typescript-eslint/consistent-type-exports': [
+        'error',
+        { fixMixedExportsWithInlineTypeSpecifier: false },
+      ],
+
+      // ── Промисы и async ──────────────────────────────────────────────────────
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/no-misused-promises': 'error',
+      '@typescript-eslint/await-thenable': 'error',
+      '@typescript-eslint/require-await': 'error',
+
+      // ── Nullability ──────────────────────────────────────────────────────────
+      '@typescript-eslint/prefer-nullish-coalescing': 'error',
+      '@typescript-eslint/prefer-optional-chain': 'error',
+
+      // ── JSDoc на всех публичных/экспортируемых сущностях ────────────────────
+      'jsdoc/require-jsdoc': [
+        'error',
+        {
+          publicOnly: false,
+          require: {
+            ClassDeclaration: true,
+            FunctionDeclaration: true,
+            MethodDefinition: true,
+            ArrowFunctionExpression: false,
+            FunctionExpression: false,
+          },
+          contexts: [
+            'TSInterfaceDeclaration',
+            'TSTypeAliasDeclaration',
+            'TSEnumDeclaration',
+            'TSPropertySignature',
+            'PropertyDefinition',
+          ],
+          checkConstructors: false,
+        },
+      ],
+      'jsdoc/require-description': ['error', { checkConstructors: false }],
+      'jsdoc/require-param': ['error', { checkDestructured: false, checkConstructors: false }],
+      'jsdoc/require-param-name': 'error',
+      'jsdoc/require-param-description': 'error',
+      'jsdoc/require-returns': ['error', { checkConstructors: false, checkGetters: false }],
+      'jsdoc/require-returns-description': 'error',
+      'jsdoc/require-throws': 'error',
+      'jsdoc/check-param-names': 'error',
+      'jsdoc/check-tag-names': 'error',
+      'jsdoc/check-alignment': 'error',
+      'jsdoc/tag-lines': ['error', 'never'],
+      'jsdoc/require-param-type': 'off',
+      'jsdoc/require-returns-type': 'off',
+    },
+  },
+);
