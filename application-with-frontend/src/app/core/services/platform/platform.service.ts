@@ -148,7 +148,7 @@ export class PlatformDetectorService {
       case AppPlatform.ELECTRON_MACOS:
       case AppPlatform.ELECTRON_LINUX:
         return 'desktop';
-      default:
+      case AppPlatform.WEB:
         return 'web';
     }
   }

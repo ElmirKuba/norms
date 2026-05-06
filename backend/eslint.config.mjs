@@ -144,10 +144,28 @@ export default tseslint.config(
       '@typescript-eslint/no-misused-promises': 'error',
       '@typescript-eslint/await-thenable': 'error',
       '@typescript-eslint/require-await': 'error',
+      // Функция, возвращающая Promise, обязана быть async.
+      // checkMethodDeclarations: false — методы классов часто реализуют async-интерфейс
+      // синхронно (Promise.resolve), добавление async конфликтует с require-await.
+      '@typescript-eslint/promise-function-async': ['error', {
+        checkMethodDeclarations: false,
+      }],
 
       // ── Nullability ──────────────────────────────────────────────────────────
       '@typescript-eslint/prefer-nullish-coalescing': 'error',
       '@typescript-eslint/prefer-optional-chain': 'error',
+
+      // ── Switch exhaustiveness ────────────────────────────────────────────────
+      // Все кейсы discriminated union обязаны быть покрыты в switch
+      '@typescript-eslint/switch-exhaustiveness-check': ['error', {
+        allowDefaultCaseForExhaustiveSwitch: false,
+        requireDefaultForNonUnion: true,
+      }],
+
+      // ── Shadowing ────────────────────────────────────────────────────────────
+      // Локальная переменная не должна перекрывать внешнюю с тем же именем
+      'no-shadow': 'off',
+      '@typescript-eslint/no-shadow': 'error',
 
       // ── JSDoc на всех публичных/экспортируемых сущностях ────────────────────
       'jsdoc/require-jsdoc': [
