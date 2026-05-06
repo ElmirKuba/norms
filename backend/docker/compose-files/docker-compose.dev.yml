@@ -1,5 +1,4 @@
 services:
-
   # ── PostgreSQL 16 ────────────────────────────────────────────────────────────
   postgres_norms_dev:
     container_name: postgres_norms_dev
@@ -12,9 +11,9 @@ services:
     volumes:
       - ./../volumes/pg_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - '5432:5432'
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U norms -d norms"]
+      test: ['CMD-SHELL', 'pg_isready -U norms -d norms']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -27,7 +26,7 @@ services:
     volumes:
       - ./../volumes/redis_data:/data
     ports:
-      - "6379:6379"
+      - '6379:6379'
 
   # ── pgweb (PostgreSQL UI) ────────────────────────────────────────────────────
   pgweb_norms_dev:
@@ -37,7 +36,7 @@ services:
     environment:
       DATABASE_URL: postgres://norms:norms@postgres_norms_dev:5432/norms?sslmode=disable
     ports:
-      - "8081:8081"
+      - '8081:8081'
     depends_on:
       postgres_norms_dev:
         condition: service_healthy
@@ -47,22 +46,22 @@ services:
   # Раскомментировать для полного запуска в Docker.
   # Контекст сборки — корень backend/ (два уровня выше compose-файла).
   # ─────────────────────────────────────────────────────────────────────────────
-  # backend_norms_dev:
-  #   container_name: backend_norms_dev
-  #   build:
-  #     context: ./../../
-  #     dockerfile: ./docker/dockerfiles/nest-backend/Dockerfile.dev
-  #   restart: unless-stopped
-  #   env_file:
-  #     - ./../../.env
-  #   environment:
-  #     CHOKIDAR_USEPOLLING: "true"
-  #   volumes:
-  #     - ./../../src:/backend/src:rw
-  #   ports:
-  #     - "3000:3000"
-  #   depends_on:
-  #     postgres_norms_dev:
-  #       condition: service_healthy
-  #     redis_norms_dev:
-  #       condition: service_started
+  backend_norms_dev:
+    container_name: backend_norms_dev
+    build:
+      context: ./../../
+      dockerfile: ./docker/dockerfiles/nest-backend/Dockerfile.dev
+    restart: unless-stopped
+    env_file:
+      - ./../../.env
+    environment:
+      CHOKIDAR_USEPOLLING: 'true'
+    volumes:
+      - ./../../src:/backend/src:rw
+    ports:
+      - '3000:3000'
+    depends_on:
+      postgres_norms_dev:
+        condition: service_healthy
+      redis_norms_dev:
+        condition: service_started
