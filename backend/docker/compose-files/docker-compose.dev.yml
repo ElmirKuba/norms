@@ -10,6 +10,7 @@ services:
       POSTGRES_PASSWORD: norms
     volumes:
       - ./../volumes/pg_data:/var/lib/postgresql/data
+      - ./../sql-files/comments.sql:/docker-entrypoint-initdb.d/comments.sql:ro
     ports:
       - '5432:5432'
     healthcheck:
