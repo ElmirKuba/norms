@@ -96,12 +96,14 @@ services:
       - redis_data:/data
     ports: ["6379:6379"]
 
-  pgweb:
-    image: sosedoff/pgweb
+  pgadmin:
+    image: dpage/pgadmin4
     environment:
-      DATABASE_URL: postgres://norms:norms@postgres:5432/norms?sslmode=disable
-    ports: ["8081:8081"]
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports: ["8081:80"]
     depends_on: [postgres]
+    # servers.json монтируется для автоконфига подключения к postgres
 
   bull-board:
     # либо отдельный сервис, либо смонтировать Express-роут внутрь бэка
