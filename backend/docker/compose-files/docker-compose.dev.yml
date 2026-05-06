@@ -29,15 +29,19 @@ services:
     ports:
       - '6379:6379'
 
-  # ── pgweb (PostgreSQL UI) ────────────────────────────────────────────────────
-  pgweb_norms_dev:
-    container_name: pgweb_norms_dev
-    image: sosedoff/pgweb
+  # ── pgAdmin 4 (PostgreSQL UI) ────────────────────────────────────────────────
+  pgadmin_norms_dev:
+    container_name: pgadmin_norms_dev
+    image: dpage/pgadmin4
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgres://norms:norms@postgres_norms_dev:5432/norms?sslmode=disable
+      PGADMIN_DEFAULT_EMAIL: admin@norms.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+    volumes:
+      - ./../volumes/pgadmin_data:/var/lib/pgadmin
+      - ./../pgadmin/servers.json:/pgadmin4/servers.json:ro
     ports:
-      - '8081:8081'
+      - '8081:80'
     depends_on:
       postgres_norms_dev:
         condition: service_healthy

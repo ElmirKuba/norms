@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "norms_dev",
+      "Group": "Servers",
+      "Host": "postgres_norms_dev",
+      "Port": 5432,
+      "MaintenanceDB": "norms",
+      "Username": "norms",
+      "SSLMode": "disable",
+      "PassFile": "/pgpass"
+    }
+  }
+}
