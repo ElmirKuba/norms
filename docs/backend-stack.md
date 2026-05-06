@@ -8,7 +8,7 @@
 |---|---|---|
 | Фреймворк | **NestJS** | TypeScript, модульная архитектура, DI, decorator-based. Архитектурный референс: [`nest-backend-example/`](../nest-backend-example/) (⚠ MySQL, bcrypt, cookies — **не копировать**, см. предупреждения в корневом `CLAUDE.md`) |
 | БД | **PostgreSQL 16** | LISTEN/NOTIFY, JSONB, `pg_trgm` для поиска по `username`, партиционирование `pending_messages` на будущее |
-| ORM | **Drizzle** (`drizzle-orm/postgres-js` + `drizzle-kit`) | Лёгкий, миграции в TS, без магии |
+| ORM | **Drizzle** (`drizzle-orm/node-postgres` + `pg` + `drizzle-kit`) | Лёгкий, миграции в TS, без магии. Используется `pg` (node-postgres) вместо `postgres-js` — последний ESM-only и несовместим с NestJS CommonJS |
 | Очередь задач | **BullMQ + Redis** | Генерация UIN, rate-limit-счётчики (login/recovery), TTL-хранилище одноразовых токенов (`reset_token`), будущие job'ы (cleanup просроченных blob'ов, push-sender) |
 | Транспорт | HTTPS (REST) + WSS (реалтайм) | См. [`server.md`](server.md) |
 

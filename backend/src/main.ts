@@ -12,7 +12,7 @@ async function bootstrap(): Promise<void> {
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
-    }),
+    })
   );
   const port: number = parseInt(process.env['PORT'] ?? '3000', 10);
   await app.listen(port);
