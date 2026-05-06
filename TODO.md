@@ -74,6 +74,25 @@
 - `MainApplicationComponent` — `passwordResetBanner` signal, желтый баннер «Пароль был сброшен через восстановление», закрывается крестиком; mock-триггер на экране Профиля
 - `ProfileApplicationComponent` — секция «Мок-события» с двумя кнопками для тестирования WSS событий
 
+### ESLint (оба проекта)
+- `switch-exhaustiveness-check` — все кейсы discriminated union обязаны быть покрыты (поймал непокрытый `AppPlatform.WEB`)
+- `no-shadow` — запрет перекрытия переменных внешней области видимости
+- `promise-function-async` (`checkMethodDeclarations: false`) — функция, возвращающая Promise, обязана быть async
+
+### Backend bootstrap
+- NestJS 11, 4-layer архитектура (presentation / application / domain / persistence / common / config)
+- Строгий tsconfig (extra-strict) + ESLint (strict-type-checked + jsdoc) идентичный фронту
+- Docker compose: postgres 16, redis 7, pgAdmin 4 (port 8081), backend (комментируется для host-разработки)
+- `docker/sql-files/init.sql` → `CREATE EXTENSION citext` (в docker-entrypoint-initdb.d)
+- `docker/sql-files/comments.sql` → `COMMENT ON TABLE/COLUMN` (применять через `npm run db:comments`)
+- `npm run db:setup` = `db:push` + `db:comments`
+- Drizzle ORM (`drizzle-orm/node-postgres` + `pg`, CommonJS-совместимо)
+- Полная схема БД: `accounts` (citext username), `uins` (text number, partial unique index), `sessions`, `invites`, `referrals`, `recovery_questions`
+- `custom-types.ts` (citext, bytea), `enums.ts` (platformEnum, chatStatusEnum)
+- `AccountRepository` (DrizzleAccountRepository) — CRUD, timestamps → Date
+- `generateId()` утилита — формат `{uuid-v7}_{unix-ms}`
+- ESLint override для `schemas/*.ts` (Drizzle callback не аннотируется стандартными средствами)
+
 ## In Progress
 _Nothing yet._
 
@@ -82,32 +101,22 @@ _Nothing yet._
 Зависимости между фичами определяют порядок реализации. Внутри группы — параллельно.
 
 ```
-1. Backend bootstrap (NestJS init, docker-compose up, Drizzle подключение)
+✅ 1. Backend bootstrap (NestJS init, docker-compose up, Drizzle + полная схема БД)
    │
-2. Accounts + Auth + Sessions (таблицы accounts, sessions, JWT, login/register)
+▶  2. Accounts + Auth + Sessions (JWT, login/register, refresh, guards)
    │
-3. UIN generation (таблица uins, BullMQ job, WSS uin_assigned)
+   3. UIN generation (BullMQ job, WSS uin_assigned)
    │
-4. Invites (таблицы invites, referrals, feature flags)
+   4. Invites (feature flags, invite/check, create/revoke)
    │
-5. Recovery (таблица recovery_questions, Q/A CRUD, reset flow)
+   5. Recovery (Q/A CRUD, reset flow, rate-limit)
    │
-6. Frontend: application shell (welcome/register/login screens, auth flow, platform guard)
+   6. Frontend: подключение к реальному API (auth flow, platform guard)
    │
-7. Chats + E2E (таблицы chats, pending_messages, ECDH key exchange, WSS messaging)
+   7. Chats + E2E (ECDH key exchange, WSS messaging)
    │
-8. Settings, search, profile, devices UI, push notifications
+   8. Settings, search, profile, devices UI, push notifications
 ```
-
-### Backend bootstrap
-
-**Как инициализировать `backend/`:**
-1. `cd backend && nest new . --package-manager npm --skip-git` (или вручную: `npm init`, установить `@nestjs/core`, `@nestjs/common`, `@nestjs/platform-express`).
-2. Установить зависимости: `drizzle-orm`, `postgres`, `drizzle-kit`, `argon2`, `jsonwebtoken`, `bullmq`, `ioredis`, `@nestjs/jwt`, `class-validator`, `class-transformer`.
-3. Структура по 4-слойной архитектуре из [`nest-backend-example/BACKEND_ARCHITECTURE.md`](nest-backend-example/BACKEND_ARCHITECTURE.md) **Часть 1** (НЕ Часть 2). PostgreSQL, не MySQL. argon2id, не bcrypt. Bearer header, не cookies. Exceptions, не Result-обёртки.
-4. `docker-compose up -d` для PostgreSQL + Redis (файл: [`docs/backend-stack.md`](docs/backend-stack.md) → Docker Compose).
-5. Drizzle config + первая миграция: таблицы `accounts` и `sessions`.
-6. Env vars по шаблону из [`docs/backend-stack.md`](docs/backend-stack.md) → Env.
 
 ## Up Next
 
