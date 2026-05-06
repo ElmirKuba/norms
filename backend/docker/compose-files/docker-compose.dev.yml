@@ -56,6 +56,9 @@ services:
       - ./../../.env
     environment:
       CHOKIDAR_USEPOLLING: 'true'
+      # Переопределяем localhost → имена контейнеров внутри Docker-сети
+      DATABASE_URL: postgres://norms:norms@postgres_norms_dev:5432/norms
+      REDIS_URL: redis://redis_norms_dev:6379
     volumes:
       - ./../../src:/backend/src:rw
     ports:
