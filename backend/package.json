@@ -17,6 +17,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
+    "db:comments": "docker exec -i postgres_norms_dev psql -U norms -d norms < docker/sql-files/comments.sql",
+    "db:setup": "npm run db:push && npm run db:comments",
     "docker:dev": "docker compose -f docker/compose-files/docker-compose.dev.yml up",
     "docker:up": "docker compose -f docker/compose-files/docker-compose.dev.yml up -d",
     "docker:rebuild": "docker compose -f docker/compose-files/docker-compose.dev.yml up --build",

@@ -10,10 +10,10 @@ export interface AccountEntity {
   readonly invitesRemaining: number;
   /** Флаг администратора. */
   readonly isAdmin: boolean;
-  /** ISO-timestamp создания аккаунта. */
-  readonly createdAt: string;
-  /** ISO-timestamp последнего обновления. */
-  readonly updatedAt: string;
+  /** Дата и время создания аккаунта. */
+  readonly createdAt: Date;
+  /** Дата и время последнего обновления. */
+  readonly updatedAt: Date;
 }
 
 /** Данные для создания нового аккаунта. */

@@ -68,7 +68,7 @@ export class DrizzleAccountRepository extends AccountRepository {
    */
   public async update(id: string, data: UpdateAccountData): Promise<AccountEntity | null> {
     const setValues = {
-      updatedAt: new Date().toISOString(),
+      updatedAt: new Date(),
       ...(data.username !== undefined ? { username: data.username } : {}),
       ...(data.passwordHash !== undefined ? { passwordHash: data.passwordHash } : {}),
       ...(data.invitesRemaining !== undefined ? { invitesRemaining: data.invitesRemaining } : {}),

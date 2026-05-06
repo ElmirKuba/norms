@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: norms
     volumes:
       - ./../volumes/pg_data:/var/lib/postgresql/data
-      - ./../sql-files/comments.sql:/docker-entrypoint-initdb.d/comments.sql:ro
+      - ./../sql-files/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     ports:
       - '5432:5432'
     healthcheck:
@@ -35,7 +35,7 @@ services:
     image: dpage/pgadmin4
     restart: unless-stopped
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@norms.local
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
       PGADMIN_DEFAULT_PASSWORD: admin
     volumes:
       - ./../volumes/pgadmin_data:/var/lib/pgadmin

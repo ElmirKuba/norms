@@ -21,5 +21,6 @@
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true
-  }
+  },
+  "exclude": ["dist", "node_modules", "drizzle.config.ts", "**/*.spec.ts"]
 }
