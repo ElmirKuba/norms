@@ -29,7 +29,7 @@ HTTP-ручки и WSS-события для бэка. Стиль именова
 ### Авторизация
 - HTTP: `Authorization: Bearer {access_token}`. Access TTL — `JWT_ACCESS_TTL` (default 15s).
 - Refresh — отдельным эндпоинтом (`POST /api/v1/session/refresh`), refresh-токен в body.
-- Эндпоинты регистрации, авторизации, начала recovery, `app/downloads`, `app/feature-flags`, `app/migrate` — **публичные** (без Bearer).
+- Эндпоинты регистрации, авторизации, начала recovery, `invite/check`, `app/downloads`, `app/feature-flags`, `app/migrate` — **публичные** (без Bearer).
 
 ### Формат ошибок
 Используем NestJS `HttpException`-стиль с нормализованным `code`:
@@ -121,7 +121,7 @@ Response 200: `{ "applied": ["0001_init", "0002_invites"] }`
 ## HTTP — Account & Auth
 
 ### `POST /api/v1/account/create`
-Регистрация аккаунта.
+Регистрация аккаунта. Принимает и код, и пароль — даже если код уже был проверен через `invite/check`.
 
 Public.
 
@@ -133,7 +133,9 @@ Request:
 }
 ```
 
-- `invite_code` обязателен, если `feature-flags.free_registration === false`.
+- `invite_code` обязателен, если `feature-flags.free_registration === false`. При `free_registration === true` — игнорируется.
+- Код передаётся повторно (не только в `invite/check`) — иначе обходится инвайт-система: перехватив валидный код из check-запроса, атакующий мог бы вызвать create напрямую без кода.
+- Код **потребляется атомарно в транзакции**: проверяется → удаляется → создаётся аккаунт + сессия. `invite/check` код не резервирует.
 - `password` — plain-text, минимум 8 символов, hash на сервере argon2id (см. [`identity.md`](identity.md#пароль), [`recovery.md`](recovery.md#хеширование)).
 
 Response 201:
@@ -344,6 +346,29 @@ Response 204.
 ---
 
 ## HTTP — Invites
+
+### `POST /api/v1/invite/check`
+Проверить валидность инвайт-кода перед регистрацией. Используется для UX: показать экран ввода пароля только если код принят.
+
+Public.
+
+**Код не потребляется и не резервируется** — между check и регистрацией кто-то другой может использовать тот же код первым. Поэтому `account/create` тоже принимает код и потребляет его атомарно.
+
+Request:
+```json
+{ "code": "1234567890" }
+```
+
+Response 200:
+```json
+{ "expires_at": "2026-05-17T13:45:01.123Z" }
+```
+
+Errors:
+- 404 `invite_not_found` — код не существует **или** истёк (намеренно одна ошибка — чтобы не позволять отличать активные коды от просроченных при переборе)
+- 429 `rate_limited` — агрессивный rate-limit (например, 10 попыток / 15 мин / IP)
+
+---
 
 ### `POST /api/v1/invite/create`
 Создать инвайт-код.
