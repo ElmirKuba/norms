@@ -9,6 +9,7 @@ import { generateId } from '../../common/utils/id.util';
 import { DRIZZLE_DB } from '../../persistence/drizzle.module';
 import type { DrizzleDb, DrizzleTransaction } from '../../persistence/drizzle.module';
 import { accounts, sessions, invites, referrals } from '../../persistence/schemas';
+import { UinService } from '../../uin/uin.service';
 import type { CreateAccountDto } from '../dto/create-account.dto';
 
 /** Данные аккаунта в ответе на регистрацию. */
@@ -72,6 +73,7 @@ export class CreateAccountUseCase {
     @Inject(DRIZZLE_DB) private readonly _db: DrizzleDb,
     private readonly _config: ConfigService,
     private readonly _jwtService: JwtService,
+    private readonly _uinService: UinService,
   ) {}
 
   /**
@@ -185,6 +187,8 @@ export class CreateAccountUseCase {
         };
       },
     );
+
+    await this._uinService.enqueueGeneration(result.accountId);
 
     const accessToken = await this._jwtService.signAsync({
       sub: result.accountId,
