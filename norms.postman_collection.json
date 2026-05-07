@@ -1,14 +1,10 @@
 {
   "info": {
-    "_postman_id": "2ba8426a-0375-48b0-a91d-8be475860ea9",
+    "_postman_id": "4b239d96-cca7-40dc-a039-3451caf5748b",
     "name": "norms",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "19244912"
   },
-  "variable": [
-    { "key": "base_url", "value": "http://localhost:3000/api/v1" },
-    { "key": "access_token", "value": "" },
-    { "key": "refresh_token", "value": "" }
-  ],
   "item": [
     {
       "name": "Флоу 0 — Система",
@@ -18,7 +14,16 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/app/feature-flags"
+            "url": {
+              "raw": "{{base_url}}/app/feature-flags",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "feature-flags"
+              ]
+            }
           },
           "response": []
         }
@@ -35,9 +40,22 @@
             "body": {
               "mode": "raw",
               "raw": "{\n    \"code\": \"1234567890\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": "{{base_url}}/invite/check"
+            "url": {
+              "raw": "{{base_url}}/invite/check",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "invite",
+                "check"
+              ]
+            }
           },
           "response": []
         },
@@ -64,23 +82,50 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"password\": \"secret123\",\n  \"system_name\": \"MacBook Pro\",\n  \"platform\": \"electron\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": "{{base_url}}/account/create"
+            "url": {
+              "raw": "{{base_url}}/account/create",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "account",
+                "create"
+              ]
+            }
           },
           "response": []
         },
         {
           "name": "3. UIN-статус",
-          "protocolProfileBehavior": { "disableBodyPruning": true },
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/uin/read-status"
+            "url": {
+              "raw": "{{base_url}}/uin/read-status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "uin",
+                "read-status"
+              ]
+            }
           },
           "response": []
         }
@@ -95,14 +140,16 @@
             {
               "listen": "test",
               "script": {
-                "type": "text/javascript",
                 "exec": [
                   "if (pm.response.code === 200 || pm.response.code === 201) {",
                   "  const res = pm.response.json();",
                   "  pm.collectionVariables.set('access_token', res.session.access_token);",
                   "  pm.collectionVariables.set('refresh_token', res.session.refresh_token);",
                   "}"
-                ]
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
               }
             }
           ],
@@ -111,10 +158,23 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"login\": \"12345\",\n  \"password\": \"secret123\",\n  \"system_name\": \"iPhone 15\",\n  \"platform\": \"ios\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "raw": "{\n  \"login\": \"2086\",\n  \"password\": \"secret123\",\n  \"system_name\": \"iPhone 15\",\n  \"platform\": \"ios\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": "{{base_url}}/account/auth"
+            "url": {
+              "raw": "{{base_url}}/account/auth",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "account",
+                "auth"
+              ]
+            }
           },
           "response": []
         }
@@ -146,9 +206,50 @@
             "body": {
               "mode": "raw",
               "raw": "{\n    \"refresh_token\": \"{{refresh_token}}\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": "{{base_url}}/session/refresh"
+            "url": {
+              "raw": "{{base_url}}/session/refresh",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "session",
+                "refresh"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7. Список сессий",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/session/read-list",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "session",
+                "read-list"
+              ]
+            }
           },
           "response": []
         },
@@ -157,16 +258,35 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "POST",
             "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\n    \"refresh_token\": \"{{refresh_token}}\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": "{{base_url}}/account/logout"
+            "url": {
+              "raw": "{{base_url}}/account/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "account",
+                "logout"
+              ]
+            }
           },
           "response": []
         }
@@ -177,32 +297,67 @@
       "item": [
         {
           "name": "Мой профиль",
-          "protocolProfileBehavior": { "disableBodyPruning": true },
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/account/read"
+            "url": {
+              "raw": "{{base_url}}/account/read",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "account",
+                "read"
+              ]
+            }
           },
           "response": []
         },
         {
           "name": "Профиль другого аккаунта",
-          "protocolProfileBehavior": { "disableBodyPruning": true },
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/account/read?id=",
-              "variable": [],
-              "query": [{ "key": "id", "value": "" }]
+              "raw": "{{base_url}}/account/read?uin=7977",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "account",
+                "read"
+              ],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "019e02b6-cb54-713d-a2d4-0207c4a43666_1778161994580",
+                  "disabled": true
+                },
+                {
+                  "key": "uin",
+                  "value": "7977"
+                }
+              ]
             }
           },
           "response": []
@@ -217,25 +372,54 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "POST",
             "header": [],
-            "url": "{{base_url}}/invite/create"
+            "url": {
+              "raw": "{{base_url}}/invite/create",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "invite",
+                "create"
+              ]
+            }
           },
           "response": []
         },
         {
           "name": "2. Список инвайтов",
-          "protocolProfileBehavior": { "disableBodyPruning": true },
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/invite/read-list"
+            "url": {
+              "raw": "{{base_url}}/invite/read-list",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "invite",
+                "read-list"
+              ]
+            }
           },
           "response": []
         },
@@ -247,9 +431,22 @@
             "body": {
               "mode": "raw",
               "raw": "{\n    \"code\": \"1234567890\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": "{{base_url}}/invite/check"
+            "url": {
+              "raw": "{{base_url}}/invite/check",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "invite",
+                "check"
+              ]
+            }
           },
           "response": []
         },
@@ -276,23 +473,50 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"password\": \"secret123\",\n  \"invite_code\": \"1234567890\",\n  \"system_name\": \"Test Device\",\n  \"platform\": \"electron\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": "{{base_url}}/account/create"
+            "url": {
+              "raw": "{{base_url}}/account/create",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "account",
+                "create"
+              ]
+            }
           },
           "response": []
         },
         {
           "name": "5. Реферальная информация",
-          "protocolProfileBehavior": { "disableBodyPruning": true },
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/invite/read-referrals"
+            "url": {
+              "raw": "{{base_url}}/invite/read-referrals",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "invite",
+                "read-referrals"
+              ]
+            }
           },
           "response": []
         },
@@ -301,18 +525,43 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/invite/revoke/:id",
-              "variable": [{ "key": "id", "value": "" }]
+              "raw": "",
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
             }
           },
           "response": []
         }
       ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api/v1"
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "refresh_token",
+      "value": ""
     }
   ]
 }
