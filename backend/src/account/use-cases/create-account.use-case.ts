@@ -86,7 +86,7 @@ export class CreateAccountUseCase {
    * @throws ConflictException если инвайт-код уже был использован (race condition).
    */
   public async execute(dto: CreateAccountDto): Promise<CreateAccountResult> {
-    const freeReg = this._config.get<string>('FREE_REGISTRATION', 'false') === 'true';
+    const freeReg = this._config.get<string>('FEATURE_FREE_REGISTRATION', 'false') === 'true';
     const inviteCode: string | null = dto.invite_code ?? null;
 
     if (!freeReg && inviteCode === null) {
