@@ -174,8 +174,6 @@ export class CreateAccountUseCase {
           throw new Error('INSERT session не вернул строк');
         }
 
-        // TODO: поставить UIN-job в BullMQ очередь для асинхронного назначения UIN
-
         return {
           accountId: account.id,
           accountUsername: account.username,
