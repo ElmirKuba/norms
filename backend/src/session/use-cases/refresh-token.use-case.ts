@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { SessionRepository } from '../../domain/ports/session.repository.port';
+import { AccountRepository } from '../../domain/ports/account.repository.port';
 import { generateRefreshToken, sha256Hex } from '../../common/utils/crypto.util';
 
 /** Форма ответа метода execute. */
@@ -16,12 +17,13 @@ interface RefreshTokenResult {
 export class RefreshTokenUseCase {
   public constructor(
     private readonly _sessionRepo: SessionRepository,
+    private readonly _accountRepo: AccountRepository,
     private readonly _jwtService: JwtService,
   ) {}
 
   /**
    * Ротирует refresh-токен. При повторном использовании (reuse detection) удаляет сессию.
-   * @param rawRefreshToken - Опaque refresh-токен из запроса клиента.
+   * @param rawRefreshToken - Opaque refresh-токен из запроса клиента.
    * @returns Новая пара токенов.
    * @throws UnauthorizedException при невалидном или уже использованном токене.
    */
@@ -33,17 +35,25 @@ export class RefreshTokenUseCase {
 
     if (session === null) {
       // Хеш не совпал — токен уже был использован → reuse detection.
-      // Сессия могла уже быть удалена параллельным запросом; пробуем удалить на случай если нет.
-      // Поскольку мы не знаем sessionId (нет совпадения) — клиент получает 401.
       throw new UnauthorizedException({
         code: 'refresh_reused',
         message: 'Refresh-токен уже был использован. Сессия аннулирована.',
       });
     }
 
+    const account = await this._accountRepo.findById(session.accountId);
+    if (account === null) {
+      throw new UnauthorizedException({
+        code: 'account_not_found',
+        message: 'Аккаунт не найден',
+      });
+    }
+
     const accessToken = await this._jwtService.signAsync({
       sub: session.accountId,
       sessionId: session.id,
+      platform: session.platform,
+      isAdmin: account.isAdmin,
     });
 
     return { access_token: accessToken, refresh_token: newRaw };

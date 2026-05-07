@@ -191,6 +191,8 @@ export class CreateAccountUseCase {
     const accessToken = await this._jwtService.signAsync({
       sub: result.accountId,
       sessionId: result.sessionId,
+      platform: result.sessionPlatform,
+      isAdmin: false,
     });
 
     return {

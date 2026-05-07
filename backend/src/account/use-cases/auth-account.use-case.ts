@@ -113,6 +113,8 @@ export class AuthAccountUseCase {
     const accessToken = await this._jwtService.signAsync({
       sub: account.id,
       sessionId: session.id,
+      platform: session.platform,
+      isAdmin: account.isAdmin,
     });
 
     return {
