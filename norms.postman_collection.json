@@ -18,7 +18,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/app/feature-flags" }
+            "url": "{{base_url}}/app/feature-flags"
           },
           "response": []
         }
@@ -37,7 +37,7 @@
               "raw": "{\n    \"code\": \"1234567890\"\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "url": { "raw": "{{base_url}}/invite/check" }
+            "url": "{{base_url}}/invite/check"
           },
           "response": []
         },
@@ -66,7 +66,7 @@
               "raw": "{\n  \"password\": \"secret123\",\n  \"system_name\": \"MacBook Pro\",\n  \"platform\": \"electron\"\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "url": { "raw": "{{base_url}}/account/create" }
+            "url": "{{base_url}}/account/create"
           },
           "response": []
         },
@@ -80,7 +80,7 @@
             },
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/uin/read-status" }
+            "url": "{{base_url}}/uin/read-status"
           },
           "response": []
         }
@@ -114,7 +114,7 @@
               "raw": "{\n  \"login\": \"12345\",\n  \"password\": \"secret123\",\n  \"system_name\": \"iPhone 15\",\n  \"platform\": \"ios\"\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "url": { "raw": "{{base_url}}/account/auth" }
+            "url": "{{base_url}}/account/auth"
           },
           "response": []
         }
@@ -148,7 +148,7 @@
               "raw": "{\n    \"refresh_token\": \"{{refresh_token}}\"\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "url": { "raw": "{{base_url}}/session/refresh" }
+            "url": "{{base_url}}/session/refresh"
           },
           "response": []
         },
@@ -166,7 +166,7 @@
               "raw": "{\n    \"refresh_token\": \"{{refresh_token}}\"\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "url": { "raw": "{{base_url}}/account/logout" }
+            "url": "{{base_url}}/account/logout"
           },
           "response": []
         }
@@ -184,7 +184,7 @@
             },
             "method": "POST",
             "header": [],
-            "url": { "raw": "{{base_url}}/invite/create" }
+            "url": "{{base_url}}/invite/create"
           },
           "response": []
         },
@@ -198,7 +198,7 @@
             },
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/invite/read-list" }
+            "url": "{{base_url}}/invite/read-list"
           },
           "response": []
         },
@@ -212,7 +212,7 @@
               "raw": "{\n    \"code\": \"1234567890\"\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "url": { "raw": "{{base_url}}/invite/check" }
+            "url": "{{base_url}}/invite/check"
           },
           "response": []
         },
@@ -241,7 +241,7 @@
               "raw": "{\n  \"password\": \"secret123\",\n  \"invite_code\": \"1234567890\",\n  \"system_name\": \"Test Device\",\n  \"platform\": \"electron\"\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "url": { "raw": "{{base_url}}/account/create" }
+            "url": "{{base_url}}/account/create"
           },
           "response": []
         },
@@ -255,7 +255,7 @@
             },
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/invite/read-referrals" }
+            "url": "{{base_url}}/invite/read-referrals"
           },
           "response": []
         },
@@ -268,7 +268,10 @@
             },
             "method": "DELETE",
             "header": [],
-            "url": { "raw": "{{base_url}}/invite/revoke/:id", "variable": [{ "key": "id", "value": "" }] }
+            "url": {
+              "raw": "{{base_url}}/invite/revoke/:id",
+              "variable": [{ "key": "id", "value": "" }]
+            }
           },
           "response": []
         }
