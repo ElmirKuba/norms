@@ -113,6 +113,7 @@
 ### Account read + Session list (шаг 5, частично)
 - `GET /account/read` — свой профиль (полный: id, uin, username, invites_remaining, is_admin, created_at) и чужой (без invites_remaining и is_admin); query `?id=` или `?uin=`
 - `GET /session/read-list` — список сессий аккаунта с флагом `is_current` (из JWT sessionId)
+- `DELETE /session/delete/:id` — кик сессии (404 `session_not_found`, 403 `not_your_session`)
 
 ### Invites (шаг 4)
 - `POST /invite/create` — TTL из `INVITE_TTL_DAYS` env (default 7д), атомарный декремент `invites_remaining`
