@@ -2,49 +2,23 @@
   "info": {
     "_postman_id": "2ba8426a-0375-48b0-a91d-8be475860ea9",
     "name": "norms",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "19244912"
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3000/api/v1" },
+    { "key": "access_token", "value": "" },
+    { "key": "refresh_token", "value": "" }
+  ],
   "item": [
     {
       "name": "Флоу 0 — Система",
       "item": [
         {
           "name": "Фича-флаги",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMTllMDJhYS01ZTgzLTc2Y2UtOWYyMy1iYmJmYmUwYzNmMzNfMTc3ODE2MTE4MDI5MSIsInNlc3Npb25JZCI6IjAxOWUwMmFhLTVlODUtNzVkOS1iNDEzLWNiMjQwMWE3YmMxM18xNzc4MTYxMTgwMjkzIiwiaWF0IjoxNzc4MTYxMTgwLCJleHAiOjE3NzgxNjExOTV9._0Rg72YgiccfjBK4U9Q9VQ6FGSVpO198QkytayfxILg",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "GET",
             "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"login\": \"2086\",\n  \"password\": \"secret123\",\n  \"system_name\": \"iPhone 15\",\n  \"platform\": \"ios\"\n}"
-            },
-            "url": {
-              "raw": "http://localhost:3000/api/v1/app/feature-flags",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "3000",
-              "path": [
-                "api",
-                "v1",
-                "app",
-                "feature-flags"
-              ]
-            }
+            "url": { "raw": "{{base_url}}/app/feature-flags" }
           },
           "response": []
         }
@@ -54,108 +28,59 @@
       "name": "Флоу 1 — Регистрация и UIN",
       "item": [
         {
-          "name": "1. Проверить инвайт (если FREE_REGISTRATION=false)",
+          "name": "1. Проверить инвайт",
           "request": {
             "method": "POST",
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"code\": \"4544454529\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\n    \"code\": \"1234567890\"\n}",
+              "options": { "raw": { "language": "json" } }
             },
-            "url": {
-              "raw": "http://localhost:3000/api/v1/invite/check",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "3000",
-              "path": [
-                "api",
-                "v1",
-                "invite",
-                "check"
-              ]
-            }
+            "url": { "raw": "{{base_url}}/invite/check" }
           },
           "response": []
         },
         {
           "name": "2. Зарегистрироваться",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const res = pm.response.json();",
+                  "  pm.collectionVariables.set('access_token', res.session.access_token);",
+                  "  pm.collectionVariables.set('refresh_token', res.session.refresh_token);",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"password\": \"secret123\",\n  \"invite_code\": \"ABCD1234XY\",\n  \"system_name\": \"MacBook Pro\",\n  \"platform\": \"electron\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\n  \"password\": \"secret123\",\n  \"system_name\": \"MacBook Pro\",\n  \"platform\": \"electron\"\n}",
+              "options": { "raw": { "language": "json" } }
             },
-            "url": {
-              "raw": "http://localhost:3000/api/v1/account/create",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "3000",
-              "path": [
-                "api",
-                "v1",
-                "account",
-                "create"
-              ]
-            }
+            "url": { "raw": "{{base_url}}/account/create" }
           },
           "response": []
         },
         {
-          "name": "3. Сразу дёргать UIN-статус (пока воркер не отработал)",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
+          "name": "3. UIN-статус",
+          "protocolProfileBehavior": { "disableBodyPruning": true },
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMTllMDJiNS02Zjg3LTczYWQtYTU2Mi0yOWVmODg0N2YzYzRfMTc3ODE2MTkwNTU0NCIsInNlc3Npb25JZCI6IjAxOWUwMmI1LTZmOGItNzA3YS1hY2E2LTVlZDlhOWU0N2E3NF8xNzc4MTYxOTA1NTQ3IiwiaWF0IjoxNzc4MTYxOTMxLCJleHAiOjE3NzgxNjE5NDZ9.BTcrDB9atAMdkfArRCbDKIbdTGJvNB3FvJF6rDPfFEo",
-                  "type": "string"
-                }
-              ]
+              "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
             },
             "method": "GET",
             "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"password\": \"secret123\",\n  \"invite_code\": \"ABCD1234XY\",\n  \"system_name\": \"MacBook Pro\",\n  \"platform\": \"electron\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://localhost:3000/api/v1/uin/read-status",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "3000",
-              "path": [
-                "api",
-                "v1",
-                "uin",
-                "read-status"
-              ]
-            }
+            "url": { "raw": "{{base_url}}/uin/read-status" }
           },
           "response": []
         }
@@ -166,42 +91,30 @@
       "item": [
         {
           "name": "4. Логин по UIN",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "  const res = pm.response.json();",
+                  "  pm.collectionVariables.set('access_token', res.session.access_token);",
+                  "  pm.collectionVariables.set('refresh_token', res.session.refresh_token);",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMTllMDJhYS01ZTgzLTc2Y2UtOWYyMy1iYmJmYmUwYzNmMzNfMTc3ODE2MTE4MDI5MSIsInNlc3Npb25JZCI6IjAxOWUwMmFhLTVlODUtNzVkOS1iNDEzLWNiMjQwMWE3YmMxM18xNzc4MTYxMTgwMjkzIiwiaWF0IjoxNzc4MTYxMTgwLCJleHAiOjE3NzgxNjExOTV9._0Rg72YgiccfjBK4U9Q9VQ6FGSVpO198QkytayfxILg",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "POST",
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"login\": \"2086\",\n  \"password\": \"secret123\",\n  \"system_name\": \"iPhone 15\",\n  \"platform\": \"ios\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\n  \"login\": \"12345\",\n  \"password\": \"secret123\",\n  \"system_name\": \"iPhone 15\",\n  \"platform\": \"ios\"\n}",
+              "options": { "raw": { "language": "json" } }
             },
-            "url": {
-              "raw": "http://localhost:3000/api/v1/account/auth",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "3000",
-              "path": [
-                "api",
-                "v1",
-                "account",
-                "auth"
-              ]
-            }
+            "url": { "raw": "{{base_url}}/account/auth" }
           },
           "response": []
         }
@@ -212,32 +125,30 @@
       "item": [
         {
           "name": "6. Refresh",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const res = pm.response.json();",
+                  "  pm.collectionVariables.set('access_token', res.access_token);",
+                  "  pm.collectionVariables.set('refresh_token', res.refresh_token);",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"refresh_token\": \"mjxPt6SwQoMcfTxRanydFjT5exhfc_lUm_cXi7IIgFs\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\n    \"refresh_token\": \"{{refresh_token}}\"\n}",
+              "options": { "raw": { "language": "json" } }
             },
-            "url": {
-              "raw": "http://localhost:3000/api/v1/session/refresh",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "3000",
-              "path": [
-                "api",
-                "v1",
-                "session",
-                "refresh"
-              ]
-            }
+            "url": { "raw": "{{base_url}}/session/refresh" }
           },
           "response": []
         },
@@ -246,39 +157,16 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMTllMDJhYy1jYjE3LTcyNWMtOGIwZi01YmIxZmE0MGEzYTNfMTc3ODE2MTMzOTE1OSIsInNlc3Npb25JZCI6IjAxOWUwMmIzLWUwYzMtNzVlYy04YzViLTNiNjM3MzhhMGUyOF8xNzc4MTYxODAzNDU5IiwiaWF0IjoxNzc4MTYxODAzLCJleHAiOjE3NzgxNjE4MTh9.8_Mj-knNA_N8SSXiARbwm-qoA6dH-YXibeSMohA4ets",
-                  "type": "string"
-                }
-              ]
+              "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
             },
             "method": "POST",
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"refresh_token\": \"Xsws_0MHo5tZeQFmUIZral6K1r959SS1rb_t2JOskLk\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\n    \"refresh_token\": \"{{refresh_token}}\"\n}",
+              "options": { "raw": { "language": "json" } }
             },
-            "url": {
-              "raw": "http://localhost:3000/api/v1/account/logout",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "3000",
-              "path": [
-                "api",
-                "v1",
-                "account",
-                "logout"
-              ]
-            }
+            "url": { "raw": "{{base_url}}/account/logout" }
           },
           "response": []
         }
@@ -292,152 +180,82 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMTllMDJiNS02Zjg3LTczYWQtYTU2Mi0yOWVmODg0N2YzYzRfMTc3ODE2MTkwNTU0NCIsInNlc3Npb25JZCI6IjAxOWUwMzAwLWQzNDktNzM4OS04NDRiLWVhMDM0NGViMjI0N18xNzc4MTY2ODQ2MjgxIiwiaWF0IjoxNzc4MTY3MTc1LCJleHAiOjE3NzgxNjcxOTB9.YxsQvIm4fyGOsoRlEUS4_f82mMvTowcnYzJOZRYlsVQ",
-                  "type": "string"
-                }
-              ]
+              "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
             },
             "method": "POST",
             "header": [],
-            "url": {
-              "raw": "http://localhost:3000/api/v1/invite/create",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "3000",
-              "path": [
-                "api",
-                "v1",
-                "invite",
-                "create"
-              ]
-            }
+            "url": { "raw": "{{base_url}}/invite/create" }
           },
           "response": []
         },
         {
           "name": "2. Список инвайтов",
+          "protocolProfileBehavior": { "disableBodyPruning": true },
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMTllMDJiNS02Zjg3LTczYWQtYTU2Mi0yOWVmODg0N2YzYzRfMTc3ODE2MTkwNTU0NCIsInNlc3Npb25JZCI6IjAxOWUwMzAwLWQzNDktNzM4OS04NDRiLWVhMDM0NGViMjI0N18xNzc4MTY2ODQ2MjgxIiwiaWF0IjoxNzc4MTY3MTc1LCJleHAiOjE3NzgxNjcxOTB9.YxsQvIm4fyGOsoRlEUS4_f82mMvTowcnYzJOZRYlsVQ",
-                  "type": "string"
-                }
-              ]
+              "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
             },
             "method": "GET",
             "header": [],
-            "url": {
-              "raw": "http://localhost:3000/api/v1/invite/read-list",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "3000",
-              "path": [
-                "api",
-                "v1",
-                "invite",
-                "read-list"
-              ]
-            }
+            "url": { "raw": "{{base_url}}/invite/read-list" }
           },
           "response": []
         },
         {
-          "name": "3. Проверить инвайт (если FREE_REGISTRATION=false)",
+          "name": "3. Проверить инвайт",
           "request": {
             "method": "POST",
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"code\": \"4544454529\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\n    \"code\": \"1234567890\"\n}",
+              "options": { "raw": { "language": "json" } }
             },
-            "url": {
-              "raw": "http://localhost:3000/api/v1/invite/check",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "3000",
-              "path": [
-                "api",
-                "v1",
-                "invite",
-                "check"
-              ]
-            }
+            "url": { "raw": "{{base_url}}/invite/check" }
           },
           "response": []
         },
         {
           "name": "4. Зарегистрироваться по инвайту",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const res = pm.response.json();",
+                  "  pm.collectionVariables.set('access_token', res.session.access_token);",
+                  "  pm.collectionVariables.set('refresh_token', res.session.refresh_token);",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"password\": \"secret123\",\n  \"invite_code\": \"3819105566\",\n  \"system_name\": \"Test Device\",\n  \"platform\": \"electron\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\n  \"password\": \"secret123\",\n  \"invite_code\": \"1234567890\",\n  \"system_name\": \"Test Device\",\n  \"platform\": \"electron\"\n}",
+              "options": { "raw": { "language": "json" } }
             },
-            "url": {
-              "raw": "http://localhost:3000/api/v1/account/create",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "3000",
-              "path": [
-                "api",
-                "v1",
-                "account",
-                "create"
-              ]
-            }
+            "url": { "raw": "{{base_url}}/account/create" }
           },
           "response": []
         },
         {
           "name": "5. Реферальная информация",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
+          "protocolProfileBehavior": { "disableBodyPruning": true },
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "",
-                  "type": "string"
-                }
-              ]
+              "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
             },
             "method": "GET",
             "header": [],
-            "url": {
-              "raw": "http://localhost:3000/api/v1/invite/read-referrals",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "3000",
-              "path": ["api", "v1", "invite", "read-referrals"]
-            }
+            "url": { "raw": "{{base_url}}/invite/read-referrals" }
           },
           "response": []
         },
@@ -446,31 +264,11 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMTllMDJiNS02Zjg3LTczYWQtYTU2Mi0yOWVmODg0N2YzYzRfMTc3ODE2MTkwNTU0NCIsInNlc3Npb25JZCI6IjAxOWUwMzAwLWQzNDktNzM4OS04NDRiLWVhMDM0NGViMjI0N18xNzc4MTY2ODQ2MjgxIiwiaWF0IjoxNzc4MTY3NTQ1LCJleHAiOjE3NzgxNjc1NjB9.I-6L7JFD5Y3LMPGNHpybKcgcPWKgFAHnlO5wTiIeMQY",
-                  "type": "string"
-                }
-              ]
+              "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
             },
             "method": "DELETE",
             "header": [],
-            "url": {
-              "raw": "http://localhost:3000/api/v1/invite/revoke/019e0301-2c1d-728b-9a53-48788d6a98d5_1778166869021",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "3000",
-              "path": [
-                "api",
-                "v1",
-                "invite",
-                "revoke",
-                "019e0301-2c1d-728b-9a53-48788d6a98d5_1778166869021"
-              ]
-            }
+            "url": { "raw": "{{base_url}}/invite/revoke/:id", "variable": [{ "key": "id", "value": "" }] }
           },
           "response": []
         }
