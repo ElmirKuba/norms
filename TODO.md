@@ -93,6 +93,17 @@
 - `generateId()` утилита — формат `{uuid-v7}_{unix-ms}`
 - ESLint override для `schemas/*.ts` (Drizzle callback не аннотируется стандартными средствами)
 
+### AuthModule (шаг 2)
+- `AccountModule`: `POST /account/create` (регистрация + атомарная транзакция инвайт), `POST /account/auth` (логин UIN/username), `POST /account/logout`
+- `SessionModule`: `POST /session/refresh` (refresh token rotation + reuse detection)
+- `InviteModule`: `POST /invite/check` (rate-limit 10/15min по IP)
+- `AuthModule` (shared): `JwtGuard` (JWT-only), `@CurrentUser()` декоратор, `JwtModule` с env-TTL
+- `RedisModule`: `ioredis` провайдер, используется для rate-limiting
+- `PersistenceModule`: добавлены `SessionRepository`, `InviteRepository`; `DrizzleModule` реэкспортируется для транзакций в use-cases
+- `generateRefreshToken()` + `sha256Hex()` в `common/utils/crypto.util.ts`
+- ESLint override для `*.dto.ts` (snake_case поля JSON) + расширение naming-convention (typeProperty/objectLiteralProperty snake_case)
+- Docs: `docs/api-contracts.md` обновлён — `system_name` + `platform` в `account/create` request
+
 ## In Progress
 _Nothing yet._
 
@@ -103,9 +114,9 @@ _Nothing yet._
 ```
 ✅ 1. Backend bootstrap (NestJS init, docker-compose up, Drizzle + полная схема БД)
    │
-▶  2. Accounts + Auth + Sessions (JWT, login/register, refresh, guards)
+✅ 2. Accounts + Auth + Sessions (JWT, login/register, refresh, guards)
    │
-   3. UIN generation (BullMQ job, WSS uin_assigned)
+▶  3. UIN generation (BullMQ job, WSS uin_assigned)
    │
    4. Invites (feature flags, invite/check, create/revoke)
    │

@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { AccountRepository } from '../../domain/ports/account.repository.port';
 import type { AccountEntity, CreateAccountData, UpdateAccountData } from '../../domain/entities/account.entity';
 import { generateId } from '../../common/utils/id.util';
-import { accounts } from '../schemas';
+import { accounts, uins } from '../schemas';
 import { DRIZZLE_DB } from '../drizzle.module';
 import type { DrizzleDb } from '../drizzle.module';
 
@@ -34,6 +34,51 @@ export class DrizzleAccountRepository extends AccountRepository {
     const rows = await this._db.select().from(accounts).where(eq(accounts.id, id)).limit(1);
     const row = rows[0];
     return row !== undefined ? this._toEntity(row) : null;
+  }
+
+  /**
+   * Находит аккаунт по юзернейму (без учёта регистра — citext в БД).
+   * @param username - Юзернейм.
+   * @returns Сущность аккаунта или null если не найден.
+   */
+  public async findByUsername(username: string): Promise<AccountEntity | null> {
+    const rows = await this._db
+      .select()
+      .from(accounts)
+      .where(eq(accounts.username, username))
+      .limit(1);
+    const row = rows[0];
+    return row !== undefined ? this._toEntity(row) : null;
+  }
+
+  /**
+   * Находит аккаунт по номеру UIN через JOIN с таблицей uins.
+   * @param uinNumber - Числовой UIN в виде строки.
+   * @returns Сущность аккаунта или null если не найден.
+   */
+  public async findByUin(uinNumber: string): Promise<AccountEntity | null> {
+    const rows = await this._db
+      .select({ account: accounts })
+      .from(accounts)
+      .innerJoin(uins, eq(uins.accountId, accounts.id))
+      .where(eq(uins.number, uinNumber))
+      .limit(1);
+    const row = rows[0];
+    return row !== undefined ? this._toEntity(row.account) : null;
+  }
+
+  /**
+   * Возвращает UIN-номер аккаунта или null если UIN ещё не назначен.
+   * @param accountId - ID аккаунта.
+   * @returns Строка UIN или null.
+   */
+  public async findUinByAccountId(accountId: string): Promise<string | null> {
+    const rows = await this._db
+      .select({ number: uins.number })
+      .from(uins)
+      .where(eq(uins.accountId, accountId))
+      .limit(1);
+    return rows[0]?.number ?? null;
   }
 
   /**

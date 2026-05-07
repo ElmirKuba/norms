@@ -11,6 +11,9 @@ export const DRIZZLE_DB = 'DRIZZLE_DB';
 /** Тип базы данных Drizzle со всеми схемами. */
 export type DrizzleDb = NodePgDatabase<typeof schema>;
 
+/** Тип объекта транзакции Drizzle — используется в use-cases с multi-table транзакциями. */
+export type DrizzleTransaction = Parameters<Parameters<DrizzleDb['transaction']>[0]>[0];
+
 /** NestJS-модуль, создающий и предоставляющий инстанс Drizzle ORM. */
 @Module({
   providers: [

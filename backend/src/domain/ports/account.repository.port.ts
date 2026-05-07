@@ -16,6 +16,27 @@ export abstract class AccountRepository {
   public abstract findById(id: string): Promise<AccountEntity | null>;
 
   /**
+   * Находит аккаунт по юзернейму (без учёта регистра).
+   * @param username - Юзернейм.
+   * @returns Сущность аккаунта или null если не найден.
+   */
+  public abstract findByUsername(username: string): Promise<AccountEntity | null>;
+
+  /**
+   * Находит аккаунт по номеру UIN через JOIN с таблицей uins.
+   * @param uinNumber - Числовой UIN в виде строки.
+   * @returns Сущность аккаунта или null если не найден.
+   */
+  public abstract findByUin(uinNumber: string): Promise<AccountEntity | null>;
+
+  /**
+   * Возвращает UIN-номер аккаунта (или null если UIN ещё не назначен).
+   * @param accountId - ID аккаунта.
+   * @returns Строка UIN или null.
+   */
+  public abstract findUinByAccountId(accountId: string): Promise<string | null>;
+
+  /**
    * Создаёт и сохраняет новый аккаунт.
    * @param data - Данные для создания.
    * @returns Созданная сущность аккаунта.

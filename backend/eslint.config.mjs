@@ -87,9 +87,12 @@ export default tseslint.config(
           format: ['camelCase'],
           leadingUnderscore: 'require',
         },
-        { selector: 'variable', format: ['camelCase', 'UPPER_CASE'] },
+        { selector: 'variable', format: ['camelCase', 'UPPER_CASE', 'PascalCase'] },
         { selector: 'parameter', format: ['camelCase'], leadingUnderscore: 'allow' },
         { selector: 'function', format: ['camelCase'] },
+        // Свойства TS-типов и объектных литералов могут быть snake_case (JSON-ключи API)
+        { selector: 'typeProperty', format: ['camelCase', 'snake_case'] },
+        { selector: 'objectLiteralProperty', format: ['camelCase', 'snake_case', 'UPPER_CASE'] },
       ],
 
       // ── Порядок членов класса ────────────────────────────────────────────────
@@ -202,6 +205,34 @@ export default tseslint.config(
       'jsdoc/tag-lines': ['error', 'never'],
       'jsdoc/require-param-type': 'off',
       'jsdoc/require-returns-type': 'off',
+    },
+  },
+
+  // ─── DTO files ─────────────────────────────────────────────────────────────
+  // Публичные поля DTO соответствуют snake_case JSON-ключам из api-contracts.
+  {
+    files: ['src/**/*.dto.ts'],
+    rules: {
+      '@typescript-eslint/naming-convention': [
+        'error',
+        { selector: 'typeLike', format: ['PascalCase'] },
+        { selector: 'enumMember', format: ['UPPER_CASE'] },
+        {
+          selector: 'memberLike',
+          modifiers: ['public'],
+          format: ['camelCase', 'snake_case'],
+          leadingUnderscore: 'forbid',
+        },
+        {
+          selector: 'memberLike',
+          modifiers: ['private'],
+          format: ['camelCase'],
+          leadingUnderscore: 'require',
+        },
+        { selector: 'variable', format: ['camelCase', 'UPPER_CASE'] },
+        { selector: 'parameter', format: ['camelCase'], leadingUnderscore: 'allow' },
+        { selector: 'function', format: ['camelCase'] },
+      ],
     },
   },
 

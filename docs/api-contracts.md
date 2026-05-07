@@ -129,7 +129,9 @@ Request:
 ```json
 {
   "password": "string",
-  "invite_code": "string | null"
+  "invite_code": "string | null",
+  "system_name": "iPhone 14 Pro",
+  "platform": "ios | android | electron"
 }
 ```
 
@@ -137,6 +139,8 @@ Request:
 - Код передаётся повторно (не только в `invite/check`) — иначе обходится инвайт-система: перехватив валидный код из check-запроса, атакующий мог бы вызвать create напрямую без кода.
 - Код **потребляется атомарно в транзакции**: проверяется → удаляется → создаётся аккаунт + сессия. `invite/check` код не резервирует.
 - `password` — plain-text, минимум 8 символов, hash на сервере argon2id (см. [`identity.md`](identity.md#пароль), [`recovery.md`](recovery.md#хеширование)).
+- `system_name` — системное имя устройства, передаётся клиентом (макс. 200 символов).
+- `platform` — одно из: `ios`, `android`, `electron`.
 
 Response 201:
 ```json
