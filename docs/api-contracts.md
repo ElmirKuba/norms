@@ -236,18 +236,30 @@ Auth required.
 
 Query: `?id={account_id}` (опционально, без id — свой аккаунт).
 
-Response 200:
+Response 200 (свой аккаунт):
 ```json
 {
   "id": "...",
   "uin": "12345" | null,
   "username": "petya" | null,
   "invites_remaining": 3,
+  "is_admin": false,
   "created_at": "..."
 }
 ```
 
-При чтении чужого аккаунта `invites_remaining` не возвращается.
+Response 200 (чужой аккаунт — без `invites_remaining` и `is_admin`):
+```json
+{
+  "id": "...",
+  "uin": "12345" | null,
+  "username": "petya" | null,
+  "created_at": "..."
+}
+```
+
+Errors:
+- 404 `account_not_found`
 
 ### `PATCH /api/v1/account/update`
 Смена пароля.

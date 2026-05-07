@@ -110,6 +110,9 @@
 - `GET /uin/read-status` — статус генерации (pending/assigned) для поллинга
 - `CreateAccountUseCase` вызывает `enqueueGeneration` после транзакции
 
+### Account read (шаг 5, частично)
+- `GET /account/read` — свой профиль (полный: id, uin, username, invites_remaining, is_admin, created_at) и чужой (без invites_remaining и is_admin); query `?id=`
+
 ### Invites (шаг 4)
 - `POST /invite/create` — TTL из `INVITE_TTL_DAYS` env (default 7д), атомарный декремент `invites_remaining`
 - `GET /invite/read-list` — активные (не просроченные) инвайты аккаунта
