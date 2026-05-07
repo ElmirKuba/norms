@@ -173,7 +173,44 @@
       ]
     },
     {
-      "name": "Флоу 4 — Приглашения",
+      "name": "Флоу 4 — Аккаунт",
+      "item": [
+        {
+          "name": "Мой профиль",
+          "protocolProfileBehavior": { "disableBodyPruning": true },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/account/read"
+          },
+          "response": []
+        },
+        {
+          "name": "Профиль другого аккаунта",
+          "protocolProfileBehavior": { "disableBodyPruning": true },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/account/read?id=",
+              "variable": [],
+              "query": [{ "key": "id", "value": "" }]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Флоу 5 — Приглашения",
       "item": [
         {
           "name": "1. Создать код приглашения",
