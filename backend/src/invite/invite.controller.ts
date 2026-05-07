@@ -7,6 +7,7 @@ import { CheckInviteUseCase } from './use-cases/check-invite.use-case';
 import { CreateInviteUseCase } from './use-cases/create-invite.use-case';
 import { RevokeInviteUseCase } from './use-cases/revoke-invite.use-case';
 import { ReadInviteListUseCase } from './use-cases/read-invite-list.use-case';
+import { ReadReferralsUseCase } from './use-cases/read-referrals.use-case';
 import { CheckInviteDto } from './dto/check-invite.dto';
 
 /** Контроллер инвайтов. */
@@ -17,6 +18,7 @@ export class InviteController {
     private readonly _createInviteUseCase: CreateInviteUseCase,
     private readonly _revokeInviteUseCase: RevokeInviteUseCase,
     private readonly _readInviteListUseCase: ReadInviteListUseCase,
+    private readonly _readReferralsUseCase: ReadReferralsUseCase,
   ) {}
 
   /**
@@ -61,10 +63,18 @@ export class InviteController {
   }
 
   /**
-   * Отзывает инвайт-код и возвращает +1 к лимиту.
-   * @param id - ID инвайта.
+   * Возвращает кто пригласил аккаунт и кого он пригласил.
    * @param user - Payload текущего JWT.
+   * @returns Реферальная информация.
    */
+  @Get('read-referrals')
+  @UseGuards(JwtGuard)
+  public readReferrals(
+    @CurrentUser() user: JwtPayload,
+  ): ReturnType<ReadReferralsUseCase['execute']> {
+    return this._readReferralsUseCase.execute(user.sub);
+  }
+
   /**
    * Отзывает инвайт-код и возвращает +1 к лимиту.
    * @param id - ID инвайта.

@@ -423,29 +423,22 @@ Errors:
 - 403 `not_your_invite`
 
 ### `GET /api/v1/invite/read-referrals`
-Список аккаунтов, которые я пригласил (из `referrals`).
+Реферальная информация: кто пригласил меня + кого пригласил я. Один запрос для всего раздела настроек.
 
 Auth required.
 
 Response 200:
 ```json
-[
-  { "account_id": "...", "uin": "...", "username": "..." | null, "joined_at": "..." },
-  ...
-]
+{
+  "inviter": { "account_id": "...", "uin": "12345", "username": null, "joined_at": "..." } | null,
+  "invitees": [
+    { "account_id": "...", "uin": "67890", "username": "vasya", "joined_at": "..." }
+  ]
+}
 ```
 
-### `GET /api/v1/invite/read-inviter`
-Кто пригласил меня (одна запись из `referrals` по моему `invitee_id`).
-
-Auth required.
-
-Response 200:
-```json
-{ "account_id": "...", "uin": "...", "username": "..." | null, "joined_at": "..." } | null
-```
-
-`null` — если зарегистрировался при `free_registration === true`.
+`inviter: null` — зарегистрировался при `free_registration === true` или инвайтер удалил аккаунт.
+`uin: null` — UIN ещё не назначен (генерируется асинхронно).
 
 ---
 
