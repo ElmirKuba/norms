@@ -2,6 +2,7 @@ import { Injectable, Inject, NotFoundException, HttpException, HttpStatus } from
 import { Redis } from 'ioredis';
 import { InviteRepository } from '../../domain/ports/invite.repository.port';
 import { REDIS_CLIENT } from '../../redis/redis.constants';
+import { ErrorCode } from '../../common/errors/error-codes';
 
 /** Форма ответа метода execute. */
 interface CheckInviteResult {
@@ -37,7 +38,7 @@ export class CheckInviteUseCase {
     // Намеренно одна ошибка для not_found И expired — предотвращает перебор активных кодов.
     if (invite === null || invite.expiresAt < new Date()) {
       throw new NotFoundException({
-        code: 'invite_not_found',
+        code: ErrorCode.INVITE_NOT_FOUND,
         message: 'Код не найден или истёк',
       });
     }
@@ -58,7 +59,7 @@ export class CheckInviteUseCase {
     }
     if (count > CheckInviteUseCase._maxAttempts) {
       throw new HttpException(
-        { code: 'rate_limited', message: 'Слишком много запросов' },
+        { code: ErrorCode.RATE_LIMITED, message: 'Слишком много запросов' },
         HttpStatus.TOO_MANY_REQUESTS,
       );
     }

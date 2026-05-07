@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { SessionRepository } from '../../domain/ports/session.repository.port';
+import { ErrorCode } from '../../common/errors/error-codes';
 
 /** Use-case кика сессии по ID (своей или чужой в рамках аккаунта). */
 @Injectable()
@@ -16,11 +17,11 @@ export class DeleteSessionUseCase {
     const session = await this._sessionRepo.findById(sessionId);
 
     if (session === null) {
-      throw new NotFoundException({ message: 'Session not found', code: 'session_not_found' });
+      throw new NotFoundException({ message: 'Session not found', code: ErrorCode.SESSION_NOT_FOUND });
     }
 
     if (session.accountId !== accountId) {
-      throw new ForbiddenException({ message: 'Not your session', code: 'not_your_session' });
+      throw new ForbiddenException({ message: 'Not your session', code: ErrorCode.NOT_YOUR_SESSION });
     }
 
     await this._sessionRepo.deleteById(sessionId);

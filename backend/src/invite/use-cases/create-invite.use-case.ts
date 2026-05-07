@@ -1,4 +1,5 @@
 import { Injectable, Inject, ForbiddenException } from '@nestjs/common';
+import { ErrorCode } from '../../common/errors/error-codes';
 import { ConfigService } from '@nestjs/config';
 import { DatabaseError } from 'pg';
 import { sql, and, eq, gt } from 'drizzle-orm';
@@ -60,7 +61,7 @@ export class CreateInviteUseCase {
 
             if (updated.length === 0) {
               throw new ForbiddenException({
-                code: 'no_invites_remaining',
+                code: ErrorCode.NO_INVITES_REMAINING,
                 message: 'Нет доступных инвайтов',
               });
             }

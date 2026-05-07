@@ -1,4 +1,5 @@
 import { Injectable, Inject, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { ErrorCode } from '../../common/errors/error-codes';
 import { sql, and, eq } from 'drizzle-orm';
 import { DRIZZLE_DB } from '../../persistence/drizzle.module';
 import type { DrizzleDb, DrizzleTransaction } from '../../persistence/drizzle.module';
@@ -33,9 +34,9 @@ export class RevokeInviteUseCase {
           .limit(1);
 
         if (existing.length === 0) {
-          throw new NotFoundException({ code: 'invite_not_found', message: 'Инвайт не найден' });
+          throw new NotFoundException({ code: ErrorCode.INVITE_NOT_FOUND, message: 'Инвайт не найден' });
         }
-        throw new ForbiddenException({ code: 'not_your_invite', message: 'Нет доступа к этому инвайту' });
+        throw new ForbiddenException({ code: ErrorCode.NOT_YOUR_INVITE, message: 'Нет доступа к этому инвайту' });
       }
 
       await tx

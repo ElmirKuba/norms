@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { ErrorCode } from '../../common/errors/error-codes';
 import * as argon2 from 'argon2';
 import { Redis } from 'ioredis';
 import { AccountRepository } from '../../domain/ports/account.repository.port';
@@ -76,7 +77,7 @@ export class AuthAccountUseCase {
     if (account === null) {
       await this._incrementFailCounter(loginKey, failWindowSec);
       throw new UnauthorizedException({
-        code: 'invalid_credentials',
+        code: ErrorCode.INVALID_CREDENTIALS,
         message: 'UIN/логин или пароль не совпадают',
       });
     }
@@ -85,7 +86,7 @@ export class AuthAccountUseCase {
     if (!passwordValid) {
       await this._incrementFailCounter(loginKey, failWindowSec);
       throw new UnauthorizedException({
-        code: 'invalid_credentials',
+        code: ErrorCode.INVALID_CREDENTIALS,
         message: 'UIN/логин или пароль не совпадают',
       });
     }
@@ -94,7 +95,7 @@ export class AuthAccountUseCase {
     const sessionCount = await this._sessionRepo.countByAccountId(account.id);
     if (sessionCount >= deviceLimit) {
       throw new ForbiddenException({
-        code: 'device_limit_reached',
+        code: ErrorCode.DEVICE_LIMIT_REACHED,
         message: 'Достигнут лимит устройств',
       });
     }
@@ -150,7 +151,7 @@ export class AuthAccountUseCase {
       const ttl = await this._redis.ttl(key);
       const retryAfter = new Date(Date.now() + ttl * 1000).toISOString();
       throw new HttpException(
-        { code: 'login_rate_limited', message: 'Слишком много неудачных попыток', retry_after: retryAfter },
+        { code: ErrorCode.LOGIN_RATE_LIMITED, message: 'Слишком много неудачных попыток', retry_after: retryAfter },
         HttpStatus.LOCKED,
       );
     }

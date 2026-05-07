@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { SessionRepository } from '../../domain/ports/session.repository.port';
 import { AccountRepository } from '../../domain/ports/account.repository.port';
 import { generateRefreshToken, sha256Hex } from '../../common/utils/crypto.util';
+import { ErrorCode } from '../../common/errors/error-codes';
 
 /** Форма ответа метода execute. */
 interface RefreshTokenResult {
@@ -36,7 +37,7 @@ export class RefreshTokenUseCase {
     if (session === null) {
       // Хеш не совпал — токен уже был использован → reuse detection.
       throw new UnauthorizedException({
-        code: 'refresh_reused',
+        code: ErrorCode.REFRESH_REUSED,
         message: 'Refresh-токен уже был использован. Сессия аннулирована.',
       });
     }
@@ -44,7 +45,7 @@ export class RefreshTokenUseCase {
     const account = await this._accountRepo.findById(session.accountId);
     if (account === null) {
       throw new UnauthorizedException({
-        code: 'account_not_found',
+        code: ErrorCode.ACCOUNT_NOT_FOUND,
         message: 'Аккаунт не найден',
       });
     }
