@@ -234,7 +234,11 @@ Errors:
 
 Auth required.
 
-Query: `?id={account_id}` (опционально, без id — свой аккаунт).
+Query (опционально, без параметров — свой аккаунт):
+- `?id={account_id}` — поиск по ID
+- `?uin={uin}` — поиск по UIN
+
+Передавать `id` и `uin` одновременно нельзя → `400 ambiguous_query`.
 
 Response 200 (свой аккаунт):
 ```json
@@ -259,6 +263,7 @@ Response 200 (чужой аккаунт — без `invites_remaining` и `is_ad
 ```
 
 Errors:
+- 400 `ambiguous_query`
 - 404 `account_not_found`
 
 ### `PATCH /api/v1/account/update`

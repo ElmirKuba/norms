@@ -66,12 +66,21 @@ export class AccountController {
    * @param id - ID запрашиваемого аккаунта (опционально).
    * @returns Данные аккаунта.
    */
+  /**
+   * Чтение данных аккаунта. Без параметров — свой профиль. По ?id= или ?uin= — чужой.
+   * @param user - Payload текущего JWT.
+   * @param id - ID аккаунта (опционально).
+   * @param uin - UIN аккаунта (опционально).
+   * @returns Данные аккаунта.
+   */
   @Get('read')
   @UseGuards(JwtGuard)
   public read(
     @CurrentUser() user: JwtPayload,
     @Query('id') id?: string,
+    @Query('uin') uin?: string,
   ): ReturnType<ReadAccountUseCase['execute']> {
-    return this._readAccountUseCase.execute(user.sub, id ?? null);
+    const q = { ...(id !== undefined && { id }), ...(uin !== undefined && { uin }) };
+    return this._readAccountUseCase.execute(user.sub, q);
   }
 }

@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { AccountRepository } from '../../domain/ports/account.repository.port';
+import type { AccountEntity } from '../../domain/entities/account.entity';
 
 /** Форма ответа для своего аккаунта. */
 interface ReadOwnAccountResult {
@@ -32,7 +33,15 @@ interface ReadOtherAccountResult {
 /** Форма ответа метода execute. */
 export type ReadAccountResult = ReadOwnAccountResult | ReadOtherAccountResult;
 
-/** Use-case чтения данных аккаунта (своего или чужого). */
+/** Параметры поиска целевого аккаунта. */
+export interface ReadAccountQuery {
+  /** Поиск по ID аккаунта. */
+  readonly id?: string;
+  /** Поиск по UIN. */
+  readonly uin?: string;
+}
+
+/** Use-case чтения данных аккаунта (своего или чужого, по ID или UIN). */
 @Injectable()
 export class ReadAccountUseCase {
   public constructor(private readonly _accountRepo: AccountRepository) {}
@@ -40,22 +49,32 @@ export class ReadAccountUseCase {
   /**
    * Возвращает данные аккаунта. Для своего — полный профиль с invites_remaining и is_admin.
    * @param requesterId - ID аккаунта из JWT (текущий пользователь).
-   * @param targetId - ID запрашиваемого аккаунта (если null — свой).
+   * @param query - Параметры поиска (id или uin). Если оба пусты — свой аккаунт.
    * @returns Данные аккаунта.
-   * @throws NotFoundException если чужой аккаунт не найден.
+   * @throws BadRequestException если переданы одновременно id и uin.
+   * @throws NotFoundException если аккаунт не найден.
    */
-  public async execute(requesterId: string, targetId: string | null): Promise<ReadAccountResult> {
-    const isSelf = targetId === null || targetId === requesterId;
-    const accountId = isSelf ? requesterId : targetId;
+  public async execute(requesterId: string, query: ReadAccountQuery): Promise<ReadAccountResult> {
+    if (query.id !== undefined && query.uin !== undefined) {
+      throw new BadRequestException({ code: 'ambiguous_query', message: 'Передайте либо id, либо uin, но не оба' });
+    }
 
-    const [account, uin] = await Promise.all([
-      this._accountRepo.findById(accountId),
-      this._accountRepo.findUinByAccountId(accountId),
-    ]);
+    let account: AccountEntity | null;
+
+    if (query.uin !== undefined) {
+      account = await this._accountRepo.findByUin(query.uin);
+    } else if (query.id !== undefined) {
+      account = await this._accountRepo.findById(query.id);
+    } else {
+      account = await this._accountRepo.findById(requesterId);
+    }
 
     if (account === null) {
       throw new NotFoundException({ code: 'account_not_found', message: 'Аккаунт не найден' });
     }
+
+    const uin = await this._accountRepo.findUinByAccountId(account.id);
+    const isSelf = account.id === requesterId;
 
     if (isSelf) {
       return {
