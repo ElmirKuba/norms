@@ -1,7 +1,9 @@
 import {
   Controller,
   Post,
+  Get,
   Body,
+  Query,
   HttpCode,
   HttpStatus,
   UseGuards,
@@ -12,16 +14,18 @@ import type { JwtPayload } from '../auth/types/jwt-payload.type';
 import { CreateAccountUseCase } from './use-cases/create-account.use-case';
 import { AuthAccountUseCase } from './use-cases/auth-account.use-case';
 import { LogoutUseCase } from './use-cases/logout.use-case';
+import { ReadAccountUseCase } from './use-cases/read-account.use-case';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { AuthAccountDto } from './dto/auth-account.dto';
 
-/** Контроллер управления аккаунтом: регистрация, авторизация, выход. */
+/** Контроллер управления аккаунтом: регистрация, авторизация, выход, чтение. */
 @Controller('account')
 export class AccountController {
   public constructor(
     private readonly _createAccountUseCase: CreateAccountUseCase,
     private readonly _authAccountUseCase: AuthAccountUseCase,
     private readonly _logoutUseCase: LogoutUseCase,
+    private readonly _readAccountUseCase: ReadAccountUseCase,
   ) {}
 
   /**
@@ -54,5 +58,20 @@ export class AccountController {
   @HttpCode(HttpStatus.NO_CONTENT)
   public async logout(@CurrentUser() user: JwtPayload): Promise<void> {
     await this._logoutUseCase.execute(user.sessionId);
+  }
+
+  /**
+   * Чтение данных аккаунта. Без ?id — свой профиль с полными данными.
+   * @param user - Payload текущего JWT.
+   * @param id - ID запрашиваемого аккаунта (опционально).
+   * @returns Данные аккаунта.
+   */
+  @Get('read')
+  @UseGuards(JwtGuard)
+  public read(
+    @CurrentUser() user: JwtPayload,
+    @Query('id') id?: string,
+  ): ReturnType<ReadAccountUseCase['execute']> {
+    return this._readAccountUseCase.execute(user.sub, id ?? null);
   }
 }
