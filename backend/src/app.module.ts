@@ -6,6 +6,7 @@ import { AccountModule } from './account/account.module';
 import { SessionModule } from './session/session.module';
 import { InviteModule } from './invite/invite.module';
 import { UinModule } from './uin/uin.module';
+import { AppConfigModule } from './config/app-config.module';
 
 /** Конфигурация BullMQ Redis-подключения. */
 interface BullRedisConfig {
@@ -43,6 +44,7 @@ interface BullRootConfig {
     SessionModule,
     InviteModule,
     UinModule,
+    AppConfigModule,
   ],
 })
 export class AppModule {}
