@@ -8,7 +8,6 @@ import { CreateInviteUseCase } from './use-cases/create-invite.use-case';
 import { RevokeInviteUseCase } from './use-cases/revoke-invite.use-case';
 import { ReadInviteListUseCase } from './use-cases/read-invite-list.use-case';
 import { CheckInviteDto } from './dto/check-invite.dto';
-import { CreateInviteDto } from './dto/create-invite.dto';
 
 /** Контроллер инвайтов. */
 @Controller('invite')
@@ -36,18 +35,16 @@ export class InviteController {
   }
 
   /**
-   * Создаёт новый инвайт-код.
-   * @param dto - Параметры создания.
+   * Создаёт новый инвайт-код. TTL определяется сервером (INVITE_TTL_DAYS).
    * @param user - Payload текущего JWT.
    * @returns Данные созданного инвайта.
    */
   @Post('create')
   @UseGuards(JwtGuard)
   public create(
-    @Body() dto: CreateInviteDto,
     @CurrentUser() user: JwtPayload,
   ): ReturnType<CreateInviteUseCase['execute']> {
-    return this._createInviteUseCase.execute(user.sub, new Date(dto.expires_at));
+    return this._createInviteUseCase.execute(user.sub);
   }
 
   /**

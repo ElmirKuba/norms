@@ -1,4 +1,5 @@
-import { Injectable, Inject, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, Inject, ForbiddenException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { DatabaseError } from 'pg';
 import { sql, and, eq, gt } from 'drizzle-orm';
 import { generateId } from '../../common/utils/id.util';
@@ -21,37 +22,30 @@ interface CreateInviteResult {
 /** Use-case создания инвайт-кода: проверка лимита + атомарный декремент + INSERT. */
 @Injectable()
 export class CreateInviteUseCase {
-  /** Минимальный TTL в миллисекундах (1 час). */
-  private static readonly _minTtlMs: number = 60 * 60 * 1_000;
-  /** Максимальный TTL в миллисекундах (30 дней). */
-  private static readonly _maxTtlMs: number = 30 * 24 * 60 * 60 * 1_000;
   /** Максимальное количество попыток при коллизии кода. */
   private static readonly _maxCodeRetries: number = 10;
   /** Нижняя граница 10-значного числа. */
   private static readonly _codeMin: number = 1_000_000_000;
   /** Диапазон 10-значных чисел. */
   private static readonly _codeRange: number = 9_000_000_000;
+  /** TTL по умолчанию в днях (если INVITE_TTL_DAYS не задан). */
+  private static readonly _defaultTtlDays: number = 7;
 
   public constructor(
     @Inject(DRIZZLE_DB) private readonly _db: DrizzleDb,
+    private readonly _config: ConfigService,
   ) {}
 
   /**
    * Создаёт инвайт-код с атомарным декрементом invites_remaining.
+   * TTL берётся из env INVITE_TTL_DAYS (default 7).
    * @param accountId - ID создателя инвайта.
-   * @param expiresAt - Дата истечения кода.
    * @returns Данные созданного инвайта.
-   * @throws BadRequestException если expires_at не укладывается в допустимый диапазон.
    * @throws ForbiddenException если у аккаунта нет доступных инвайтов.
    */
-  public async execute(accountId: string, expiresAt: Date): Promise<CreateInviteResult> {
-    const ttl = expiresAt.getTime() - Date.now();
-    if (ttl < CreateInviteUseCase._minTtlMs) {
-      throw new BadRequestException({ code: 'expires_at_too_soon', message: 'Минимальный TTL — 1 час' });
-    }
-    if (ttl > CreateInviteUseCase._maxTtlMs) {
-      throw new BadRequestException({ code: 'expires_at_too_far', message: 'Максимальный TTL — 30 дней' });
-    }
+  public async execute(accountId: string): Promise<CreateInviteResult> {
+    const ttlDays = this._config.get<number>('INVITE_TTL_DAYS', CreateInviteUseCase._defaultTtlDays);
+    const expiresAt = new Date(Date.now() + ttlDays * 24 * 60 * 60 * 1_000);
 
     for (let i = 0; i < CreateInviteUseCase._maxCodeRetries; i++) {
       const code = this._generateCode();
