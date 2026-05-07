@@ -379,12 +379,7 @@ Errors:
 
 Auth required.
 
-Request:
-```json
-{ "expires_at": "2026-05-17T13:45:01.123Z" }
-```
-
-`expires_at` — ISO-8601. Минимальный TTL — час, максимальный — 30 дней (валидируется бэком).
+Request: тело пустое. TTL определяется сервером через env `INVITE_TTL_DAYS` (default 7 дней).
 
 Response 201:
 ```json
