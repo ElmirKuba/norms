@@ -103,6 +103,20 @@
 - `generateRefreshToken()` + `sha256Hex()` в `common/utils/crypto.util.ts`
 - ESLint override для `*.dto.ts` (snake_case поля JSON) + расширение naming-convention (typeProperty/objectLiteralProperty snake_case)
 - Docs: `docs/api-contracts.md` обновлён — `system_name` + `platform` в `account/create` request
+- JWT payload расширен: добавлены `platform` и `isAdmin`
+
+### UIN-генерация (шаг 3)
+- `UinModule`: `BullMQ` очередь `uin-generation`, `UinService.enqueueGeneration()`, `UinGenerationProcessor` (retry 4→10 цифр, pg 23505 collision handling)
+- `GET /uin/read-status` — статус генерации (pending/assigned) для поллинга
+- `CreateAccountUseCase` вызывает `enqueueGeneration` после транзакции
+
+### Invites (шаг 4)
+- `POST /invite/create` — TTL из `INVITE_TTL_DAYS` env (default 7д), атомарный декремент `invites_remaining`
+- `GET /invite/read-list` — активные (не просроченные) инвайты аккаунта
+- `DELETE /invite/revoke/:id` — отзыв + инкремент `invites_remaining`
+- `GET /invite/read-referrals` — кто пригласил + кого пригласил (один запрос)
+- `GET /app/feature-flags` — `free_registration`, `dev_mode` из env (публичный)
+- Postman-коллекция: авто-сохранение токенов, `{{access_token}}` / `{{refresh_token}}` / `{{base_url}}`
 
 ## In Progress
 _Nothing yet._
@@ -116,17 +130,21 @@ _Nothing yet._
    │
 ✅ 2. Accounts + Auth + Sessions (JWT, login/register, refresh, guards)
    │
-▶  3. UIN generation (BullMQ job, WSS uin_assigned)
+✅ 3. UIN generation (BullMQ job, GET /uin/read-status)
    │
-   4. Invites (feature flags, invite/check, create/revoke)
+✅ 4. Invites (feature flags, invite/check, create/revoke/read-list/read-referrals)
    │
-   5. Recovery (Q/A CRUD, reset flow, rate-limit)
+▶  5. Sessions + Account endpoints (read-list, delete, clear-others, update-nickname, account/read)
    │
-   6. Frontend: подключение к реальному API (auth flow, platform guard)
+   6. Recovery (Q/A CRUD, reset flow, rate-limit, WSS password_reset_via_recovery)
    │
-   7. Chats + E2E (ECDH key exchange, WSS messaging)
+   7. WSS gateway (uin_assigned, session_kicked, token rotation без реконнекта)
    │
-   8. Settings, search, profile, devices UI, push notifications
+   8. Frontend: подключение к реальному API (auth flow, platform guard)
+   │
+   9. Chats + E2E (ECDH key exchange, WSS messaging)
+   │
+  10. Settings, search, profile, devices UI, push notifications
 ```
 
 ## Up Next
