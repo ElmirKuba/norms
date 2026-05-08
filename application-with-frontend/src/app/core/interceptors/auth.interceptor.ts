@@ -1,20 +1,39 @@
 import { inject } from '@angular/core';
-import type { HttpInterceptorFn, HttpEvent } from '@angular/common/http';
-import type { HttpRequest, HttpHandlerFn } from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
+import type { HttpInterceptorFn, HttpEvent, HttpRequest, HttpHandlerFn } from '@angular/common/http';
+import { BehaviorSubject } from 'rxjs';
+import { catchError, filter, switchMap, take, throwError } from 'rxjs';
 import type { Observable } from 'rxjs';
+import type { RefreshTokenResponse } from '../services/session/session-api.service';
 import { TokenStorageService } from '../services/storage/token-storage.service';
+import { SessionApiService } from '../services/session/session-api.service';
+
+/** true пока выполняется запрос на обновление токена — защита от гонки. */
+let isRefreshing: boolean = false;
+
+/**
+ * Транслирует новый access-токен всем запросам, ждавшим окончания рефреша.
+ * null — рефреш ещё в процессе.
+ */
+const refreshSubject: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
+
+/**
+ * Клонирует запрос с Bearer-токеном.
+ * @param req - Исходный запрос.
+ * @param token - Access-токен.
+ * @returns Клон запроса с заголовком Authorization.
+ */
+function withBearer(req: HttpRequest<unknown>, token: string): HttpRequest<unknown> {
+  /* eslint-disable @typescript-eslint/naming-convention -- HTTP-заголовок Authorization использует PascalCase */
+  return req.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
+  /* eslint-enable @typescript-eslint/naming-convention */
+}
 
 /**
  * HTTP-интерцептор авторизации.
- * Прикрепляет Bearer-токен ко всем исходящим запросам.
- *
- * TODO: добавить авторефреш на 401 —
- *   1. Перехватить HttpErrorResponse со status === 401.
- *   2. Вызвать SessionApiService.refresh(refreshToken).
- *   3. Сохранить новую пару через TokenStorageService.store().
- *   4. Повторить исходный запрос с новым access-токеном.
- *   5. Если refresh вернул 401 — TokenStorageService.clear() + редирект на welcome.
- *   6. Защитить от гонки: если refresh уже выполняется — сбросить запрос в очередь.
+ * Прикрепляет Bearer access-токен к каждому запросу.
+ * При ответе 401 — ротирует токены через refresh-token и повторяет запрос.
+ * Параллельные запросы во время рефреша ставятся в очередь и повторяются автоматически.
  * @param req - Исходящий HTTP-запрос.
  * @param next - Следующий обработчик в цепочке.
  * @returns Observable с HTTP-событиями.
@@ -24,15 +43,53 @@ export const authInterceptor: HttpInterceptorFn = (
   next: HttpHandlerFn,
 ): Observable<HttpEvent<unknown>> => {
   const tokenStorage = inject(TokenStorageService);
+  const sessionApi = inject(SessionApiService);
+
   const token = tokenStorage.accessToken;
+  const authReq = token !== null ? withBearer(req, token) : req;
 
-  if (token === null) {
-    return next(req);
-  }
+  return next(authReq).pipe(
+    catchError((error: unknown): Observable<HttpEvent<unknown>> => {
+      if (!(error instanceof HttpErrorResponse) || error.status !== 401) {
+        return throwError((): unknown => error);
+      }
 
-  /* eslint-disable @typescript-eslint/naming-convention -- HTTP-заголовок Authorization использует PascalCase */
-  const authReq = req.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
-  /* eslint-enable @typescript-eslint/naming-convention */
+      // Refresh-токен сам вернул 401 — токен недействителен, чистим сессию
+      if (req.url.includes('/session/refresh-token')) {
+        tokenStorage.clear();
+        return throwError((): unknown => error);
+      }
 
-  return next(authReq);
+      const refreshToken = tokenStorage.refreshToken;
+      if (refreshToken === null) {
+        return throwError((): unknown => error);
+      }
+
+      if (isRefreshing) {
+        // Дождаться окончания параллельного рефреша и повторить с новым токеном
+        return refreshSubject.pipe(
+          filter((t: string | null): t is string => t !== null),
+          take(1),
+          switchMap((newToken: string): Observable<HttpEvent<unknown>> => next(withBearer(req, newToken))),
+        );
+      }
+
+      isRefreshing = true;
+      refreshSubject.next(null);
+
+      return sessionApi.refresh(refreshToken).pipe(
+        switchMap((result: RefreshTokenResponse): Observable<HttpEvent<unknown>> => {
+          isRefreshing = false;
+          tokenStorage.store(result.access_token, result.refresh_token);
+          refreshSubject.next(result.access_token);
+          return next(withBearer(req, result.access_token));
+        }),
+        catchError((refreshError: unknown): Observable<HttpEvent<unknown>> => {
+          isRefreshing = false;
+          tokenStorage.clear();
+          return throwError((): unknown => refreshError);
+        }),
+      );
+    }),
+  );
 };
