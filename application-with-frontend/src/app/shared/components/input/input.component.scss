@@ -3,6 +3,11 @@
   width: 100%;
 }
 
+.input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
 .input {
   width: 100%;
   box-sizing: border-box;
@@ -22,5 +27,29 @@
 
   &:focus {
     border-color: var(--clr-primary);
+  }
+
+  &--password {
+    padding-right: 52px;
+  }
+}
+
+.input__toggle {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--clr-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+
+  &:hover {
+    color: var(--clr-text-primary);
   }
 }

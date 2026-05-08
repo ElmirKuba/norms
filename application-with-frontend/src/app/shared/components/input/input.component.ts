@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, signal } from '@angular/core';
+import type { WritableSignal } from '@angular/core';
 
 /** Переиспользуемый компонент поля ввода */
 @Component({
@@ -8,7 +9,7 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from 
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InputSharedComponent {
-  /** Тип поля */
+  /** Тип поля — при 'password' показывается кнопка показа/скрытия */
   @Input() public type: 'text' | 'password' = 'text';
 
   /** Плейсхолдер */
@@ -23,11 +24,25 @@ export class InputSharedComponent {
   /** Эмит при изменении значения */
   @Output() public readonly valueChange: EventEmitter<string> = new EventEmitter<string>();
 
+  /** true — пароль отображается открытым текстом */
+  protected readonly _isPasswordVisible: WritableSignal<boolean> = signal(false);
+
+  /** Фактический тип инпута с учётом переключателя видимости */
+  protected get _effectiveType(): 'text' | 'password' {
+    if (this.type !== 'password') return 'text';
+    return this._isPasswordVisible() ? 'text' : 'password';
+  }
+
   /**
-   * Обрабатывает ввод пользователя
-   * @param event - событие ввода из нативного инпута
+   * Обрабатывает ввод пользователя.
+   * @param event - событие ввода из нативного инпута.
    */
   public onInput(event: Event): void {
     this.valueChange.emit((event.target as HTMLInputElement).value);
+  }
+
+  /** Переключает видимость пароля. */
+  protected _togglePasswordVisibility(): void {
+    this._isPasswordVisible.update((v: boolean): boolean => !v);
   }
 }
