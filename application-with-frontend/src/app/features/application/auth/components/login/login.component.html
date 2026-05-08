@@ -18,6 +18,10 @@
       (valueChange)="_password.set($event)"
     />
 
+    @if (_error()) {
+      <p class="login__error">{{ _error() }}</p>
+    }
+
     <div class="login__forgot">
       <button class="login__forgot-btn" (click)="onForgotPassword()">Забыли пароль?</button>
     </div>

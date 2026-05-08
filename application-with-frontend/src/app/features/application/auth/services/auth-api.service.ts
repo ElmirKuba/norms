@@ -33,8 +33,8 @@ export interface CreateAccountResponseAccount {
   readonly created_at: string;
 }
 
-/** Данные сессии в ответе на регистрацию. */
-export interface CreateAccountResponseSession {
+/** Данные сессии в ответе на регистрацию и авторизацию. */
+export interface AccountResponseSession {
   /** ID сессии. */
   readonly id: string;
   /** Системное имя устройства. */
@@ -52,7 +52,39 @@ export interface CreateAccountResponse {
   /** Данные созданного аккаунта. */
   readonly account: CreateAccountResponseAccount;
   /** Данные сессии с токенами. */
-  readonly session: CreateAccountResponseSession;
+  readonly session: AccountResponseSession;
+}
+
+/** Тело запроса POST /account/auth. */
+export interface AuthAccountRequest {
+  /** UIN (цифры) или username. */
+  readonly login: string;
+  /** Пароль в открытом виде. */
+  readonly password: string;
+  /** Системное имя устройства. */
+  readonly system_name: string;
+  /** Платформа устройства. */
+  readonly platform: ApiPlatform;
+}
+
+/** Данные аккаунта в ответе на авторизацию. */
+export interface AuthAccountResponseAccount {
+  /** ID аккаунта. */
+  readonly id: string;
+  /** UIN или null если ещё не назначен. */
+  readonly uin: string | null;
+  /** Юзернейм или null. */
+  readonly username: string | null;
+  /** Количество оставшихся инвайтов. */
+  readonly invites_remaining: number;
+}
+
+/** Ответ POST /account/auth. */
+export interface AuthAccountResponse {
+  /** Данные аккаунта. */
+  readonly account: AuthAccountResponseAccount;
+  /** Данные сессии с токенами. */
+  readonly session: AccountResponseSession;
 }
 /* eslint-enable @typescript-eslint/naming-convention */
 
@@ -76,5 +108,17 @@ export class AuthApiService {
    */
   public createAccount(data: CreateAccountRequest): Observable<CreateAccountResponse> {
     return this._http.post<CreateAccountResponse>(`${this._baseUrl}/account/create`, data);
+  }
+
+  /**
+   * Авторизует пользователя по UIN/username + пароль (POST /account/auth).
+   * @param data - Данные входа.
+   * @returns Данные аккаунта и токены сессии.
+   * @throws HttpErrorResponse 401 если логин или пароль неверны.
+   * @throws HttpErrorResponse 403 если достигнут лимит устройств.
+   * @throws HttpErrorResponse 423 если превышен лимит попыток входа.
+   */
+  public authAccount(data: AuthAccountRequest): Observable<AuthAccountResponse> {
+    return this._http.post<AuthAccountResponse>(`${this._baseUrl}/account/auth`, data);
   }
 }

@@ -38,6 +38,12 @@
     gap: 16px;
   }
 
+  &__error {
+    font-size: 13px;
+    color: var(--clr-error, #e53935);
+    margin: 0;
+  }
+
   &__forgot {
     display: flex;
     justify-content: flex-end;
