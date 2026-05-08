@@ -158,18 +158,30 @@
 
 ### Frontend: подключение к реальному API — шаг 8 (частично)
 - `API_BASE_URL` InjectionToken (`core/api/api-config.ts`) — default `http://localhost:3000/api/v1`
-- `FeatureFlagsService` — `GET /app/feature-flags` через `APP_INITIALIZER`, при ошибке — дефолтные флаги
-- `TokenStorageService` — in-memory хранение access/refresh токенов текущей сессии
+- `FeatureFlagsService` — `GET /app/feature-flags` через `APP_INITIALIZER`, при ошибке — дефолтные флаги; обновляются при нажатии «Зарегистрироваться» (всегда актуальные)
 - `InviteApiService` — `POST /invite/check`, обработка 404/429
-- `AuthApiService` — `POST /account/create`, полные типы ответа (snake_case через `eslint-disable`)
+- `AuthApiService` — `POST /account/create` + `POST /account/auth`, полные типы ответа (snake_case через `eslint-disable`)
 - `WelcomeComponent` — читает `freeRegistration` из `FeatureFlagsService` вместо мока
 - `InviteCodeComponent` — вызывает API, показывает ошибки, передаёт code в router state
-- `CreateAccountComponent` — вызывает API, сохраняет токены, навигирует в main; system_name/platform из `PlatformDetectorService`
-- `provideHttpClient(withFetch())` в `app.config.ts`
+- `CreateAccountComponent` — вызывает API, сохраняет токены, навигирует в main с `pendingUin: true`
+- `LoginApplicationComponent` — `POST /account/auth`, сохраняет токены, навигирует в main; ошибки 401/403/423
+- `provideHttpClient(withFetch(), withInterceptors([authInterceptor]))` в `app.config.ts`
 - `AppPlatform` и `OperatingSystem` enum — JSDoc на каждом члене
+- **UIN флоу (реальный API):** `UinApiService.readStatus()` → `GET /uin/read-status`; `UinModalService.showPendingAndWait()` — при «Понятно» проверяет статус, если assigned → полноэкранный `UinAssignedApplicationComponent` с реальным UIN из router state; `preventDialogClose: true` на pending-модалке
+- **SecureStorage (OS keychain):** `SecureStorageService` абстракция + Electron-реализация через `safeStorage` IPC (macOS Keychain / Win DPAPI / Linux libsecret — один код); Capacitor — TODO-заглушка
+- **TokenStorageService** — persist on `store/clear` в SecureStorage; `loadFromStorage()` в APP_INITIALIZER
+- **APP_INITIALIZER на старте:** `loadFromStorage()` → `POST /session/refresh` → свежие токены до рендера компонентов
+- **authInterceptor** — Bearer header на все запросы; при 401: refresh → retry; параллельные запросы ставятся в очередь через `BehaviorSubject`
+- **InputSharedComponent** — глазик показать/скрыть пароль (SVG, только при `type="password"`)
 
 ## In Progress
-_Nothing yet._
+
+### Frontend: подключение к реальному API — шаг 8 (продолжение)
+- [ ] Logout — `POST /account/logout` → `tokenStorage.clear()` → navigate welcome
+- [ ] Auth guard — защита `/application/main` от неавторизованных; redirect на welcome если нет токена
+- [ ] WssService — подключение `wss://host/ws?token=`, авторефреш токена без реконнекта (`token_refresh` → `tokens_updated`), обработка событий: `uin_assigned` → `UinModalService.closePendingAndShowAssigned()`, `session_kicked` → `SessionKickedService`, `password_reset_via_recovery` → баннер; авто-реконнект
+- [ ] Настройки → Устройства — подключить к реальному API (read-list, кик, rename)
+- [ ] Настройки → Инвайты — подключить к реальному API (create, revoke, read-list, read-referrals)
 
 ## Implementation Order
 
@@ -224,7 +236,7 @@ _Nothing yet._
 - ~~Фронт: экран ввода инвайт-кода (если `freeRegistration` выключен)~~ ✅
 - ~~Фронт: главный экран — две кнопки (Авторизация / Регистрация)~~ ✅
 - ~~Фронт: регистрация — только пароль, POST /account/create~~ ✅
-- Фронт: авторизация — логин (UIN или username, бэк разбирает) + пароль → `POST /account/auth` → токены.
+- ~~Фронт: авторизация — логин (UIN или username, бэк разбирает) + пароль → `POST /account/auth` → токены.~~ ✅
 - Фронт: logout → `POST /account/logout`, очистка TokenStorageService.
 - Фронт: в настройках — создание инвайтов, таблица активных кодов, отзыв, список приглашённых (подключить к реальному API).
 
