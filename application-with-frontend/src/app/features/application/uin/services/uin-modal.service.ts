@@ -42,6 +42,7 @@ export class UinModalService {
           closeCallback: (): void => {
             this._onPendingAcknowledged();
           },
+          preventDialogClose: true,
         },
       },
     );
