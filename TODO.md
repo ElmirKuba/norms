@@ -156,6 +156,18 @@
 - `GET /app/feature-flags` — `free_registration`, `dev_mode` из env (публичный)
 - Postman-коллекция: авто-сохранение токенов, `{{access_token}}` / `{{refresh_token}}` / `{{base_url}}`
 
+### Frontend: подключение к реальному API — шаг 8 (частично)
+- `API_BASE_URL` InjectionToken (`core/api/api-config.ts`) — default `http://localhost:3000/api/v1`
+- `FeatureFlagsService` — `GET /app/feature-flags` через `APP_INITIALIZER`, при ошибке — дефолтные флаги
+- `TokenStorageService` — in-memory хранение access/refresh токенов текущей сессии
+- `InviteApiService` — `POST /invite/check`, обработка 404/429
+- `AuthApiService` — `POST /account/create`, полные типы ответа (snake_case через `eslint-disable`)
+- `WelcomeComponent` — читает `freeRegistration` из `FeatureFlagsService` вместо мока
+- `InviteCodeComponent` — вызывает API, показывает ошибки, передаёт code в router state
+- `CreateAccountComponent` — вызывает API, сохраняет токены, навигирует в main; system_name/platform из `PlatformDetectorService`
+- `provideHttpClient(withFetch())` в `app.config.ts`
+- `AppPlatform` и `OperatingSystem` enum — JSDoc на каждом члене
+
 ## In Progress
 _Nothing yet._
 
@@ -178,7 +190,7 @@ _Nothing yet._
    │
 ✅ 7. WSS gateway (uin_assigned, session_kicked, token rotation без реконнекта)
    │
-   8. Frontend: подключение к реальному API (auth flow, platform guard)
+🔄 8. Frontend: подключение к реальному API (auth flow, platform guard)
    │
    9. Chats + E2E (ECDH key exchange, WSS messaging)
    │
@@ -208,15 +220,13 @@ _Nothing yet._
 
 ### Инвайты и регистрация
 См. [`docs/invites.md`](docs/invites.md).
-- Бэк: таблица `invites` (код, TTL, создатель), таблица `referrals` (кто кого пригласил).
-- Бэк: столбец `invites_remaining` в `accounts` (default 3).
-- Бэк: API feature flags (devMode, freeRegistration и др.).
-- Бэк: генерация 10-значного кода (рандом + unique + retry), проверка TTL при использовании.
-- Фронт: экран ввода инвайт-кода перед регистрацией (если `freeRegistration` выключен).
-- Фронт: главный экран — две кнопки (Авторизация / Регистрация).
-- Фронт: авторизация — логин (UIN или username, бэк разбирает) + пароль.
-- Фронт: регистрация — только пароль.
-- Фронт: в настройках — создание инвайтов, таблица активных кодов, отзыв, список приглашённых.
+- ~~Бэк: таблица `invites`, `referrals`, `invites_remaining`, feature flags, генерация кода~~ ✅
+- ~~Фронт: экран ввода инвайт-кода (если `freeRegistration` выключен)~~ ✅
+- ~~Фронт: главный экран — две кнопки (Авторизация / Регистрация)~~ ✅
+- ~~Фронт: регистрация — только пароль, POST /account/create~~ ✅
+- Фронт: авторизация — логин (UIN или username, бэк разбирает) + пароль → `POST /account/auth` → токены.
+- Фронт: logout → `POST /account/logout`, очистка TokenStorageService.
+- Фронт: в настройках — создание инвайтов, таблица активных кодов, отзыв, список приглашённых (подключить к реальному API).
 
 ### Авторизация и устройства
 См. [`docs/auth-devices.md`](docs/auth-devices.md).
