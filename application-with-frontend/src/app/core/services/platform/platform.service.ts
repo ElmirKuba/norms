@@ -1,10 +1,29 @@
 import { Injectable } from '@angular/core';
 
+/** Secure storage API, доступный через Electron preload. */
+interface ElectronSecureStorageAPI {
+  /** Возвращает расшифрованное значение по ключу или null. */
+  readonly get: (key: string) => Promise<string | null>;
+  /** Шифрует и сохраняет значение по ключу. */
+  readonly set: (key: string, value: string) => Promise<void>;
+  /** Удаляет запись по ключу. */
+  readonly remove: (key: string) => Promise<void>;
+}
+
 declare global {
   /** Расширение глобального Window для платформенных API */
   interface Window {
     /** API Electron, внедряемый через preload.ts */
-    electronAPI?: Record<string, unknown>;
+    electronAPI?: {
+      /** Возвращает версию приложения. */
+      readonly getAppVersion: () => Promise<string>;
+      /** Возвращает текущую платформу ('darwin' | 'win32' | 'linux'). */
+      readonly getPlatform: () => Promise<string>;
+      /** Подписка на deep-link события. */
+      readonly onDeepLink: (callback: (url: string) => void) => void;
+      /** Шифрованное хранилище через OS keychain. */
+      readonly secureStorage: ElectronSecureStorageAPI;
+    };
     /** API Capacitor, доступный на нативных платформах */
     // eslint-disable-next-line @typescript-eslint/naming-convention -- внешнее API Capacitor использует PascalCase
     Capacitor?: {
