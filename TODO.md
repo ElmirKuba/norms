@@ -113,6 +113,21 @@
 - `GET /uin/read-status` — статус генерации (pending/assigned) для поллинга
 - `CreateAccountUseCase` вызывает `enqueueGeneration` после транзакции
 
+### Recovery (шаг 6)
+- `GET /recovery/preset-questions` — статический список пресет-вопросов (публичный)
+- `POST /recovery/question/create` — создать Q/A пару (argon2id-хеш ответа, нормализация)
+- `GET /recovery/question/read-list` — список своих вопросов без хешей
+- `PATCH /recovery/question/update/:id` — изменить вопрос и/или ответ
+- `DELETE /recovery/question/delete/:id` — удалить Q/A пару
+- `GET /recovery/read-questions-for-login?login=` — список вопросов аккаунта для «Забыл пароль» + rate-limit check
+- `POST /recovery/check-answer` — проверка ответа + эскалирующий rate-limit (5 неудач → 1ч/24ч/7д) + выдача reset_token (Redis EX 600)
+- `POST /recovery/reset-password` — смена пароля по одноразовому reset_token
+- Очистка `recovery_fail_count` и `recovery_fail_level` при успешном логине
+- `PublicRecoveryQuestion` — вынесен в порт-интерфейс (без хеша)
+- `ErrorCode` расширен: 7 новых кодов (RECOVERY_QUESTION_NOT_FOUND, NOT_YOUR_RECOVERY_QUESTION, RECOVERY_NOT_CONFIGURED, WRONG_ANSWER, RECOVERY_RATE_LIMITED, RESET_TOKEN_INVALID, RESET_TOKEN_EXPIRED)
+- Postman: Флоу 6 с авто-сохранением `recovery_account_id`, `recovery_question_id`, `reset_token`
+- TODO (шаг 7): после `reset-password` — WSS `password_reset_via_recovery` всем сессиям
+
 ### Account read + Session list (шаг 5, частично)
 - `GET /account/read` — свой профиль (полный: id, uin, username, invites_remaining, is_admin, created_at) и чужой (без invites_remaining и is_admin); query `?id=` или `?uin=`
 - `GET /session/read-list` — список сессий аккаунта с флагом `is_current` (из JWT sessionId)
@@ -146,7 +161,7 @@ _Nothing yet._
    │
 ✅ 5. Sessions + Account endpoints (read-list, delete, clear-others, update-nickname, account/read)
    │
-   6. Recovery (Q/A CRUD, reset flow, rate-limit, WSS password_reset_via_recovery)
+✅ 6. Recovery (Q/A CRUD, reset flow, rate-limit, WSS password_reset_via_recovery)
    │
    7. WSS gateway (uin_assigned, session_kicked, token rotation без реконнекта)
    │
