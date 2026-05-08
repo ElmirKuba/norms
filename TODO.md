@@ -83,7 +83,7 @@
 ### Backend bootstrap
 - NestJS 11, 4-layer архитектура (presentation / application / domain / persistence / common / config)
 - Строгий tsconfig (extra-strict) + ESLint (strict-type-checked + jsdoc) идентичный фронту
-- Docker compose: postgres 16, redis 7, pgAdmin 4 (port 8081), backend (комментируется для host-разработки)
+- Docker compose: postgres 16, redis 7, pgAdmin 4 (port 8081), RedisInsight (port 5540), backend (комментируется для host-разработки)
 - `docker/sql-files/init.sql` → `CREATE EXTENSION citext` (в docker-entrypoint-initdb.d)
 - `docker/sql-files/comments.sql` → `COMMENT ON TABLE/COLUMN` (применять через `npm run db:comments`)
 - `npm run db:setup` = `db:push` + `db:comments`
@@ -203,11 +203,11 @@ _Нет активных задач._
    │
 ✅ 7. WSS gateway (uin_assigned, session_kicked, token rotation без реконнекта)
    │
-🔄 8. Frontend: подключение к реальному API (auth flow, platform guard)
+✅ 8. Frontend: подключение к реальному API (auth flow, platform guard, devices, invites)
    │
    9. Chats + E2E (ECDH key exchange, WSS messaging)
    │
-  10. Settings, search, profile, devices UI, push notifications
+  10. Settings, search, profile, push notifications
 ```
 
 ## Up Next
@@ -238,8 +238,8 @@ _Нет активных задач._
 - ~~Фронт: главный экран — две кнопки (Авторизация / Регистрация)~~ ✅
 - ~~Фронт: регистрация — только пароль, POST /account/create~~ ✅
 - ~~Фронт: авторизация — логин (UIN или username, бэк разбирает) + пароль → `POST /account/auth` → токены.~~ ✅
-- Фронт: logout → `POST /account/logout`, очистка TokenStorageService.
-- Фронт: в настройках — создание инвайтов, таблица активных кодов, отзыв, список приглашённых (подключить к реальному API).
+- ~~Фронт: logout → `POST /account/logout`, очистка TokenStorageService.~~ ✅
+- ~~Фронт: в настройках — создание инвайтов, таблица активных кодов, отзыв, список приглашённых (подключить к реальному API).~~ ✅
 
 ### Авторизация и устройства
 См. [`docs/auth-devices.md`](docs/auth-devices.md).
@@ -251,8 +251,8 @@ _Нет активных задач._
 - Бэк: эндпоинт `PATCH /api/v1/session/update-nickname` — установка/снятие прозвища текущей сессии.
 - Бэк: WSS-сигнал кикнутому устройству.
 - Фронт: хранение токенов локально, мульти-аккаунт (несколько пар токенов).
-- Фронт: настройки → список устройств (nickname ?? system_name, платформа, дата активности, текущее помечено), кнопки кика.
-- Фронт: установка/изменение прозвища своего устройства.
+- ~~Фронт: настройки → список устройств (nickname ?? system_name, платформа, дата активности, текущее помечено), кнопки кика.~~ ✅
+- ~~Фронт: установка/изменение прозвища своего устройства.~~ ✅
 - Фронт: локальные прозвища чужих устройств (SQLite).
 
 ### Админ и приватность (MVP, не "потом-потом")
