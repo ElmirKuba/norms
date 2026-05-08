@@ -289,7 +289,35 @@
           "response": []
         },
         {
-          "name": "9. Logout",
+          "name": "9. Кик всех остальных сессий",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/session/clear-others",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "session",
+                "clear-others"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "10. Logout",
           "request": {
             "auth": {
               "type": "bearer",

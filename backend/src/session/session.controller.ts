@@ -5,6 +5,7 @@ import type { JwtPayload } from '../auth/types/jwt-payload.type';
 import { RefreshTokenUseCase } from './use-cases/refresh-token.use-case';
 import { ReadSessionListUseCase } from './use-cases/read-session-list.use-case';
 import { DeleteSessionUseCase } from './use-cases/delete-session.use-case';
+import { ClearOtherSessionsUseCase } from './use-cases/clear-other-sessions.use-case';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 /** Контроллер управления сессиями: ротация токенов, список устройств, кик. */
@@ -14,6 +15,7 @@ export class SessionController {
     private readonly _refreshTokenUseCase: RefreshTokenUseCase,
     private readonly _readSessionListUseCase: ReadSessionListUseCase,
     private readonly _deleteSessionUseCase: DeleteSessionUseCase,
+    private readonly _clearOtherSessionsUseCase: ClearOtherSessionsUseCase,
   ) {}
 
   /**
@@ -53,5 +55,18 @@ export class SessionController {
     @Param('id') id: string,
   ): ReturnType<DeleteSessionUseCase['execute']> {
     return this._deleteSessionUseCase.execute(user.sub, id);
+  }
+
+  /**
+   * Удаляет все сессии аккаунта, кроме текущей.
+   * @param user - Payload текущего JWT.
+   * @returns Количество удалённых сессий.
+   */
+  @Post('clear-others')
+  @UseGuards(JwtGuard)
+  public clearOthers(
+    @CurrentUser() user: JwtPayload,
+  ): ReturnType<ClearOtherSessionsUseCase['execute']> {
+    return this._clearOtherSessionsUseCase.execute(user.sub, user.sessionId);
   }
 }
