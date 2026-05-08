@@ -219,6 +219,7 @@ export default tseslint.config(
             'TSInterfaceDeclaration', // export interface Foo {}
             'TSTypeAliasDeclaration', // export type Foo = ...
             'TSEnumDeclaration', // export enum Foo {}
+            'TSEnumMember', // член enum: FOO = 'foo'
             'TSPropertySignature', // поля interface { ... }
             'PropertyDefinition', // поля class { ... }
           ],

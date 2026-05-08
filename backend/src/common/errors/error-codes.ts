@@ -4,28 +4,45 @@
  */
 export enum ErrorCode {
   // Auth
+  /** JWT-токен отсутствует в заголовке Authorization. */
   MISSING_TOKEN = 'missing_token',
+  /** JWT-токен невалиден или истёк. */
   INVALID_TOKEN = 'invalid_token',
 
   // Account
+  /** UIN/логин или пароль не совпадают. */
   INVALID_CREDENTIALS = 'invalid_credentials',
+  /** Достигнут лимит активных устройств аккаунта. */
   DEVICE_LIMIT_REACHED = 'device_limit_reached',
+  /** Аккаунт с данным ID не найден. */
   ACCOUNT_NOT_FOUND = 'account_not_found',
+  /** Переданы одновременно id и uin — допустим только один параметр. */
   AMBIGUOUS_QUERY = 'ambiguous_query',
+  /** Превышен лимит неудачных попыток входа — аккаунт временно заблокирован. */
   LOGIN_RATE_LIMITED = 'login_rate_limited',
 
   // Invite
+  /** Код приглашения обязателен при закрытой регистрации. */
   INVITE_REQUIRED = 'invite_required',
+  /** Инвайт-код не найден или уже истёк. */
   INVITE_NOT_FOUND = 'invite_not_found',
+  /** Срок действия инвайт-кода истёк. */
   INVITE_EXPIRED = 'invite_expired',
+  /** Инвайт-код уже был использован (race condition). */
   INVITE_ALREADY_USED = 'invite_already_used',
+  /** У аккаунта закончились доступные инвайты. */
   NO_INVITES_REMAINING = 'no_invites_remaining',
+  /** Попытка отозвать чужой инвайт. */
   NOT_YOUR_INVITE = 'not_your_invite',
+  /** Превышен лимит запросов (rate limiting по IP). */
   RATE_LIMITED = 'rate_limited',
 
   // Session
+  /** Refresh-токен уже был использован — возможна компрометация сессии. */
   REFRESH_REUSED = 'refresh_reused',
+  /** Сессия с данным ID не найдена. */
   SESSION_NOT_FOUND = 'session_not_found',
+  /** Попытка управлять сессией другого аккаунта. */
   NOT_YOUR_SESSION = 'not_your_session',
 }
 

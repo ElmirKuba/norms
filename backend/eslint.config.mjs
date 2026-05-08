@@ -186,6 +186,7 @@ export default tseslint.config(
             'TSInterfaceDeclaration',
             'TSTypeAliasDeclaration',
             'TSEnumDeclaration',
+            'TSEnumMember',
             'TSPropertySignature',
             'PropertyDefinition',
           ],
