@@ -45,9 +45,7 @@ export class MainApplicationComponent implements OnInit {
   public ngOnInit(): void {
     const state = this._router.lastSuccessfulNavigation()?.extras.state as Record<string, unknown> | null | undefined;
     if (state?.['pendingUin'] === true) {
-      this._uinModal.openUinPending((): void => {
-        void this._router.navigate(['/application/uin/assigned']);
-      });
+      this._uinModal.showPendingAndWait();
     }
     // Мок: симулируем password_reset_via_recovery из навигационного state
     if (state?.['mockPasswordReset'] === true) {
