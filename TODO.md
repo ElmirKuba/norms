@@ -128,6 +128,19 @@
 - Postman: Флоу 6 с авто-сохранением `recovery_account_id`, `recovery_question_id`, `reset_token`
 - TODO (шаг 7): после `reset-password` — WSS `password_reset_via_recovery` всем сессиям
 
+### WSS-gateway (шаг 7)
+- `WssModule` — `@Global()`, экспортирует `WssConnectionStore`
+- `WssGateway` — `@WebSocketGateway({ path: '/ws' })`, авторизация JWT из `?token=` при upgrade (закрывает сокет 4001 если невалиден)
+- `WssConnectionStore` — Map sessionId → { socket, accountId }, `sendToSession` / `sendToAccount`
+- WeakMap для хранения sessionId сокета без monkey-patching интерфейса
+- `token_refresh` → `tokens_updated`: WSS-ротация без реконнекта (reuse detection)
+- `ping` → `pong`
+- `session_kicked`: emitирует DeleteSessionUseCase + ClearOtherSessionsUseCase
+- `uin_assigned { uin }`: emitирует UinGenerationProcessor после вставки в БД
+- `password_reset_via_recovery { at }`: emitирует ResetPasswordUseCase
+- `deleteAllByAccountIdExcept` теперь возвращает `string[]` вместо `number`
+- `WsAdapter` подключён в `main.ts`
+
 ### Account read + Session list (шаг 5, частично)
 - `GET /account/read` — свой профиль (полный: id, uin, username, invites_remaining, is_admin, created_at) и чужой (без invites_remaining и is_admin); query `?id=` или `?uin=`
 - `GET /session/read-list` — список сессий аккаунта с флагом `is_current` (из JWT sessionId)
@@ -163,7 +176,7 @@ _Nothing yet._
    │
 ✅ 6. Recovery (Q/A CRUD, reset flow, rate-limit, WSS password_reset_via_recovery)
    │
-   7. WSS gateway (uin_assigned, session_kicked, token rotation без реконнекта)
+✅ 7. WSS gateway (uin_assigned, session_kicked, token rotation без реконнекта)
    │
    8. Frontend: подключение к реальному API (auth flow, platform guard)
    │
