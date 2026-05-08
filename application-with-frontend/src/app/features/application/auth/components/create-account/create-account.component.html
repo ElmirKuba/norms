@@ -12,6 +12,10 @@
       (valueChange)="_password.set($event)"
     />
 
+    @if (_error()) {
+      <p class="create-account__error">{{ _error() }}</p>
+    }
+
     <shared-button [disabled]="!_isValid" (clicked)="onSubmit()">
       Создать аккаунт
     </shared-button>

@@ -19,11 +19,17 @@ declare global {
  * Определяется один раз при старте приложения.
  */
 export enum AppPlatform {
+  /** iOS (iPhone/iPad через Capacitor). */
   IOS = 'ios',
+  /** Android через Capacitor. */
   ANDROID = 'android',
+  /** Electron на Windows. */
   ELECTRON_WINDOWS = 'electron-windows',
+  /** Electron на macOS. */
   ELECTRON_MACOS = 'electron-macos',
+  /** Electron на Linux. */
   ELECTRON_LINUX = 'electron-linux',
+  /** Обычный браузер (только лендинг). */
   WEB = 'web',
 }
 
@@ -32,11 +38,17 @@ export type PlatformFamily = 'mobile' | 'desktop' | 'web';
 
 /** Операционные системы пользователя */
 export enum OperatingSystem {
+  /** Windows (Electron). */
   WINDOWS = 'windows',
+  /** macOS (Electron). */
   MACOS = 'macos',
+  /** iOS (Capacitor). */
   IOS = 'ios',
+  /** Android (Capacitor). */
   ANDROID = 'android',
+  /** Linux (Electron). */
   LINUX = 'linux',
+  /** Не удалось определить ОС. */
   UNKNOWN = 'unknown',
 }
 

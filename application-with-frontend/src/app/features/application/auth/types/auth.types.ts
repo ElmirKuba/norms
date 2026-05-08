@@ -1,13 +1,7 @@
-/** Feature flags с бэкенда (мок) */
+/** Feature flags, загружаемые с бэкенда при старте приложения. */
 export interface FeatureFlags {
-  /** Регистрация без инвайт-кода */
+  /** Регистрация без инвайт-кода. */
   freeRegistration: boolean;
-  /** Dev-режим */
+  /** Показывать dev-элементы UI. */
   devMode: boolean;
 }
-
-/** Мок feature flags для разработки */
-export const MOCK_FEATURE_FLAGS: FeatureFlags = {
-  freeRegistration: false,
-  devMode: true,
-};

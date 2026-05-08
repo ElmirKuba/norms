@@ -7,10 +7,14 @@
   <div class="invite-code__form">
     <shared-input
       placeholder="XXXX-XXXX-XX"
-      [value]="_formattedCode"
+      [value]="_formattedCode()"
       [maxlength]="12"
       (valueChange)="onInput($event)"
     />
+
+    @if (_error()) {
+      <p class="invite-code__error">{{ _error() }}</p>
+    }
 
     <shared-button [disabled]="!_isValid" (clicked)="onSubmit()">
       Проверить код
