@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Delete, Body, Param, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Delete, Patch, Body, Param, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { JwtGuard } from '../auth/jwt.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { JwtPayload } from '../auth/types/jwt-payload.type';
@@ -6,7 +6,9 @@ import { RefreshTokenUseCase } from './use-cases/refresh-token.use-case';
 import { ReadSessionListUseCase } from './use-cases/read-session-list.use-case';
 import { DeleteSessionUseCase } from './use-cases/delete-session.use-case';
 import { ClearOtherSessionsUseCase } from './use-cases/clear-other-sessions.use-case';
+import { UpdateNicknameUseCase } from './use-cases/update-nickname.use-case';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { UpdateNicknameDto } from './dto/update-nickname.dto';
 
 /** Контроллер управления сессиями: ротация токенов, список устройств, кик. */
 @Controller('session')
@@ -16,6 +18,7 @@ export class SessionController {
     private readonly _readSessionListUseCase: ReadSessionListUseCase,
     private readonly _deleteSessionUseCase: DeleteSessionUseCase,
     private readonly _clearOtherSessionsUseCase: ClearOtherSessionsUseCase,
+    private readonly _updateNicknameUseCase: UpdateNicknameUseCase,
   ) {}
 
   /**
@@ -68,5 +71,21 @@ export class SessionController {
     @CurrentUser() user: JwtPayload,
   ): ReturnType<ClearOtherSessionsUseCase['execute']> {
     return this._clearOtherSessionsUseCase.execute(user.sub, user.sessionId);
+  }
+
+  /**
+   * Устанавливает или снимает прозвище текущей сессии.
+   * @param user - Payload текущего JWT.
+   * @param dto - Новое прозвище или null.
+   * @returns Промис без значения.
+   */
+  @Patch('update-nickname')
+  @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  public updateNickname(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: UpdateNicknameDto,
+  ): ReturnType<UpdateNicknameUseCase['execute']> {
+    return this._updateNicknameUseCase.execute(user.sessionId, dto.nickname);
   }
 }

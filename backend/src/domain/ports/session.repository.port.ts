@@ -58,4 +58,11 @@ export abstract class SessionRepository {
     accountId: string,
     excludeId: string,
   ): Promise<number>;
+
+  /**
+   * Обновляет прозвище сессии. null — снять прозвище.
+   * @param id - ID сессии.
+   * @param nickname - Новое прозвище или null.
+   */
+  public abstract updateNickname(id: string, nickname: string | null): Promise<void>;
 }

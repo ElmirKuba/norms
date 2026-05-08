@@ -114,6 +114,8 @@
 - `GET /account/read` — свой профиль (полный: id, uin, username, invites_remaining, is_admin, created_at) и чужой (без invites_remaining и is_admin); query `?id=` или `?uin=`
 - `GET /session/read-list` — список сессий аккаунта с флагом `is_current` (из JWT sessionId)
 - `DELETE /session/delete/:id` — кик сессии (404 `session_not_found`, 403 `not_your_session`)
+- `POST /session/clear-others` — кик всех остальных сессий → `{ kicked_count }`
+- `PATCH /session/update-nickname` — установка/снятие прозвища текущей сессии (204)
 
 ### Invites (шаг 4)
 - `POST /invite/create` — TTL из `INVITE_TTL_DAYS` env (default 7д), атомарный декремент `invites_remaining`
@@ -139,7 +141,7 @@ _Nothing yet._
    │
 ✅ 4. Invites (feature flags, invite/check, create/revoke/read-list/read-referrals)
    │
-▶  5. Sessions + Account endpoints (read-list, delete, clear-others, update-nickname, account/read)
+✅ 5. Sessions + Account endpoints (read-list, delete, clear-others, update-nickname, account/read)
    │
    6. Recovery (Q/A CRUD, reset flow, rate-limit, WSS password_reset_via_recovery)
    │

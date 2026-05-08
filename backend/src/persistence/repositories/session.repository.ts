@@ -114,6 +114,18 @@ export class DrizzleSessionRepository extends SessionRepository {
   }
 
   /**
+   * Обновляет прозвище сессии. null — снять прозвище.
+   * @param id - ID сессии.
+   * @param nickname - Новое прозвище или null.
+   */
+  public async updateNickname(id: string, nickname: string | null): Promise<void> {
+    await this._db
+      .update(sessions)
+      .set({ nickname, updatedAt: new Date() })
+      .where(eq(sessions.id, id));
+  }
+
+  /**
    * Преобразует строку из БД в доменную сущность.
    * @param row - Строка из Drizzle-запроса.
    * @returns Доменная сущность сессии.

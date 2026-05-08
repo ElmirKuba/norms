@@ -317,7 +317,44 @@
           "response": []
         },
         {
-          "name": "10. Logout",
+          "name": "10. Обновить прозвище сессии",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nickname\": \"Рабочий мак\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/session/update-nickname",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "session",
+                "update-nickname"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "11. Logout",
           "request": {
             "auth": {
               "type": "bearer",
