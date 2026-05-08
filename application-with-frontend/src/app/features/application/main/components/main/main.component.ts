@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import type { OnInit, WritableSignal, Signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Router } from '@angular/router';
 import { UinModalService } from '../../../uin/services/uin-modal.service';
 import { ChatsStateService } from '../../../chats/services/chats-state.service';
 import { SessionKickedService } from '../../services/session-kicked.service';
+import { WssService } from '../../../../../core/services/wss/wss.service';
 
 /** Основной shell приложения: таббар + router-outlet для дочерних экранов */
 @Component({
@@ -40,6 +42,17 @@ export class MainApplicationComponent implements OnInit {
 
   /** Сервис модалки кика сессии */
   private readonly _sessionKicked: SessionKickedService = inject(SessionKickedService);
+
+  /** WSS-сервис для подписки на real-time события */
+  private readonly _wss: WssService = inject(WssService);
+
+  public constructor() {
+    this._wss.passwordResetAt$
+      .pipe(takeUntilDestroyed())
+      .subscribe((): void => {
+        this.passwordResetBanner.set(true);
+      });
+  }
 
   /** @inheritdoc */
   public ngOnInit(): void {

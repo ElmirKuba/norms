@@ -7,6 +7,7 @@ import { ButtonSharedComponent } from '../../../../../shared/components/button/b
 import { AuthApiService } from '../../services/auth-api.service';
 import type { ApiPlatform, AuthAccountResponse } from '../../services/auth-api.service';
 import { TokenStorageService } from '../../../../../core/services/storage/token-storage.service';
+import { WssService } from '../../../../../core/services/wss/wss.service';
 import { PlatformDetectorService, AppPlatform } from '../../../../../core/services/platform/platform.service';
 
 /** Экран входа в аккаунт */
@@ -44,6 +45,9 @@ export class LoginApplicationComponent {
   /** Хранилище токенов текущей сессии */
   private readonly _tokenStorage: TokenStorageService = inject(TokenStorageService);
 
+  /** WSS-сервис — подключается после успешного входа */
+  private readonly _wss: WssService = inject(WssService);
+
   /** Сервис определения платформы */
   private readonly _platform: PlatformDetectorService = inject(PlatformDetectorService);
 
@@ -64,6 +68,7 @@ export class LoginApplicationComponent {
       /* eslint-enable @typescript-eslint/naming-convention */
       next: (response: AuthAccountResponse): void => {
         this._tokenStorage.store(response.session.access_token, response.session.refresh_token);
+        this._wss.connect();
         void this._router.navigate(['/application/main'], { replaceUrl: true });
       },
       error: (err: unknown): void => {
