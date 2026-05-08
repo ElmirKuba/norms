@@ -71,7 +71,10 @@ export class CreateAccountApplicationComponent {
       /* eslint-enable @typescript-eslint/naming-convention */
       next: (response: CreateAccountResponse): void => {
         this._tokenStorage.store(response.session.access_token, response.session.refresh_token);
-        void this._router.navigate(['/application/main'], { replaceUrl: true });
+        void this._router.navigate(['/application/main'], {
+          replaceUrl: true,
+          state: { pendingUin: true },
+        });
       },
       error: (err: unknown): void => {
         this._isLoading.set(false);
