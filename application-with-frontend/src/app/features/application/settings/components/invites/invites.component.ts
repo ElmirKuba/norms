@@ -149,14 +149,13 @@ export class SettingsInvitesComponent implements OnInit {
    * @param code - Инвайт для копирования.
    */
   public copyCode(code: InviteItem): void {
-    void navigator.clipboard.writeText(code.code).then((): void => {
-      this.copiedId.set(code.id);
+    this.copiedId.set(code.id);
+    this._cdr.markForCheck();
+    void navigator.clipboard.writeText(code.code);
+    setTimeout((): void => {
+      this.copiedId.set(null);
       this._cdr.markForCheck();
-      setTimeout((): void => {
-        this.copiedId.set(null);
-        this._cdr.markForCheck();
-      }, 1500);
-    });
+    }, 1500);
   }
 
   /**

@@ -38,14 +38,13 @@ export class UinAssignedApplicationComponent {
   /** Скопировать UIN в буфер обмена */
   public onCopy(): void {
     // TODO: заменить на ClipboardService (платформенный сервис)
-    void navigator.clipboard.writeText(this._uin).then((): void => {
-      this._copied.set(true);
+    this._copied.set(true);
+    this._cdr.markForCheck();
+    void navigator.clipboard.writeText(this._uin);
+    setTimeout((): void => {
+      this._copied.set(false);
       this._cdr.markForCheck();
-      setTimeout((): void => {
-        this._copied.set(false);
-        this._cdr.markForCheck();
-      }, 1500);
-    });
+    }, 1500);
   }
 
   /** Продолжить — переход на основной экран приложения */
