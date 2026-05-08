@@ -7,6 +7,7 @@ import { SessionModule } from './session/session.module';
 import { InviteModule } from './invite/invite.module';
 import { UinModule } from './uin/uin.module';
 import { RecoveryModule } from './recovery/recovery.module';
+import { WssModule } from './wss/wss.module';
 import { AppConfigModule } from './config/app-config.module';
 
 /** Конфигурация BullMQ Redis-подключения. */
@@ -40,6 +41,7 @@ interface BullRootConfig {
         };
       },
     }),
+    WssModule,
     PersistenceModule,
     AccountModule,
     SessionModule,

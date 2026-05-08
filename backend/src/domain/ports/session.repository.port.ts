@@ -52,12 +52,12 @@ export abstract class SessionRepository {
    * Удаляет все сессии аккаунта, кроме указанной.
    * @param accountId - ID аккаунта.
    * @param excludeId - ID сессии, которую не удалять.
-   * @returns Количество удалённых сессий.
+   * @returns Массив ID удалённых сессий.
    */
   public abstract deleteAllByAccountIdExcept(
     accountId: string,
     excludeId: string,
-  ): Promise<number>;
+  ): Promise<string[]>;
 
   /**
    * Обновляет прозвище сессии. null — снять прозвище.

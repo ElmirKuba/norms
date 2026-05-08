@@ -105,12 +105,16 @@ export class DrizzleSessionRepository extends SessionRepository {
    * @param excludeId - ID сессии, которую оставить.
    * @returns Количество удалённых сессий.
    */
-  public async deleteAllByAccountIdExcept(accountId: string, excludeId: string): Promise<number> {
+  public async deleteAllByAccountIdExcept(accountId: string, excludeId: string): Promise<string[]> {
     const deleted = await this._db
       .delete(sessions)
       .where(and(eq(sessions.accountId, accountId), ne(sessions.id, excludeId)))
       .returning({ id: sessions.id });
-    return deleted.length;
+    const ids: string[] = [];
+    for (const row of deleted) {
+      ids.push(row.id);
+    }
+    return ids;
   }
 
   /**

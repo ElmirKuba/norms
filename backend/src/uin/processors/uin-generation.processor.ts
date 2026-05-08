@@ -9,6 +9,7 @@ import { DRIZZLE_DB } from '../../persistence/drizzle.module';
 import type { DrizzleDb } from '../../persistence/drizzle.module';
 import { uins } from '../../persistence/schemas';
 import { generateId } from '../../common/utils/id.util';
+import { WssConnectionStore } from '../../wss/wss-connection.store';
 
 /** Код ошибки PostgreSQL при нарушении уникального ограничения. */
 const PG_UNIQUE_VIOLATION = '23505';
@@ -34,35 +35,40 @@ const MAX_RETRIES_PER_LENGTH = 20;
 export class UinGenerationProcessor extends WorkerHost {
   public constructor(
     @Inject(DRIZZLE_DB) private readonly _db: DrizzleDb,
+    private readonly _wss: WssConnectionStore,
   ) {
     super();
   }
 
   /**
    * Обрабатывает задачу генерации UIN — идемпотентен при дублировании.
+   * При успешной генерации отправляет WSS-событие uin_assigned аккаунту.
    * @param job - BullMQ-задача с данными аккаунта.
    * @returns Промис без значения.
    */
   public async process(job: Job<UinJobData>): Promise<void> {
-    await this._assignUin(job.data.accountId);
+    const uin = await this._assignUin(job.data.accountId);
+    if (uin !== null) {
+      this._wss.sendToAccount(job.data.accountId, 'uin_assigned', { uin });
+    }
   }
 
   /**
    * Генерирует уникальный UIN и вставляет запись в таблицу uins.
    * При авто-расширении: начинает с 4 цифр, увеличивает до 10 при коллизиях.
-   * Идемпотентен: если аккаунт уже имеет UIN — завершается без ошибки.
+   * Идемпотентен: если аккаунт уже имеет UIN — возвращает null.
    * @param accountId - ID аккаунта.
+   * @returns Присвоенный UIN или null если аккаунт уже имел UIN.
    * @throws Error если не удалось сгенерировать UIN после всех попыток.
    */
-  private async _assignUin(accountId: string): Promise<void> {
-    // Проверка идемпотентности — если UIN уже есть, ничего не делаем
+  private async _assignUin(accountId: string): Promise<string | null> {
     const existing = await this._db
-      .select({ id: uins.id })
+      .select({ id: uins.id, number: uins.number })
       .from(uins)
       .where(eq(uins.accountId, accountId))
       .limit(1);
     if (existing.length > 0) {
-      return;
+      return null;
     }
 
     for (let digits = MIN_DIGITS; digits <= MAX_DIGITS; digits++) {
@@ -75,15 +81,13 @@ export class UinGenerationProcessor extends WorkerHost {
             number,
             isPremium: false,
           });
-          return;
+          return number;
         } catch (error: unknown) {
           if (error instanceof DatabaseError && error.code === PG_UNIQUE_VIOLATION) {
             if (error.constraint === UINS_ACCOUNT_CONSTRAINT) {
-              // Дублированный job — аккаунт уже получил UIN
-              return;
+              return null;
             }
             if (error.constraint === UINS_NUMBER_CONSTRAINT) {
-              // Коллизия по номеру — пробуем следующий
               continue;
             }
           }
