@@ -68,10 +68,10 @@
     </section>
   }
 
-  @if (invitedUsers.length > 0) {
+  @if (invitedUsers().length > 0) {
     <div class="invites__section-title">Приглашённые мной</div>
     <section class="settings-sub__section">
-      @for (user of invitedUsers; track user.id) {
+      @for (user of invitedUsers(); track user.id) {
         <div class="invites__user-row">
           <div class="invites__user-avatar" [style.background]="user.avatarColor">
             <span class="invites__user-initials">{{ user.initials }}</span>
@@ -87,6 +87,6 @@
 
   <div class="invites__section-title">Кто меня пригласил</div>
   <section class="settings-sub__section">
-    <div class="invites__invited-by">{{ invitedBy }}</div>
+    <div class="invites__invited-by">{{ invitedBy() }}</div>
   </section>
 </div>

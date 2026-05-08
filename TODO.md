@@ -156,7 +156,7 @@
 - `GET /app/feature-flags` — `free_registration`, `dev_mode` из env (публичный)
 - Postman-коллекция: авто-сохранение токенов, `{{access_token}}` / `{{refresh_token}}` / `{{base_url}}`
 
-### Frontend: подключение к реальному API — шаг 8 (частично)
+### Frontend: подключение к реальному API — шаг 8 (завершён)
 - `API_BASE_URL` InjectionToken (`core/api/api-config.ts`) — default `http://localhost:3000/api/v1`
 - `FeatureFlagsService` — `GET /app/feature-flags` через `APP_INITIALIZER`, при ошибке — дефолтные флаги; обновляются при нажатии «Зарегистрироваться» (всегда актуальные)
 - `InviteApiService` — `POST /invite/check`, обработка 404/429
@@ -173,15 +173,16 @@
 - **APP_INITIALIZER на старте:** `loadFromStorage()` → `POST /session/refresh` → свежие токены до рендера компонентов
 - **authInterceptor** — Bearer header на все запросы; при 401: refresh → retry; параллельные запросы ставятся в очередь через `BehaviorSubject`
 - **InputSharedComponent** — глазик показать/скрыть пароль (SVG, только при `type="password"`)
+- **Logout** — `AuthApiService.logout()` (`POST /account/logout`, best-effort), `SettingsApplicationComponent` кнопка «Выйти из аккаунта», `tokenStorage.clear()` + navigate welcome
+- **authGuard** (`CanActivateFn`) — защищает `/application/main` и все `main/settings/*`, `main/user/:accountId`; redirect на welcome если нет access-токена
+- **WssService** (`core/services/wss/`) — connect/disconnect/reconnect (exponential backoff), ping/pong heartbeat, JWT exp decode без либ, token_refresh таймер за 3с до истечения, dispatch: `uin_assigned` → UinModalService, `session_kicked` → SessionKickedService + clear, `password_reset_via_recovery` → passwordResetAt$ Subject; интеграция: connect после login/create/restore, disconnect при logout; MainComponent подписывается через takeUntilDestroyed
+- **docs/api-contracts.md WSS** — приведена в соответствие с реальным бэком: URL-auth `?token=`, формат `{event,data}`, heartbeat CLIENT→SERVER
+- **SettingsDevicesComponent** — подключён к реальному API: `SessionApiService.readList/deleteById/updateNickname`; кнопка переименования только для текущей сессии; подтверждение кика через `DialogModalComponent`
+- **SettingsInvitesComponent** — подключён к реальному API: `forkJoin(readSelf, readList, readReferrals)` в `ngOnInit`; create/revoke/copy через API; `InviteeItem` с аватарами; форматирование `XXXX-XXXX-XX`
 
 ## In Progress
 
-### Frontend: подключение к реальному API — шаг 8 (продолжение)
-- [ ] Logout — `POST /account/logout` → `tokenStorage.clear()` → navigate welcome
-- [ ] Auth guard — защита `/application/main` от неавторизованных; redirect на welcome если нет токена
-- [ ] WssService — подключение `wss://host/ws?token=`, авторефреш токена без реконнекта (`token_refresh` → `tokens_updated`), обработка событий: `uin_assigned` → `UinModalService.closePendingAndShowAssigned()`, `session_kicked` → `SessionKickedService`, `password_reset_via_recovery` → баннер; авто-реконнект
-- [ ] Настройки → Устройства — подключить к реальному API (read-list, кик, rename)
-- [ ] Настройки → Инвайты — подключить к реальному API (create, revoke, read-list, read-referrals)
+_Нет активных задач._
 
 ## Implementation Order
 

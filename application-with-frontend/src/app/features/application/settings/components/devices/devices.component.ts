@@ -1,19 +1,27 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import type { WritableSignal } from '@angular/core';
+import type { OnInit, WritableSignal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { DialogModalComponent } from '../../../../../shared/modals/components/dialog-modal/dialog-modal.component';
 import { MODAL_BOTTOM_SHEET_PARAMS } from '../../../../../shared/modals/constants/modal.constants';
 import { ModalHeaderIcon } from '../../../../../shared/modals/types/modal.types';
-import { MOCK_DEVICES } from '../../types/settings.types';
-import type { MockDevice } from '../../types/settings.types';
 import type { DialogModalData } from '../../../../../shared/modals/types/modal.types';
+import { SessionApiService } from '../../../../../core/services/session/session-api.service';
+import type { ApiSession } from '../../../../../core/services/session/session-api.service';
 
-/** Устройство с изменяемым именем (мок) */
-interface DeviceItem extends MockDevice {
-  /** Отображаемое название (может быть изменено пользователем) */
+/** Устройство, отображаемое в списке. */
+interface DeviceItem {
+  /** ID сессии. */
+  id: string;
+  /** Отображаемое имя: прозвище или системное имя. */
   name: string;
+  /** Платформа для иконки. */
+  platform: string;
+  /** true — текущая сессия (нельзя кикнуть, можно переименовать). */
+  isCurrent: boolean;
+  /** Дата последней активности (отформатированная). */
+  lastSeen: string;
 }
 
 /** Подэкран настроек — Устройства */
@@ -24,32 +32,47 @@ interface DeviceItem extends MockDevice {
   styleUrl: './devices.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SettingsDevicesComponent {
-  /** Список устройств (мок) */
-  public readonly devices: WritableSignal<DeviceItem[]> = signal(
-    MOCK_DEVICES.map((d: MockDevice): DeviceItem => ({ ...d })),
-  );
+export class SettingsDevicesComponent implements OnInit {
+  /** Список устройств. */
+  public readonly devices: WritableSignal<DeviceItem[]> = signal([]);
 
-  /** id устройства, для которого открыто поле переименования */
+  /** ID устройства, для которого открыто поле переименования. */
   public readonly renamingId: WritableSignal<string | null> = signal(null);
 
-  /** Временное имя при редактировании */
+  /** true — идёт загрузка списка устройств. */
+  public readonly isLoading: WritableSignal<boolean> = signal(true);
+
+  /** Временное значение поля переименования. */
   public renameValue: string = '';
 
-  /** Роутер для навигации */
+  /** Роутер для навигации. */
   private readonly _router: Router = inject(Router);
 
-  /** Сервис диалогов Angular Material */
+  /** Сервис диалогов Angular Material. */
   private readonly _dialog: MatDialog = inject(MatDialog);
 
-  /** Назад к настройкам */
+  /** API-клиент для сессий. */
+  private readonly _sessionApi: SessionApiService = inject(SessionApiService);
+
+  /** @inheritdoc */
+  public ngOnInit(): void {
+    this._sessionApi.readList().subscribe({
+      next: (sessions: ApiSession[]): void => {
+        this.devices.set(sessions.map((s: ApiSession): DeviceItem => this._mapSession(s)));
+        this.isLoading.set(false);
+      },
+      error: (): void => { this.isLoading.set(false); },
+    });
+  }
+
+  /** Назад к настройкам. */
   public goBack(): void {
     void this._router.navigate(['/application/main/settings']);
   }
 
   /**
-   * Открыть подтверждение кика.
-   * @param device - устройство для отключения
+   * Открывает диалог подтверждения кика.
+   * @param device - Устройство для отключения.
    */
   public confirmTerminate(device: DeviceItem): void {
     this._dialog.open<DialogModalComponent, DialogModalData>(DialogModalComponent, {
@@ -68,38 +91,67 @@ export class SettingsDevicesComponent {
   }
 
   /**
-   * Открыть поле переименования.
-   * @param device - устройство для переименования
+   * Открывает поле переименования (только для текущей сессии).
+   * @param device - Устройство для переименования.
    */
   public openRename(device: DeviceItem): void {
+    if (!device.isCurrent) return;
     this.renameValue = device.name;
     this.renamingId.set(device.id);
   }
 
   /**
-   * Сохранить переименование.
-   * @param id - идентификатор устройства
+   * Сохраняет новое прозвище текущей сессии через API.
+   * @param id - ID сессии.
    */
   public saveRename(id: string): void {
     const trimmed = this.renameValue.trim();
-    if (trimmed.length > 0) {
-      this.devices.update((list: DeviceItem[]): DeviceItem[] =>
-        list.map((d: DeviceItem): DeviceItem => (d.id === id ? { ...d, name: trimmed } : d)),
-      );
+    if (trimmed.length === 0) {
+      this.renamingId.set(null);
+      return;
     }
-    this.renamingId.set(null);
+    this._sessionApi.updateNickname(trimmed).subscribe({
+      next: (): void => {
+        this.devices.update((list: DeviceItem[]): DeviceItem[] =>
+          list.map((d: DeviceItem): DeviceItem => (d.id === id ? { ...d, name: trimmed } : d)),
+        );
+        this.renamingId.set(null);
+      },
+      error: (): void => { this.renamingId.set(null); },
+    });
   }
 
-  /** Отменить переименование */
+  /** Отменяет переименование. */
   public cancelRename(): void {
     this.renamingId.set(null);
   }
 
   /**
-   * Удалить устройство из списка (мок кика).
-   * @param id - идентификатор устройства для удаления
+   * Кикает сессию по ID через API и убирает её из списка.
+   * @param id - ID сессии.
    */
   private _terminateDevice(id: string): void {
-    this.devices.update((list: DeviceItem[]): DeviceItem[] => list.filter((d: DeviceItem): boolean => d.id !== id));
+    this._sessionApi.deleteById(id).subscribe({
+      next: (): void => {
+        this.devices.update((list: DeviceItem[]): DeviceItem[] =>
+          list.filter((d: DeviceItem): boolean => d.id !== id),
+        );
+      },
+    });
+  }
+
+  /**
+   * Преобразует ApiSession в DeviceItem для отображения.
+   * @param session - Сессия из API.
+   * @returns Подготовленный объект устройства.
+   */
+  private _mapSession(session: ApiSession): DeviceItem {
+    return {
+      id: session.id,
+      name: session.nickname ?? session.system_name,
+      platform: session.platform,
+      isCurrent: session.is_current,
+      lastSeen: new Date(session.updated_at).toLocaleDateString('ru-RU'),
+    };
   }
 }

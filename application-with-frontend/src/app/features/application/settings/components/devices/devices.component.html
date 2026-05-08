@@ -68,6 +68,7 @@
         </div>
 
         <div class="devices__item-actions">
+          @if (device.isCurrent) {
           <button
             class="devices__item-action devices__item-action--rename"
             type="button"
@@ -79,6 +80,7 @@
               <path d="M18.5 2.5C19.3 1.7 20.7 1.7 21.5 2.5C22.3 3.3 22.3 4.7 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
             </svg>
           </button>
+          }
           @if (!device.isCurrent) {
             <button
               class="devices__item-action devices__item-action--terminate"

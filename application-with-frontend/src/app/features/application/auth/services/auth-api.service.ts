@@ -86,6 +86,21 @@ export interface AuthAccountResponse {
   /** Данные сессии с токенами. */
   readonly session: AccountResponseSession;
 }
+/** Ответ GET /account/read для своего аккаунта. */
+export interface ReadSelfResponse {
+  /** ID аккаунта. */
+  readonly id: string;
+  /** UIN или null. */
+  readonly uin: string | null;
+  /** Username или null. */
+  readonly username: string | null;
+  /** Оставшееся количество инвайтов. */
+  readonly invites_remaining: number;
+  /** Признак администратора. */
+  readonly is_admin: boolean;
+  /** ISO-8601 дата регистрации. */
+  readonly created_at: string;
+}
 /* eslint-enable @typescript-eslint/naming-convention */
 
 /** HTTP-клиент для эндпоинтов /account/*. */
@@ -120,6 +135,14 @@ export class AuthApiService {
    */
   public authAccount(data: AuthAccountRequest): Observable<AuthAccountResponse> {
     return this._http.post<AuthAccountResponse>(`${this._baseUrl}/account/auth`, data);
+  }
+
+  /**
+   * Возвращает профиль текущего аккаунта (GET /account/read).
+   * @returns Данные аккаунта включая invites_remaining.
+   */
+  public readSelf(): Observable<ReadSelfResponse> {
+    return this._http.get<ReadSelfResponse>(`${this._baseUrl}/account/read`);
   }
 
   /**
