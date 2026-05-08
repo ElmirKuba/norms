@@ -52,6 +52,54 @@ backend/src/
 - **DTO** — `class-validator` для входных данных в `common/dto/input/`. Выходные DTO в `common/dto/output/`.
 - **Modules** — по слою: `PersistenceModule`, `DomainModule`, `ApplicationModule`, `PresentationModule`, `CommonModule`.
 
+### Соглашение по ошибкам (`common/errors/error-codes.ts`)
+
+Единый источник правды для кодов и текстов ошибок:
+
+```ts
+export enum ErrorCode {
+  /** Описание для ESLint jsdoc/require-jsdoc */
+  INVITE_NOT_FOUND = 'invite_not_found',
+  // ...
+}
+
+export const ErrorMessage: Record<ErrorCode, string> = {
+  [ErrorCode.INVITE_NOT_FOUND]: 'Инвайт не найден',
+  // ...
+};
+
+export function makeError(code: ErrorCode): ErrorBody {
+  return { code, message: ErrorMessage[code] };
+}
+```
+
+В use-case: `throw new NotFoundException(makeError(ErrorCode.INVITE_NOT_FOUND))`.  
+Если у ошибки есть дополнительные поля: `{ ...makeError(ErrorCode.LOGIN_RATE_LIMITED), retry_after: n }`.
+
+### Соглашение по схемам Drizzle (`persistence/schemas/`)
+
+Каждая таблица имеет интерфейс строки + `satisfies SchemaColumnMap<T>` для devtime-контроля полноты:
+
+```ts
+// define-table.helper.ts
+export type SchemaColumnMap<T> = { [K in keyof T]: PgColumnBuilderBase };
+
+// sessions.schema.ts
+interface ISessionRow {
+  readonly id: unknown;
+  readonly accountId: unknown;
+  // ... все колонки — компилятор заставляет перечислить каждую
+}
+
+export const sessions = pgTable('sessions', {
+  id: text('id').primaryKey(),
+  accountId: text('account_id').notNull().references(...),
+  // ...
+} satisfies SchemaColumnMap<ISessionRow>);
+```
+
+`satisfies` (а не присвоение с типом) — сохраняет конкретные типы колонок (`.notNull()`, `.default()`, timestamp → `PgTimestampBuilderInitial`), что нужно Drizzle для ORM-вывода типов.
+
 ## Структура репозитория
 
 ```

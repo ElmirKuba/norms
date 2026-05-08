@@ -78,6 +78,7 @@
 - `switch-exhaustiveness-check` — все кейсы discriminated union обязаны быть покрыты (поймал непокрытый `AppPlatform.WEB`)
 - `no-shadow` — запрет перекрытия переменных внешней области видимости
 - `promise-function-async` (`checkMethodDeclarations: false`) — функция, возвращающая Promise, обязана быть async
+- `TSEnumMember` в `contexts` у `jsdoc/require-jsdoc` — JSDoc обязателен на каждом члене enum
 
 ### Backend bootstrap
 - NestJS 11, 4-layer архитектура (presentation / application / domain / persistence / common / config)
@@ -92,6 +93,8 @@
 - `AccountRepository` (DrizzleAccountRepository) — CRUD, timestamps → Date
 - `generateId()` утилита — формат `{uuid-v7}_{unix-ms}`
 - ESLint override для `schemas/*.ts` (Drizzle callback не аннотируется стандартными средствами)
+- `SchemaColumnMap<T>` type + `satisfies` на объекте колонок — devtime-контроль полноты схем (каждый ключ интерфейса строки обязан быть задан, типы колонок не теряются)
+- `ErrorCode` enum (UPPER_CASE), `ErrorMessage: Record<ErrorCode, string>`, `makeError(code): ErrorBody` — единый источник кодов и текстов ошибок, убраны магические строки во всех use-cases
 
 ### AuthModule (шаг 2)
 - `AccountModule`: `POST /account/create` (регистрация + атомарная транзакция инвайт), `POST /account/auth` (логин UIN/username), `POST /account/logout`
