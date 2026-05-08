@@ -55,7 +55,7 @@ export const authInterceptor: HttpInterceptorFn = (
       }
 
       // Refresh-токен сам вернул 401 — токен недействителен, чистим сессию
-      if (req.url.includes('/session/refresh-token')) {
+      if (req.url.includes('/session/refresh')) {
         tokenStorage.clear();
         return throwError((): unknown => error);
       }

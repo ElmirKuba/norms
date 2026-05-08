@@ -31,7 +31,7 @@ export class SessionApiService {
    */
   public refresh(refreshToken: string): Observable<RefreshTokenResponse> {
     /* eslint-disable @typescript-eslint/naming-convention -- snake_case соответствует API-контракту */
-    return this._http.post<RefreshTokenResponse>(`${this._baseUrl}/session/refresh-token`, {
+    return this._http.post<RefreshTokenResponse>(`${this._baseUrl}/session/refresh`, {
       refresh_token: refreshToken,
     });
     /* eslint-enable @typescript-eslint/naming-convention */
