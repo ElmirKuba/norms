@@ -50,6 +50,12 @@ export class UinGenerationProcessor extends WorkerHost {
     const uin = await this._assignUin(job.data.accountId);
     if (uin !== null) {
       this._wss.sendToAccount(job.data.accountId, 'uin_assigned', { uin });
+      // TODO(push): отправить APNs/FCM пуш-уведомление «Ваш UIN готов — войдите в приложение»
+      // если у аккаунта нет активных WSS-сессий (или безусловно, т.к. iOS/Android убивают фон).
+      // Нужно: таблица push_tokens (account_id, token, platform, created_at),
+      // POST /push/register-token (вызывается при старте прилы),
+      // PushModule с PushService (node-apn для APNs, firebase-admin для FCM).
+      // Триггер: UinGenerationProcessor.process() → PushService.sendUinAssigned(accountId).
     }
   }
 
