@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, signal } from '@angular/core';
 import type { OnInit, WritableSignal } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
@@ -85,6 +85,9 @@ export class SettingsInvitesComponent implements OnInit {
   /** API-клиент для аккаунта (нужен invites_remaining). */
   private readonly _authApi: AuthApiService = inject(AuthApiService);
 
+  /** Change detector для принудительного обновления при OnPush (Promise-коллбэк вне zone.js). */
+  private readonly _cdr: ChangeDetectorRef = inject(ChangeDetectorRef);
+
   /** @inheritdoc */
   public ngOnInit(): void {
     forkJoin({
@@ -148,7 +151,11 @@ export class SettingsInvitesComponent implements OnInit {
   public copyCode(code: InviteItem): void {
     void navigator.clipboard.writeText(code.code).then((): void => {
       this.copiedId.set(code.id);
-      setTimeout((): void => { this.copiedId.set(null); }, 1500);
+      this._cdr.markForCheck();
+      setTimeout((): void => {
+        this.copiedId.set(null);
+        this._cdr.markForCheck();
+      }, 1500);
     });
   }
 

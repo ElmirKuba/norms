@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, signal } from '@angular/core';
 import type { WritableSignal } from '@angular/core';
 import { Router } from '@angular/router';
 import { ButtonSharedComponent } from '../../../../../shared/components/button/button.component';
@@ -26,6 +26,9 @@ export class UinAssignedApplicationComponent {
   /** Роутер для навигации между экранами */
   private readonly _router: Router = inject(Router);
 
+  /** Change detector для принудительного обновления при OnPush (Promise-коллбэк вне zone.js). */
+  private readonly _cdr: ChangeDetectorRef = inject(ChangeDetectorRef);
+
   public constructor() {
     const state = window.history.state as Record<string, unknown>;
     const uin = state['uin'];
@@ -37,7 +40,11 @@ export class UinAssignedApplicationComponent {
     // TODO: заменить на ClipboardService (платформенный сервис)
     void navigator.clipboard.writeText(this._uin).then((): void => {
       this._copied.set(true);
-      setTimeout((): void => { this._copied.set(false); }, 1500);
+      this._cdr.markForCheck();
+      setTimeout((): void => {
+        this._copied.set(false);
+        this._cdr.markForCheck();
+      }, 1500);
     });
   }
 
