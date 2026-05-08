@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { ErrorCode } from '../../common/errors/error-codes';
+import { ErrorCode, makeError } from '../../common/errors/error-codes';
 import * as argon2 from 'argon2';
 import { Redis } from 'ioredis';
 import { AccountRepository } from '../../domain/ports/account.repository.port';
@@ -76,28 +76,19 @@ export class AuthAccountUseCase {
     const account = await this._findAccount(dto.login);
     if (account === null) {
       await this._incrementFailCounter(loginKey, failWindowSec);
-      throw new UnauthorizedException({
-        code: ErrorCode.INVALID_CREDENTIALS,
-        message: 'UIN/логин или пароль не совпадают',
-      });
+      throw new UnauthorizedException(makeError(ErrorCode.INVALID_CREDENTIALS));
     }
 
     const passwordValid = await argon2.verify(account.passwordHash, dto.password);
     if (!passwordValid) {
       await this._incrementFailCounter(loginKey, failWindowSec);
-      throw new UnauthorizedException({
-        code: ErrorCode.INVALID_CREDENTIALS,
-        message: 'UIN/логин или пароль не совпадают',
-      });
+      throw new UnauthorizedException(makeError(ErrorCode.INVALID_CREDENTIALS));
     }
 
     const deviceLimit = parseInt(this._config.get<string>('DEVICE_LIMIT', '20'), 10);
     const sessionCount = await this._sessionRepo.countByAccountId(account.id);
     if (sessionCount >= deviceLimit) {
-      throw new ForbiddenException({
-        code: ErrorCode.DEVICE_LIMIT_REACHED,
-        message: 'Достигнут лимит устройств',
-      });
+      throw new ForbiddenException(makeError(ErrorCode.DEVICE_LIMIT_REACHED));
     }
 
     await this._redis.del(loginKey);
@@ -151,7 +142,7 @@ export class AuthAccountUseCase {
       const ttl = await this._redis.ttl(key);
       const retryAfter = new Date(Date.now() + ttl * 1000).toISOString();
       throw new HttpException(
-        { code: ErrorCode.LOGIN_RATE_LIMITED, message: 'Слишком много неудачных попыток', retry_after: retryAfter },
+        { ...makeError(ErrorCode.LOGIN_RATE_LIMITED), retry_after: retryAfter },
         HttpStatus.LOCKED,
       );
     }

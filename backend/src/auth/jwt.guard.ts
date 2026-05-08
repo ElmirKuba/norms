@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import type { CanActivate, ExecutionContext } from '@nestjs/common';
 import type { Request } from 'express';
 import type { JwtPayload } from './types/jwt-payload.type';
-import { ErrorCode } from '../common/errors/error-codes';
+import { ErrorCode, makeError } from '../common/errors/error-codes';
 
 /** Тип HTTP-запроса с прикреплённым payload авторизованного пользователя. */
 interface AuthenticatedRequest extends Request {
@@ -26,19 +26,13 @@ export class JwtGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<Request>();
     const token = this._extractToken(request);
     if (token === null) {
-      throw new UnauthorizedException({
-        code: ErrorCode.MISSING_TOKEN,
-        message: 'Authorization header отсутствует',
-      });
+      throw new UnauthorizedException(makeError(ErrorCode.MISSING_TOKEN));
     }
     try {
       const payload = await this._jwtService.verifyAsync<JwtPayload>(token);
       (request as AuthenticatedRequest).user = payload;
     } catch {
-      throw new UnauthorizedException({
-        code: ErrorCode.INVALID_TOKEN,
-        message: 'Токен невалиден или истёк',
-      });
+      throw new UnauthorizedException(makeError(ErrorCode.INVALID_TOKEN));
     }
     return true;
   }

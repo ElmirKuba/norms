@@ -10,7 +10,7 @@ import { DRIZZLE_DB } from '../../persistence/drizzle.module';
 import type { DrizzleDb, DrizzleTransaction } from '../../persistence/drizzle.module';
 import { accounts, sessions, invites, referrals } from '../../persistence/schemas';
 import { UinService } from '../../uin/uin.service';
-import { ErrorCode } from '../../common/errors/error-codes';
+import { ErrorCode, makeError } from '../../common/errors/error-codes';
 import type { CreateAccountDto } from '../dto/create-account.dto';
 
 /** Данные аккаунта в ответе на регистрацию. */
@@ -91,10 +91,7 @@ export class CreateAccountUseCase {
     const inviteCode: string | null = dto.invite_code ?? null;
 
     if (!freeReg && inviteCode === null) {
-      throw new BadRequestException({
-        code: ErrorCode.INVITE_REQUIRED,
-        message: 'Код приглашения обязателен',
-      });
+      throw new BadRequestException(makeError(ErrorCode.INVITE_REQUIRED));
     }
 
     const passwordHash = await argon2.hash(dto.password);
@@ -113,10 +110,10 @@ export class CreateAccountUseCase {
 
           const invite = inviteRows[0];
           if (invite === undefined) {
-            throw new NotFoundException({ code: ErrorCode.INVITE_NOT_FOUND, message: 'Инвайт не найден' });
+            throw new NotFoundException(makeError(ErrorCode.INVITE_NOT_FOUND));
           }
           if (invite.expiresAt < new Date()) {
-            throw new GoneException({ code: ErrorCode.INVITE_EXPIRED, message: 'Инвайт истёк' });
+            throw new GoneException(makeError(ErrorCode.INVITE_EXPIRED));
           }
 
           const deletedRows = await tx
@@ -125,10 +122,7 @@ export class CreateAccountUseCase {
             .returning({ id: invites.id });
 
           if (deletedRows.length === 0) {
-            throw new ConflictException({
-              code: ErrorCode.INVITE_ALREADY_USED,
-              message: 'Инвайт уже был использован',
-            });
+            throw new ConflictException(makeError(ErrorCode.INVITE_ALREADY_USED));
           }
 
           inviteAccountId = invite.accountId;

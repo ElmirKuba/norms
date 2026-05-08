@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { AccountRepository } from '../../domain/ports/account.repository.port';
 import type { AccountEntity } from '../../domain/entities/account.entity';
-import { ErrorCode } from '../../common/errors/error-codes';
+import { ErrorCode, makeError } from '../../common/errors/error-codes';
 
 /** Форма ответа для своего аккаунта. */
 interface ReadOwnAccountResult {
@@ -57,7 +57,7 @@ export class ReadAccountUseCase {
    */
   public async execute(requesterId: string, query: ReadAccountQuery): Promise<ReadAccountResult> {
     if (query.id !== undefined && query.uin !== undefined) {
-      throw new BadRequestException({ code: ErrorCode.AMBIGUOUS_QUERY, message: 'Передайте либо id, либо uin, но не оба' });
+      throw new BadRequestException(makeError(ErrorCode.AMBIGUOUS_QUERY));
     }
 
     let account: AccountEntity | null;
@@ -71,7 +71,7 @@ export class ReadAccountUseCase {
     }
 
     if (account === null) {
-      throw new NotFoundException({ code: ErrorCode.ACCOUNT_NOT_FOUND, message: 'Аккаунт не найден' });
+      throw new NotFoundException(makeError(ErrorCode.ACCOUNT_NOT_FOUND));
     }
 
     const uin = await this._accountRepo.findUinByAccountId(account.id);
