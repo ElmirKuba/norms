@@ -19,7 +19,7 @@ export class ProfileApplicationComponent {
 
   /** [МОК] Симулировать получение WSS события session_kicked */
   public mockSessionKick(): void {
-    this._sessionKicked.showKickedModal('MacBook Pro');
+    this._sessionKicked.showKickedModal();
   }
 
   /** [МОК] Симулировать получение WSS события password_reset_via_recovery */

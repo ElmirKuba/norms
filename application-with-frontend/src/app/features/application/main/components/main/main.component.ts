@@ -68,7 +68,7 @@ export class MainApplicationComponent implements OnInit {
 
   /** [МОК] Симулировать событие session_kicked */
   public mockSessionKick(): void {
-    this._sessionKicked.showKickedModal('MacBook Pro');
+    this._sessionKicked.showKickedModal();
   }
 
   /** Закрыть баннер сброса пароля */
