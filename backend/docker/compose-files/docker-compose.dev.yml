@@ -29,6 +29,18 @@ services:
     ports:
       - '6379:6379'
 
+  # ── RedisInsight (Redis UI) ──────────────────────────────────────────────────
+  redisinsight_norms_dev:
+    container_name: redisinsight_norms_dev
+    image: redis/redisinsight:latest
+    restart: unless-stopped
+    volumes:
+      - ./../volumes/redisinsight_data:/data
+    ports:
+      - '5540:5540'
+    depends_on:
+      - redis_norms_dev
+
   # ── pgAdmin 4 (PostgreSQL UI) ────────────────────────────────────────────────
   pgadmin_norms_dev:
     container_name: pgadmin_norms_dev
