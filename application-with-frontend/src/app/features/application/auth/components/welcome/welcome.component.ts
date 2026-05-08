@@ -22,13 +22,15 @@ export class WelcomeApplicationComponent {
   /** Feature flags с бэкенда */
   private readonly _featureFlags: FeatureFlagsService = inject(FeatureFlagsService);
 
-  /** Переход на регистрацию: инвайт-код или сразу создание аккаунта */
+  /** Переход на регистрацию: сначала обновляет флаги, потом решает куда идти */
   public onRegister(): void {
-    if (this._featureFlags.flags().freeRegistration) {
-      void this._router.navigate(['/application/auth/create-account']);
-    } else {
-      void this._router.navigate(['/application/auth/invite-code']);
-    }
+    this._featureFlags.load().subscribe((): void => {
+      if (this._featureFlags.flags().freeRegistration) {
+        void this._router.navigate(['/application/auth/create-account']);
+      } else {
+        void this._router.navigate(['/application/auth/invite-code']);
+      }
+    });
   }
 
   /** Переход на экран входа */
