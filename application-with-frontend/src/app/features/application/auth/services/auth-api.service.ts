@@ -121,4 +121,13 @@ export class AuthApiService {
   public authAccount(data: AuthAccountRequest): Observable<AuthAccountResponse> {
     return this._http.post<AuthAccountResponse>(`${this._baseUrl}/account/auth`, data);
   }
+
+  /**
+   * Завершает текущую сессию (POST /account/logout).
+   * Сервер инвалидирует refresh-токен. Ошибка не критична — клиент всё равно чистит токены.
+   * @returns Пустой Observable.
+   */
+  public logout(): Observable<unknown> {
+    return this._http.post(`${this._baseUrl}/account/logout`, {});
+  }
 }

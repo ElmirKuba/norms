@@ -1,4 +1,5 @@
 import type { Routes } from '@angular/router';
+import { authGuard } from '../../core/guards/auth.guard';
 import type { MainApplicationComponent } from './main/components/main/main.component';
 import type { WelcomeApplicationComponent } from './auth/components/welcome/welcome.component';
 import type { AuthShellComponent } from './auth/components/auth-shell/auth-shell.component';
@@ -108,6 +109,7 @@ export const APPLICATION_ROUTES: Routes = [
   // Профиль чужого пользователя — полноэкранный, без таббара
   {
     path: 'main/user/:accountId',
+    canActivate: [authGuard],
     loadComponent: async (): Promise<typeof UserProfileApplicationComponent> => {
       const m = await import('./profile/components/user-profile/user-profile.component');
       return m.UserProfileApplicationComponent;
@@ -117,6 +119,7 @@ export const APPLICATION_ROUTES: Routes = [
   // Подэкраны Settings — полноэкранные, без таббара
   {
     path: 'main/settings/account',
+    canActivate: [authGuard],
     loadComponent: async (): Promise<typeof SettingsAccountComponent> => {
       const m = await import('./settings/components/account/account.component');
       return m.SettingsAccountComponent;
@@ -124,6 +127,7 @@ export const APPLICATION_ROUTES: Routes = [
   },
   {
     path: 'main/settings/devices',
+    canActivate: [authGuard],
     loadComponent: async (): Promise<typeof SettingsDevicesComponent> => {
       const m = await import('./settings/components/devices/devices.component');
       return m.SettingsDevicesComponent;
@@ -131,6 +135,7 @@ export const APPLICATION_ROUTES: Routes = [
   },
   {
     path: 'main/settings/privacy',
+    canActivate: [authGuard],
     loadComponent: async (): Promise<typeof SettingsPrivacyComponent> => {
       const m = await import('./settings/components/privacy/privacy.component');
       return m.SettingsPrivacyComponent;
@@ -138,6 +143,7 @@ export const APPLICATION_ROUTES: Routes = [
   },
   {
     path: 'main/settings/recovery',
+    canActivate: [authGuard],
     loadComponent: async (): Promise<typeof SettingsRecoveryQuestionsComponent> => {
       const m = await import('./settings/components/recovery-questions/recovery-questions.component');
       return m.SettingsRecoveryQuestionsComponent;
@@ -145,6 +151,7 @@ export const APPLICATION_ROUTES: Routes = [
   },
   {
     path: 'main/settings/invites',
+    canActivate: [authGuard],
     loadComponent: async (): Promise<typeof SettingsInvitesComponent> => {
       const m = await import('./settings/components/invites/invites.component');
       return m.SettingsInvitesComponent;
@@ -152,6 +159,7 @@ export const APPLICATION_ROUTES: Routes = [
   },
   {
     path: 'main/settings/change-password',
+    canActivate: [authGuard],
     loadComponent: async (): Promise<typeof SettingsChangePasswordComponent> => {
       const m = await import('./settings/components/change-password/change-password.component');
       return m.SettingsChangePasswordComponent;
@@ -161,6 +169,7 @@ export const APPLICATION_ROUTES: Routes = [
   // Основное приложение (мессенджер): shell с таббаром
   {
     path: 'main',
+    canActivate: [authGuard],
     loadComponent: async (): Promise<typeof MainApplicationComponent> => {
       const m = await import('./main/components/main/main.component');
       return m.MainApplicationComponent;
