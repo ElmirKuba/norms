@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { ButtonSharedComponent } from '../../../../../shared/components/button/button.component';
-import { MOCK_UIN } from '../../types/uin.types';
 
 /** Экран успешного присвоения UIN */
 @Component({
@@ -12,10 +11,10 @@ import { MOCK_UIN } from '../../types/uin.types';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UinAssignedApplicationComponent {
-  /** UIN пользователя (мок, в продакшене придёт из WSS-события uin_assigned) */
-  protected readonly _uin: string = MOCK_UIN;
+  /** UIN пользователя, полученный из router state */
+  protected readonly _uin: string;
 
-  /** Форматированный UIN для отображения (4 291 837) */
+  /** Форматированный UIN для отображения: «8845» → «8 845» */
   protected get _formattedUin(): string {
     return this._uin.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1 ');
   }
@@ -23,15 +22,20 @@ export class UinAssignedApplicationComponent {
   /** Роутер для навигации между экранами */
   private readonly _router: Router = inject(Router);
 
+  public constructor() {
+    const state = window.history.state as Record<string, unknown>;
+    const uin = state['uin'];
+    this._uin = typeof uin === 'string' ? uin : '';
+  }
+
   /** Скопировать UIN в буфер обмена */
   public async onCopy(): Promise<void> {
-    // TODO: использовать ClipboardService (платформенный сервис)
+    // TODO: заменить на ClipboardService (платформенный сервис)
     await navigator.clipboard.writeText(this._uin);
   }
 
   /** Продолжить — переход на основной экран приложения */
   public onContinue(): void {
-    // TODO: перейти на main с учётом orphan-peers (devices-and-chats.md)
     void this._router.navigate(['/application/main']);
   }
 }

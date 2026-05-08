@@ -1,4 +1,5 @@
 import { inject, Injectable } from '@angular/core';
+import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import type { MatDialogRef } from '@angular/material/dialog';
 import { DialogModalComponent } from '../../../../shared/modals/components/dialog-modal/dialog-modal.component';
@@ -13,6 +14,9 @@ import type { UinStatusResponse } from './uin-api.service';
 export class UinModalService {
   /** Сервис диалогов Angular Material. */
   private readonly _dialog: MatDialog = inject(MatDialog);
+
+  /** Роутер для навигации на экран UIN Assigned. */
+  private readonly _router: Router = inject(Router);
 
   /** API-сервис для проверки статуса UIN. */
   private readonly _uinApi: UinApiService = inject(UinApiService);
@@ -73,31 +77,10 @@ export class UinModalService {
   }
 
   /**
-   * Форматирует UIN пробелами между группами цифр: «8845» → «8 845».
-   * @param uin - Числовая строка UIN.
-   * @returns Форматированная строка.
-   */
-  private _formatUin(uin: string): string {
-    return uin.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1 ');
-  }
-
-  /**
-   * Открывает bottom-sheet с подтверждением присвоенного UIN.
+   * Навигирует на полноэкранный экран UIN Assigned с UIN в router state.
    * @param uin - Присвоенный UIN.
    */
   private _openUinAssigned(uin: string): void {
-    this._dialog.open<DialogModalComponent, DialogModalData>(
-      DialogModalComponent,
-      {
-        ...MODAL_BOTTOM_SHEET_PARAMS,
-        data: {
-          icon: ModalHeaderIcon.DONE,
-          title: `Ваш UIN: ${this._formatUin(uin)}`,
-          text: 'Сохраните его — по нему вас найдут в Normisy.',
-          closeBtnText: 'Отлично!',
-          textCenter: true,
-        },
-      },
-    );
+    void this._router.navigate(['/application/uin/assigned'], { state: { uin } });
   }
 }
