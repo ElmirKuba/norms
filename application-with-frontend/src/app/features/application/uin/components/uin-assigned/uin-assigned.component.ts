@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import type { WritableSignal } from '@angular/core';
 import { Router } from '@angular/router';
 import { ButtonSharedComponent } from '../../../../../shared/components/button/button.component';
 
@@ -13,6 +14,9 @@ import { ButtonSharedComponent } from '../../../../../shared/components/button/b
 export class UinAssignedApplicationComponent {
   /** UIN пользователя, полученный из router state */
   protected readonly _uin: string;
+
+  /** true — UIN только что скопирован (показывает галочку 1.5 сек). */
+  protected readonly _copied: WritableSignal<boolean> = signal(false);
 
   /** Форматированный UIN для отображения: «8845» → «8 845» */
   protected get _formattedUin(): string {
@@ -29,9 +33,12 @@ export class UinAssignedApplicationComponent {
   }
 
   /** Скопировать UIN в буфер обмена */
-  public async onCopy(): Promise<void> {
+  public onCopy(): void {
     // TODO: заменить на ClipboardService (платформенный сервис)
-    await navigator.clipboard.writeText(this._uin);
+    void navigator.clipboard.writeText(this._uin).then((): void => {
+      this._copied.set(true);
+      setTimeout((): void => { this._copied.set(false); }, 1500);
+    });
   }
 
   /** Продолжить — переход на основной экран приложения */

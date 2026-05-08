@@ -15,12 +15,25 @@
     <div class="uin-assigned__card">
       <span class="uin-assigned__card-label">Ваш UIN</span>
       <span class="uin-assigned__card-number">{{ _formattedUin }}</span>
-      <button class="uin-assigned__copy" (click)="onCopy()">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <rect x="5" y="5" width="9" height="9" rx="2" stroke="#8E8E93" stroke-width="1.5"/>
-          <path d="M11 5V3C11 2.44772 10.5523 2 10 2H3C2.44772 2 2 2.44772 2 3V10C2 10.5523 2.44772 11 3 11H5" stroke="#8E8E93" stroke-width="1.5"/>
-        </svg>
-        Скопировать
+      <button
+        class="uin-assigned__copy"
+        [class.uin-assigned__copy--copied]="_copied()"
+        type="button"
+        (click)="onCopy()"
+        [attr.aria-label]="_copied() ? 'Скопировано' : 'Скопировать'"
+      >
+        @if (_copied()) {
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M5 12L10 17L19 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Скопировано
+        } @else {
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <rect x="5" y="5" width="9" height="9" rx="2" stroke="#8E8E93" stroke-width="1.5"/>
+            <path d="M11 5V3C11 2.44772 10.5523 2 10 2H3C2.44772 2 2 2.44772 2 3V10C2 10.5523 2.44772 11 3 11H5" stroke="#8E8E93" stroke-width="1.5"/>
+          </svg>
+          Скопировать
+        }
       </button>
     </div>
   </div>

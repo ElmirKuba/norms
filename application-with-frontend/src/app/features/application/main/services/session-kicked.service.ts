@@ -15,11 +15,8 @@ export class SessionKickedService {
   /** Роутер для навигации после разлогина */
   private readonly _router: Router = inject(Router);
 
-  /**
-   * Показать модалку кика и разлогинить пользователя.
-   * @param deviceName - название устройства, инициировавшего кик
-   */
-  public showKickedModal(deviceName: string = 'другого устройства'): void {
+  /** Показать модалку кика и разлогинить пользователя. */
+  public showKickedModal(): void {
     this._dialog.closeAll();
 
     this._dialog.open<DialogModalComponent, DialogModalData>(DialogModalComponent, {
@@ -28,7 +25,7 @@ export class SessionKickedService {
       data: {
         icon: ModalHeaderIcon.WARNING,
         title: 'Сессия завершена',
-        text: `Устройство «${deviceName}» завершило вашу сессию. Войдите снова, чтобы продолжить.`,
+        text: 'Ваша сессия была завершена с другого устройства. Войдите снова, чтобы продолжить.',
         closeBtnText: 'Войти снова',
         closeCallback: (): void => {
           void this._router.navigate(['/application/welcome']);
