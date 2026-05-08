@@ -648,6 +648,185 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Флоу 6 — Recovery",
+      "item": [
+        {
+          "name": "1. Пресет-вопросы",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/recovery/preset-questions",
+              "host": ["{{base_url}}"],
+              "path": ["recovery", "preset-questions"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Создать Q/A пару",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"Кличка первого питомца\",\n  \"answer\": \"Барсик\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{base_url}}/recovery/question/create",
+              "host": ["{{base_url}}"],
+              "path": ["recovery", "question", "create"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Мои вопросы",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/recovery/question/read-list",
+              "host": ["{{base_url}}"],
+              "path": ["recovery", "question", "read-list"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Обновить Q/A пару",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"answer\": \"Мурзик\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{base_url}}/recovery/question/update/:id",
+              "host": ["{{base_url}}"],
+              "path": ["recovery", "question", "update", ":id"],
+              "variable": [{"key": "id", "value": ""}]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Удалить Q/A пару",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/recovery/question/delete/:id",
+              "host": ["{{base_url}}"],
+              "path": ["recovery", "question", "delete", ":id"],
+              "variable": [{"key": "id", "value": ""}]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6. Вопросы по логину (экран забыл пароль)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const res = pm.response.json();",
+                  "  pm.collectionVariables.set('recovery_account_id', res.account_id);",
+                  "  if (res.questions.length > 0) {",
+                  "    pm.collectionVariables.set('recovery_question_id', res.questions[0].id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/recovery/read-questions-for-login?login=2086",
+              "host": ["{{base_url}}"],
+              "path": ["recovery", "read-questions-for-login"],
+              "query": [{"key": "login", "value": "2086"}]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7. Проверить ответ",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const res = pm.response.json();",
+                  "  pm.collectionVariables.set('reset_token', res.reset_token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"account_id\": \"{{recovery_account_id}}\",\n  \"question_id\": \"{{recovery_question_id}}\",\n  \"answer\": \"Барсик\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{base_url}}/recovery/check-answer",
+              "host": ["{{base_url}}"],
+              "path": ["recovery", "check-answer"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "8. Сбросить пароль",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reset_token\": \"{{reset_token}}\",\n  \"new_password\": \"newSecret123\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{base_url}}/recovery/reset-password",
+              "host": ["{{base_url}}"],
+              "path": ["recovery", "reset-password"]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "variable": [
@@ -661,6 +840,18 @@
     },
     {
       "key": "refresh_token",
+      "value": ""
+    },
+    {
+      "key": "recovery_account_id",
+      "value": ""
+    },
+    {
+      "key": "recovery_question_id",
+      "value": ""
+    },
+    {
+      "key": "reset_token",
       "value": ""
     }
   ]

@@ -91,7 +91,11 @@ export class AuthAccountUseCase {
       throw new ForbiddenException(makeError(ErrorCode.DEVICE_LIMIT_REACHED));
     }
 
-    await this._redis.del(loginKey);
+    await this._redis.del(
+      loginKey,
+      `recovery_fail_count:${account.id}`,
+      `recovery_fail_level:${account.id}`,
+    );
 
     const { raw: rawRefresh, hash: refreshHash } = generateRefreshToken();
     const session = await this._sessionRepo.create({

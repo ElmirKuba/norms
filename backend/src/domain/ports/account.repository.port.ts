@@ -52,6 +52,13 @@ export abstract class AccountRepository {
   public abstract update(id: string, data: UpdateAccountData): Promise<AccountEntity | null>;
 
   /**
+   * Обновляет хеш пароля аккаунта.
+   * @param id - ID аккаунта.
+   * @param passwordHash - Новый argon2id-хеш пароля.
+   */
+  public abstract updatePassword(id: string, passwordHash: string): Promise<void>;
+
+  /**
    * Удаляет аккаунт по ID.
    * @param id - ID аккаунта.
    */

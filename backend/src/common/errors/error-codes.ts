@@ -44,6 +44,22 @@ export enum ErrorCode {
   SESSION_NOT_FOUND = 'session_not_found',
   /** Попытка управлять сессией другого аккаунта. */
   NOT_YOUR_SESSION = 'not_your_session',
+
+  // Recovery
+  /** Вопрос безопасности не найден. */
+  RECOVERY_QUESTION_NOT_FOUND = 'recovery_question_not_found',
+  /** Попытка изменить чужой вопрос безопасности. */
+  NOT_YOUR_RECOVERY_QUESTION = 'not_your_recovery_question',
+  /** У аккаунта нет настроенных вопросов восстановления. */
+  RECOVERY_NOT_CONFIGURED = 'recovery_not_configured',
+  /** Ответ на секретный вопрос неверен. */
+  WRONG_ANSWER = 'wrong_answer',
+  /** Превышен лимит неудачных попыток восстановления — аккаунт заблокирован. */
+  RECOVERY_RATE_LIMITED = 'recovery_rate_limited',
+  /** Токен сброса пароля недействителен. */
+  RESET_TOKEN_INVALID = 'reset_token_invalid',
+  /** Токен сброса пароля истёк. */
+  RESET_TOKEN_EXPIRED = 'reset_token_expired',
 }
 
 /** Пользовательские сообщения для каждого кода ошибки. */
@@ -72,6 +88,15 @@ export const ErrorMessage: Record<ErrorCode, string> = {
   [ErrorCode.REFRESH_REUSED]: 'Refresh-токен уже был использован. Сессия аннулирована.',
   [ErrorCode.SESSION_NOT_FOUND]: 'Сессия не найдена',
   [ErrorCode.NOT_YOUR_SESSION]: 'Нет доступа к этой сессии',
+
+  // Recovery
+  [ErrorCode.RECOVERY_QUESTION_NOT_FOUND]: 'Вопрос безопасности не найден',
+  [ErrorCode.NOT_YOUR_RECOVERY_QUESTION]: 'Нет доступа к этому вопросу',
+  [ErrorCode.RECOVERY_NOT_CONFIGURED]: 'Восстановление не настроено для этого аккаунта',
+  [ErrorCode.WRONG_ANSWER]: 'Неверный ответ на секретный вопрос',
+  [ErrorCode.RECOVERY_RATE_LIMITED]: 'Слишком много неудачных попыток восстановления',
+  [ErrorCode.RESET_TOKEN_INVALID]: 'Токен сброса пароля недействителен',
+  [ErrorCode.RESET_TOKEN_EXPIRED]: 'Токен сброса пароля истёк',
 };
 
 /** Форма объекта ошибки для передачи в NestJS-исключение. */

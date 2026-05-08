@@ -128,6 +128,18 @@ export class DrizzleAccountRepository extends AccountRepository {
   }
 
   /**
+   * Обновляет хеш пароля аккаунта.
+   * @param id - ID аккаунта.
+   * @param passwordHash - Новый argon2id-хеш пароля.
+   */
+  public async updatePassword(id: string, passwordHash: string): Promise<void> {
+    await this._db
+      .update(accounts)
+      .set({ passwordHash, updatedAt: new Date() })
+      .where(eq(accounts.id, id));
+  }
+
+  /**
    * Удаляет аккаунт по ID.
    * @param id - ID аккаунта.
    */
