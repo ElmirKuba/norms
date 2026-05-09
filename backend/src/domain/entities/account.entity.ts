@@ -28,6 +28,16 @@ export interface CreateAccountData {
   readonly isAdmin?: boolean;
 }
 
+/** Результат поиска аккаунта (публичные поля). */
+export interface AccountSearchResult {
+  /** ID аккаунта. */
+  readonly accountId: string;
+  /** UIN или null если ещё не назначен. */
+  readonly uin: string | null;
+  /** Username или null. */
+  readonly username: string | null;
+}
+
 /** Частичные данные аккаунта для обновления — изменяются только переданные поля. */
 export interface UpdateAccountData {
   /** Новый юзернейм, или null чтобы удалить его. */

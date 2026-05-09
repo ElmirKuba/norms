@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import { eq, like } from 'drizzle-orm';
 import { AccountRepository } from '../../domain/ports/account.repository.port';
-import type { AccountEntity, CreateAccountData, UpdateAccountData } from '../../domain/entities/account.entity';
+import type { AccountEntity, AccountSearchResult, CreateAccountData, UpdateAccountData } from '../../domain/entities/account.entity';
 import { generateId } from '../../common/utils/id.util';
 import { accounts, uins } from '../schemas';
 import { DRIZZLE_DB } from '../drizzle.module';
@@ -137,6 +137,43 @@ export class DrizzleAccountRepository extends AccountRepository {
       .update(accounts)
       .set({ passwordHash, updatedAt: new Date() })
       .where(eq(accounts.id, id));
+  }
+
+  /**
+   * Поиск по UIN (точный) или username (префикс, CITEXT — case-insensitive).
+   * @param q - Строка запроса.
+   * @param limit - Лимит результатов.
+   * @returns Массив результатов с account_id, uin, username.
+   */
+  public async search(q: string, limit: number): Promise<AccountSearchResult[]> {
+    const firstChar = q[0];
+    const isUinQuery = firstChar !== undefined && /^\d$/.test(firstChar);
+
+    if (isUinQuery) {
+      const rows = await this._db
+        .select({ accountId: accounts.id, username: accounts.username, uin: uins.number })
+        .from(accounts)
+        .innerJoin(uins, eq(uins.accountId, accounts.id))
+        .where(eq(uins.number, q))
+        .limit(limit);
+      return rows.map((r): AccountSearchResult => ({
+        accountId: r.accountId,
+        uin: r.uin,
+        username: r.username,
+      }));
+    }
+
+    const rows = await this._db
+      .select({ accountId: accounts.id, username: accounts.username, uin: uins.number })
+      .from(accounts)
+      .leftJoin(uins, eq(uins.accountId, accounts.id))
+      .where(like(accounts.username, `${q}%`))
+      .limit(limit);
+    return rows.map((r): AccountSearchResult => ({
+      accountId: r.accountId,
+      uin: r.uin ?? null,
+      username: r.username,
+    }));
   }
 
   /**

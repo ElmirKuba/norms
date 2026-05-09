@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Patch,
   Body,
   Query,
   HttpCode,
@@ -17,8 +18,10 @@ import { LogoutUseCase } from './use-cases/logout.use-case';
 import { ReadAccountUseCase } from './use-cases/read-account.use-case';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { AuthAccountDto } from './dto/auth-account.dto';
+import { UpdateAccountDto } from './dto/update-account.dto';
+import { UpdateAccountUseCase } from './use-cases/update-account.use-case';
 
-/** Контроллер управления аккаунтом: регистрация, авторизация, выход, чтение. */
+/** Контроллер управления аккаунтом: регистрация, авторизация, выход, чтение, обновление. */
 @Controller('account')
 export class AccountController {
   public constructor(
@@ -26,6 +29,7 @@ export class AccountController {
     private readonly _authAccountUseCase: AuthAccountUseCase,
     private readonly _logoutUseCase: LogoutUseCase,
     private readonly _readAccountUseCase: ReadAccountUseCase,
+    private readonly _updateAccountUseCase: UpdateAccountUseCase,
   ) {}
 
   /**
@@ -61,12 +65,6 @@ export class AccountController {
   }
 
   /**
-   * Чтение данных аккаунта. Без ?id — свой профиль с полными данными.
-   * @param user - Payload текущего JWT.
-   * @param id - ID запрашиваемого аккаунта (опционально).
-   * @returns Данные аккаунта.
-   */
-  /**
    * Чтение данных аккаунта. Без параметров — свой профиль. По ?id= или ?uin= — чужой.
    * @param user - Payload текущего JWT.
    * @param id - ID аккаунта (опционально).
@@ -82,5 +80,17 @@ export class AccountController {
   ): ReturnType<ReadAccountUseCase['execute']> {
     const q = { ...(id !== undefined && { id }), ...(uin !== undefined && { uin }) };
     return this._readAccountUseCase.execute(user.sub, q);
+  }
+
+  /**
+   * Смена пароля текущего аккаунта.
+   * @param user - Payload текущего JWT.
+   * @param dto - Текущий и новый пароль.
+   */
+  @Patch('update')
+  @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  public async update(@CurrentUser() user: JwtPayload, @Body() dto: UpdateAccountDto): Promise<void> {
+    await this._updateAccountUseCase.execute(user.sub, dto);
   }
 }

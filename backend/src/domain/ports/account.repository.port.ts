@@ -1,4 +1,4 @@
-import type { AccountEntity, CreateAccountData, UpdateAccountData } from '../entities/account.entity';
+import type { AccountEntity, CreateAccountData, UpdateAccountData, AccountSearchResult } from '../entities/account.entity';
 
 /** Порт (абстракция) для операций с аккаунтами — реализуется в слое персистентности. */
 export abstract class AccountRepository {
@@ -57,6 +57,14 @@ export abstract class AccountRepository {
    * @param passwordHash - Новый argon2id-хеш пароля.
    */
   public abstract updatePassword(id: string, passwordHash: string): Promise<void>;
+
+  /**
+   * Поиск аккаунтов по UIN (точное совпадение) или username (префикс, case-insensitive).
+   * @param q - Строка запроса. Если первый символ — цифра, ищет по UIN; иначе по username.
+   * @param limit - Максимальное количество результатов.
+   * @returns Массив найденных аккаунтов с UIN.
+   */
+  public abstract search(q: string, limit: number): Promise<AccountSearchResult[]>;
 
   /**
    * Удаляет аккаунт по ID.
