@@ -67,12 +67,23 @@
 - `ChatsApplicationComponent` — иконка pending_key в превью списка чатов
 - `CreateChatModalComponent` + `CreateChatModalService` — модалка выбора устройства собеседника (Способ B), открывается после онбординга в UserProfile
 - `MockSearchUser.devices` — массив `MockUserDevice[]` (deviceId, label) для каждого пользователя
-- `SettingsChangePasswordComponent` (`/application/main/settings/change-password`) — форма (текущий/новый/повтор), show/hide пароля, мок-сабмит с spinner → success-экран; кнопка «Сменить пароль» в AccountSettings теперь кликабельна
+- `SettingsChangePasswordComponent` (`/application/main/settings/change-password`) — форма (текущий/новый/повтор), show/hide пароля; кнопка «Сменить пароль» в AccountSettings кликабельна
 - `SettingsDevicesComponent` — подтверждение кика через `DialogModalComponent` (ModalHeaderIcon.Warning, isConfirmModal), inline-переименование устройства
 - `SettingsInvitesComponent` — модалка успеха после createCode() (ModalHeaderIcon.Done с кодом)
-- `SessionKickedService` (`main/services/`) — глобальный сервис, открывает bottom-sheet «Сессия завершена», после OK редиректит на `/application/welcome`; mock-триггер на экране Профиля
-- `MainApplicationComponent` — `passwordResetBanner` signal, желтый баннер «Пароль был сброшен через восстановление», закрывается крестиком; mock-триггер на экране Профиля
-- `ProfileApplicationComponent` — секция «Мок-события» с двумя кнопками для тестирования WSS событий
+- `SessionKickedService` (`main/services/`) — глобальный сервис, открывает bottom-sheet «Сессия завершена», после OK редиректит на `/application/welcome`
+- `MainApplicationComponent` — `passwordResetBanner` signal, жёлтый баннер «Пароль был сброшен через восстановление», закрывается крестиком
+
+### Полировка фронта — перевод с моков на реальный API (финал шага 8)
+- **guestGuard** — защищает `welcome` и `auth/*` от авторизованных пользователей; fix session-restore bug (после рестарта app показывался welcome)
+- **`accounts.nickname`** — столбец в БД, `PATCH /account/update` (бэк + фронт); отображение приоритетом: nickname > @username > UIN XXXXX
+- **`ProfileApplicationComponent`** — `GET /account/read` (UIN, nickname, username); инициалы из слов nickname
+- **`SettingsAccountComponent`** — `GET /account/read` + редактирование nickname inline → `PATCH /account/update`
+- **`SettingsChangePasswordComponent`** — реальный `PATCH /account/update`; ошибка 401 → «Неверный текущий пароль»
+- **`SettingsRecoveryQuestionsComponent`** — полный CRUD через API (`forkJoin` preset + list; create/update/delete)
+- **`SearchApplicationComponent`** — `GET /search` с debounce 300ms через Subject; `SearchApiService` + `avatarColorForId()`
+- **`UserProfileApplicationComponent`** — `GET /account/read?id=`; `buildDisplay()` с приоритетом nickname > @username > UIN
+- **`RecoveryApplicationComponent`** — все 3 шага подключены к реальному API: `GET /recovery/read-questions-for-login` → `POST /recovery/check-answer` → `POST /recovery/reset-password`; ошибки (wrong_answer, rate_limited, account_not_found, recovery_not_configured)
+- **Мок-кнопки dev-событий** — удалены из `ProfileApplicationComponent` (WSS-флоу session_kicked и password_reset_via_recovery полностью проводны в WssService)
 
 ### ESLint (оба проекта)
 - `switch-exhaustiveness-check` — все кейсы discriminated union обязаны быть покрыты (поймал непокрытый `AppPlatform.WEB`)
@@ -184,61 +195,10 @@
 
 _Нет активных задач._
 
-## Полировка приложения (убрать все моки кроме чатов)
+## Оставшийся мок до шага 9
 
-Приоритет: сделать до начала шага 9 (Chats + E2E). Порядок — сверху вниз.
-
-### Бэк-эндпоинты: задокументированы, но не реализованы
-
-Все три есть в `docs/api-contracts.md`, бэк до них не дошёл при поэтапной реализации шагов 1–8.
-
-| Эндпоинт | Нужен для |
-|---|---|
-| `PATCH /api/v1/account/update` | Смена пароля в настройках |
-| `GET /api/v1/search?q=&limit=` | Поиск пользователей по UIN/username |
-| `GET /api/v1/chat/read-orphan-peers` | Экран «Новое устройство» (делать с шагом 9) |
-
-### 1. Свой профиль + настройки аккаунта
-
-**Проблема:** «Эльмир К.» захардкожен в трёх местах.
-
-- `profile/components/profile/profile.component.html` — имя, UIN, username
-- `settings/components/account/account.component.html` — имя
-
-**Что сделать:**
-- Бэк: `GET /account/read` уже есть ✅
-- Фронт: вызвать `AuthApiService.readSelf()` в `ngOnInit`, заполнить сигналы `name / uin / username`
-- Отображать: `username ?? 'Без username'`; инициалы для аватара из имени (UIN → первая цифра, username → первая буква)
-- `SettingsAccountComponent`: те же данные, кнопки смены имени/username пока `disabled` (нет эндпоинтов)
-
-### 2. Recovery Questions (настройки)
-
-**Проблема:** список Q&A — мок, добавление/удаление — мок-сабмит.
-
-- Бэк: все эндпоинты есть ✅ (`GET/POST/PATCH/DELETE /recovery/question/*`, `GET /recovery/preset-questions`)
-- Фронт: `SettingsRecoveryQuestionsComponent` — подключить к реальному API
-
-### 3. Change Password (настройки)
-
-**Проблема:** форма есть, сабмит — мок.
-
-- Бэк: `PATCH /api/v1/account/update` (текущий пароль + новый) — в доке есть, нужна реализация ❌
-- Фронт: после появления эндпоинта — подключить `SettingsChangePasswordComponent`
-
-### 4. Поиск пользователей + UserProfile
-
-**Проблема:** поиск работает по `MOCK_SEARCH_USERS`, чужой профиль тоже из мока.
-
-- Бэк: `GET /api/v1/search?q=&limit=` — в доке есть, нужна реализация ❌
-- Фронт: `SearchApplicationComponent` — заменить `MOCK_SEARCH_USERS` на вызов API
-- Фронт: `UserProfileApplicationComponent` — заменить мок на `GET /account/read?uin=X`
-
-### 5. Экран «Новое устройство»
-
-**Проблема:** список осиротевших собеседников — мок.
-
-- Бэк: `GET /api/v1/chat/read-orphan-peers` — в доке есть, делать вместе с шагом 9 ❌
-- Фронт: `NewDeviceApplicationComponent` — пока оставить мок, подключить в шаге 9
+- **`NewDeviceApplicationComponent`** — список осиротевших собеседников мок; подключить к `GET /chat/read-orphan-peers` в шаге 9
+- **Чаты** — `ChatsApplicationComponent`, `ChatDetailApplicationComponent`, `CreateChatModalComponent` — полностью на моках; реализовать в шаге 9 (ECDH + WSS messaging)
 
 ## Implementation Order
 
@@ -259,7 +219,7 @@ _Нет активных задач._
    │
 ✅ 7. WSS gateway (uin_assigned, session_kicked, token rotation без реконнекта)
    │
-✅ 8. Frontend: подключение к реальному API (auth flow, platform guard, devices, invites)
+✅ 8. Frontend: подключение к реальному API (auth flow, platform guard, devices, invites, полировка всех экранов кроме чатов)
    │
    9. Chats + E2E (ECDH key exchange, WSS messaging)
    │
@@ -390,6 +350,8 @@ _Нет активных задач._
 
 ## Backlog
 _Идеи и не-приоритетные фичи._
+
+- **Псевдоним (display name)** — отображаемое имя, пользователь ставит сам. Произвольный текст (кириллица, пробелы, что угодно), не используется для входа и поиска. Отдельное поле `nickname` в таблице `accounts`. Показывается в профиле вместо/рядом с UIN. Отличается от `username` (буквенный логин, назначается админом).
 
 - **i18n** — `@ngx-translate/core` или альтернатива. На старте только русский. Английский добавить когда понадобится для App Store reviewer'ов / зарубежной аудитории.
 - **UnifiedPush для Android** — опциональный приёмник push-уведомлений для degoogled-устройств. Юзер выбирает в настройках. Дополнение к FCM (стандарт по умолчанию).
