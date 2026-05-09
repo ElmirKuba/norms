@@ -1,0 +1,61 @@
+<div class="security-alerts">
+  @if (newSessionAlert(); as alert) {
+    <div class="security-alerts__banner">
+      <div class="security-alerts__banner-body">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" class="security-alerts__banner-icon">
+          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+          <path d="M12 9V13M12 17H12.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        <span class="security-alerts__banner-text">Выполнен вход с устройства «{{ alert.systemName }}». Это были вы?</span>
+      </div>
+      <div class="security-alerts__banner-actions">
+        <button class="security-alerts__banner-btn security-alerts__banner-btn--action" type="button" (click)="kickNewSession()">
+          Кикнуть
+        </button>
+        <button class="security-alerts__banner-btn security-alerts__banner-btn--dismiss" type="button" (click)="dismissNewSessionAlert()">
+          Это я
+        </button>
+      </div>
+    </div>
+  }
+
+  @if (passwordChangedBanner()) {
+    <div class="security-alerts__banner">
+      <div class="security-alerts__banner-body">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" class="security-alerts__banner-icon">
+          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+          <path d="M12 9V13M12 17H12.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        <span class="security-alerts__banner-text">Пароль аккаунта изменён на другом устройстве. Если это были не вы — немедленно смените пароль.</span>
+      </div>
+      <div class="security-alerts__banner-actions">
+        <button class="security-alerts__banner-btn security-alerts__banner-btn--action" type="button" routerLink="/application/main/settings/change-password" (click)="dismissPasswordChangedBanner()">
+          Сменить пароль
+        </button>
+        <button class="security-alerts__banner-btn security-alerts__banner-btn--dismiss" type="button" (click)="dismissPasswordChangedBanner()">
+          Закрыть
+        </button>
+      </div>
+    </div>
+  }
+
+  @if (passwordResetBanner()) {
+    <div class="security-alerts__banner">
+      <div class="security-alerts__banner-body">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" class="security-alerts__banner-icon">
+          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+          <path d="M12 9V13M12 17H12.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        <span class="security-alerts__banner-text">Пароль изменён через Recovery. Если это были не вы — смените пароль.</span>
+      </div>
+      <div class="security-alerts__banner-actions">
+        <button class="security-alerts__banner-btn security-alerts__banner-btn--action" type="button" routerLink="/application/main/settings/change-password" (click)="dismissPasswordResetBanner()">
+          Сменить пароль
+        </button>
+        <button class="security-alerts__banner-btn security-alerts__banner-btn--dismiss" type="button" (click)="dismissPasswordResetBanner()">
+          Закрыть
+        </button>
+      </div>
+    </div>
+  }
+</div>
