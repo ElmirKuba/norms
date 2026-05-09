@@ -12,6 +12,9 @@
         <button class="security-alerts__banner-btn security-alerts__banner-btn--action" type="button" (click)="kickNewSession()">
           Кикнуть
         </button>
+        <a class="security-alerts__banner-btn security-alerts__banner-btn--dismiss" routerLink="/application/main/settings/devices" (click)="dismissNewSessionAlert()">
+          Устройства
+        </a>
         <button class="security-alerts__banner-btn security-alerts__banner-btn--dismiss" type="button" (click)="dismissNewSessionAlert()">
           Это я
         </button>

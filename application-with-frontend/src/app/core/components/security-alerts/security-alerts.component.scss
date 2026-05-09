@@ -45,6 +45,9 @@
   &__banner-btn {
     height: 32px;
     padding: 0 14px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
     border-radius: 8px;
     font-size: 13px;
     font-weight: 500;
