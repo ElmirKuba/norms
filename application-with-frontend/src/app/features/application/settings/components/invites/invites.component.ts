@@ -21,6 +21,14 @@ interface InviteItem {
   expiresAt: string;
 }
 
+/** Данные инвайтера для отображения. */
+interface InviterItem {
+  /** Основная строка: nickname / @username / UIN XXXX / 'Свободная регистрация'. */
+  name: string;
+  /** Вторая строка: @username · UIN XXXX или только UIN XXXX (null если нечего добавить). */
+  meta: string | null;
+}
+
 /** Приглашённый пользователь для отображения. */
 interface InviteeItem {
   /** Ключ для track. */
@@ -65,7 +73,7 @@ export class SettingsInvitesComponent implements OnInit {
   public readonly codes: WritableSignal<InviteItem[]> = signal([]);
 
   /** Кто пригласил меня. */
-  public readonly invitedBy: WritableSignal<string> = signal('');
+  public readonly invitedBy: WritableSignal<InviterItem> = signal({ name: '', meta: null });
 
   /** Кого я пригласил. */
   public readonly invitedUsers: WritableSignal<InviteeItem[]> = signal([]);
@@ -177,12 +185,18 @@ export class SettingsInvitesComponent implements OnInit {
    * @param inviter - Данные инвайтера или null.
    * @returns Строка для отображения.
    */
-  private _formatInviter(inviter: ReferralPerson | null): string {
-    if (inviter === null) return 'Свободная регистрация';
-    if (inviter.nickname !== null) return inviter.nickname;
-    if (inviter.username !== null) return `@${inviter.username}`;
-    if (inviter.uin !== null) return `UIN ${inviter.uin}`;
-    return 'Неизвестный пользователь';
+  private _formatInviter(inviter: ReferralPerson | null): InviterItem {
+    if (inviter === null) return { name: 'Свободная регистрация', meta: null };
+
+    const metaParts: string[] = [];
+    if (inviter.username !== null) metaParts.push(`@${inviter.username}`);
+    if (inviter.uin !== null) metaParts.push(`UIN ${inviter.uin}`);
+    const meta = metaParts.length > 0 ? metaParts.join(' · ') : null;
+
+    if (inviter.nickname !== null) return { name: inviter.nickname, meta };
+    if (inviter.username !== null) return { name: `@${inviter.username}`, meta: inviter.uin !== null ? `UIN ${inviter.uin}` : null };
+    if (inviter.uin !== null) return { name: `UIN ${inviter.uin}`, meta: null };
+    return { name: 'Неизвестный пользователь', meta: null };
   }
 
   /**

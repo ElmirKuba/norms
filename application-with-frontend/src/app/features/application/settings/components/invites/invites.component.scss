@@ -179,7 +179,18 @@
 
   &__invited-by {
     padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__invited-by-name {
     font-size: 15px;
     color: var(--clr-text-primary);
+  }
+
+  &__invited-by-meta {
+    font-size: 12px;
+    color: var(--clr-text-secondary);
   }
 }

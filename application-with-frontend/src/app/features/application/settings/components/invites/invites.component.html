@@ -87,6 +87,11 @@
 
   <div class="invites__section-title">Кто меня пригласил</div>
   <section class="settings-sub__section">
-    <div class="invites__invited-by">{{ invitedBy() }}</div>
+    <div class="invites__invited-by">
+      <span class="invites__invited-by-name">{{ invitedBy().name }}</span>
+      @if (invitedBy().meta !== null) {
+        <span class="invites__invited-by-meta">{{ invitedBy().meta }}</span>
+      }
+    </div>
   </section>
 </div>
