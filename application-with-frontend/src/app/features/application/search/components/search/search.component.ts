@@ -1,10 +1,45 @@
-import { ChangeDetectionStrategy, Component, computed, signal, inject } from '@angular/core';
-import type { WritableSignal, Signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import type { WritableSignal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MOCK_SEARCH_USERS } from '../../types/search.types';
-import { ChatOnboardingService } from '../../../chats/services/chat-onboarding.service';
-import type { MockSearchUser } from '../../types/search.types';
+import { Subject, switchMap, debounceTime, of, EMPTY, catchError } from 'rxjs';
+import type { Observable } from 'rxjs';
+import { SearchApiService, avatarColorForId } from '../../services/search-api.service';
+import type { SearchResultItem } from '../../services/search-api.service';
+
+/** Отображаемый элемент результатов поиска. */
+interface SearchDisplayItem {
+  /** ID аккаунта. */
+  readonly accountId: string;
+  /** Отображаемое имя: @username или UIN XXXXX. */
+  readonly displayName: string;
+  /** UIN для второй строки (null если не назначен). */
+  readonly uin: string | null;
+  /** Инициалы для аватара. */
+  readonly initials: string;
+  /** Цвет аватара. */
+  readonly avatarColor: string;
+}
+
+/**
+ * Преобразует результат API в отображаемый элемент.
+ * @param item - Элемент из API.
+ * @returns Отображаемый элемент.
+ */
+function toDisplayItem(item: SearchResultItem): SearchDisplayItem {
+  const displayName = item.username !== null ? `@${item.username}` : (item.uin !== null ? `UIN ${item.uin}` : 'Аккаунт');
+  const initials = item.username !== null
+    ? (item.username[0]?.toUpperCase() ?? '?')
+    : (item.uin?.[0] ?? '?');
+  return {
+    accountId: item.account_id,
+    displayName,
+    uin: item.uin,
+    initials,
+    avatarColor: avatarColorForId(item.account_id),
+  };
+}
 
 /** Экран поиска по UIN или username */
 @Component({
@@ -15,49 +50,62 @@ import type { MockSearchUser } from '../../types/search.types';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SearchApplicationComponent {
-  /** Поисковый запрос */
+  /** Поисковый запрос. */
   public readonly query: WritableSignal<string> = signal('');
 
-  /** Отфильтрованные результаты */
-  public readonly results: Signal<MockSearchUser[]> = computed((): MockSearchUser[] => {
-    const q = this.query().trim().toLowerCase();
-    if (q === '') return [];
-    return MOCK_SEARCH_USERS.filter(
-      (u: MockSearchUser): boolean => u.name.toLowerCase().includes(q) || u.uin.includes(q),
-    );
-  });
+  /** Результаты поиска. */
+  public readonly results: WritableSignal<SearchDisplayItem[]> = signal([]);
 
-  /** Роутер для навигации */
+  /** Идёт поиск. */
+  public readonly loading: WritableSignal<boolean> = signal(false);
+
+  /** Роутер для навигации. */
   private readonly _router: Router = inject(Router);
 
-  /** Сервис онбординг-модалки */
-  private readonly _onboarding: ChatOnboardingService = inject(ChatOnboardingService);
+  /** API поиска. */
+  private readonly _searchApi: SearchApiService = inject(SearchApiService);
+
+  /** DestroyRef для автоотписки. */
+  private readonly _destroyRef: DestroyRef = inject(DestroyRef);
+
+  /** Subject для дебаунса запросов. */
+  private readonly _querySubject: Subject<string> = new Subject<string>();
+
+  public constructor() {
+    this._querySubject.pipe(
+      debounceTime(300),
+      switchMap((q: string): Observable<SearchDisplayItem[]> => {
+        if (q.trim().length === 0) {
+          this.loading.set(false);
+          this.results.set([]);
+          return EMPTY;
+        }
+        this.loading.set(true);
+        return this._searchApi.search(q.trim()).pipe(
+          catchError((): Observable<SearchResultItem[]> => of([])),
+        );
+      }),
+      takeUntilDestroyed(this._destroyRef),
+    ).subscribe((items: SearchResultItem[] | SearchDisplayItem[]): void => {
+      this.results.set((items as SearchResultItem[]).map(toDisplayItem));
+      this.loading.set(false);
+    });
+  }
 
   /**
    * Обновить запрос из input.
-   * @param value - новое значение строки поиска
+   * @param value - Новое значение строки поиска.
    */
   public onQueryChange(value: string): void {
     this.query.set(value);
+    this._querySubject.next(value);
   }
 
   /**
    * Открыть профиль пользователя.
-   * @param user - пользователь из результатов поиска
+   * @param item - Элемент результатов поиска.
    */
-  public openProfile(user: MockSearchUser): void {
-    void this._router.navigate(['/application/main/user', user.id]);
-  }
-
-  /**
-   * Написать пользователю — онбординг + переход к чату (мок).
-   * @param user - пользователь, которому пишем
-   */
-  public writeToUser(user: MockSearchUser): void {
-    this._onboarding.openIfNeeded((): void => {
-      // В реальном приложении: создать чат через API, затем перейти в него
-      // Мок: переходим на профиль пользователя
-      void this._router.navigate(['/application/main/user', user.id]);
-    });
+  public openProfile(item: SearchDisplayItem): void {
+    void this._router.navigate(['/application/main/user', item.accountId]);
   }
 }

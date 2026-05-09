@@ -120,4 +120,25 @@
     font-size: 15px;
     color: var(--clr-text-secondary);
   }
+
+  &__loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1 1 auto;
+  }
+
+  &__spinner {
+    display: block;
+    width: 24px;
+    height: 24px;
+    border: 2.5px solid var(--clr-border-medium);
+    border-top-color: var(--clr-primary);
+    border-radius: 50%;
+    animation: up-spin 0.7s linear infinite;
+  }
+}
+
+@keyframes up-spin {
+  to { transform: rotate(360deg); }
 }

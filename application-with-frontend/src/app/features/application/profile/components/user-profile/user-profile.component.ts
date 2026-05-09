@@ -4,10 +4,52 @@ import type { OnInit, WritableSignal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ChatOnboardingService } from '../../../chats/services/chat-onboarding.service';
 import { CreateChatModalService } from '../../../chats/services/create-chat-modal.service';
-import { MOCK_CHATS } from '../../../chats/types/chats.types';
-import { MOCK_SEARCH_USERS } from '../../../search/types/search.types';
-import type { MockSearchUser } from '../../../search/types/search.types';
-import type { MockChat } from '../../../chats/types/chats.types';
+import { AuthApiService } from '../../../auth/services/auth-api.service';
+import type { ReadOtherAccountResponse } from '../../../auth/services/auth-api.service';
+import { avatarColorForId } from '../../../search/services/search-api.service';
+
+/** Отображаемые данные чужого профиля. */
+interface UserProfileDisplay {
+  /** ID аккаунта. */
+  readonly accountId: string;
+  /** Отображаемое имя: nickname > @username > UIN > Аккаунт. */
+  readonly displayName: string;
+  /** UIN или null. */
+  readonly uin: string | null;
+  /** Инициалы для аватара (до 2 символов). */
+  readonly initials: string;
+  /** Цвет аватара. */
+  readonly avatarColor: string;
+}
+
+/**
+ * Строит отображаемые данные из ответа API.
+ * @param data - Данные аккаунта от бэка.
+ * @returns Отображаемые поля.
+ */
+function buildDisplay(data: ReadOtherAccountResponse): UserProfileDisplay {
+  let displayName: string;
+  let initials: string;
+
+  if (data.nickname !== null) {
+    displayName = data.nickname;
+    const words = data.nickname.trim().split(/\s+/);
+    const first = words[0]?.[0]?.toUpperCase() ?? '?';
+    const second = words[1]?.[0]?.toUpperCase() ?? '';
+    initials = first + second;
+  } else if (data.username !== null) {
+    displayName = `@${data.username}`;
+    initials = data.username[0]?.toUpperCase() ?? '?';
+  } else if (data.uin !== null) {
+    displayName = `UIN ${data.uin}`;
+    initials = data.uin[0] ?? '?';
+  } else {
+    displayName = 'Аккаунт';
+    initials = '?';
+  }
+
+  return { accountId: data.id, displayName, uin: data.uin, initials, avatarColor: avatarColorForId(data.id) };
+}
 
 /** Профиль чужого пользователя */
 @Component({
@@ -18,56 +60,73 @@ import type { MockChat } from '../../../chats/types/chats.types';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UserProfileApplicationComponent implements OnInit {
-  /** Данные пользователя */
-  public readonly user: WritableSignal<MockSearchUser | null> = signal(null);
+  /** Отображаемые данные профиля. */
+  public readonly profile: WritableSignal<UserProfileDisplay | null> = signal(null);
 
-  /** Сервис навигации назад в истории браузера */
+  /** Идёт загрузка. */
+  public readonly loading: WritableSignal<boolean> = signal(true);
+
+  /** Сервис навигации назад в истории браузера. */
   private readonly _location: Location = inject(Location);
 
-  /** Маршрут для чтения параметров */
+  /** Маршрут для чтения параметров. */
   private readonly _route: ActivatedRoute = inject(ActivatedRoute);
 
-  /** Роутер для навигации */
+  /** Роутер для навигации. */
   private readonly _router: Router = inject(Router);
 
-  /** Сервис онбординг-модалки */
+  /** Сервис онбординг-модалки. */
   private readonly _onboarding: ChatOnboardingService = inject(ChatOnboardingService);
 
-  /** Сервис открытия модалки создания чата */
+  /** Сервис открытия модалки создания чата. */
   private readonly _createChatModal: CreateChatModalService = inject(CreateChatModalService);
+
+  /** API аккаунта. */
+  private readonly _authApi: AuthApiService = inject(AuthApiService);
 
   /** @inheritdoc */
   public ngOnInit(): void {
     const accountId = this._route.snapshot.paramMap.get('accountId');
-    const found = MOCK_SEARCH_USERS.find((u: MockSearchUser): boolean => u.id === accountId) ?? null;
-    this.user.set(found);
+    if (accountId === null) {
+      this.loading.set(false);
+      return;
+    }
+
+    this._authApi.readAccount(accountId).subscribe({
+      next: (data: ReadOtherAccountResponse): void => {
+        this.profile.set(buildDisplay(data));
+        this.loading.set(false);
+      },
+      error: (): void => {
+        this.loading.set(false);
+      },
+    });
   }
 
-  /** Назад — возвращаемся туда откуда пришли (чат или поиск) */
+  /** Назад — возвращаемся туда откуда пришли (поиск и т.п.) */
   public goBack(): void {
     this._location.back();
   }
 
   /** Написать — онбординг → выбор устройства → переход в чат */
   public writeMessage(): void {
-    const currentUser = this.user();
-    if (currentUser === null) return;
+    const currentProfile = this.profile();
+    if (currentProfile === null) return;
 
     this._onboarding.openIfNeeded((): void => {
-      this._createChatModal.open(currentUser, (_deviceId: string, _chatName: string): void => {
-        // Мок: ищем существующий чат или открываем список
-        const existingChat = MOCK_CHATS.find((c: MockChat): boolean => c.id.startsWith(currentUser.id.split('_')[0] ?? ''));
-        if (existingChat !== undefined) {
-          void this._router.navigate(['/application/main/chats', existingChat.id]);
-        } else {
-          const firstChat = MOCK_CHATS[0];
-          if (firstChat !== undefined) {
-            void this._router.navigate(['/application/main/chats', firstChat.id]);
-          } else {
-            void this._router.navigate(['/application/main/chats']);
-          }
-        }
-      });
+      this._createChatModal.open(
+        {
+          id: currentProfile.accountId,
+          name: currentProfile.displayName,
+          uin: currentProfile.uin ?? '',
+          initials: currentProfile.initials,
+          avatarColor: currentProfile.avatarColor,
+          devices: [],
+        },
+        (_deviceId: string, _chatName: string): void => {
+          void this._router.navigate(['/application/main/chats']);
+        },
+      );
     });
   }
 }

@@ -8,6 +8,21 @@
 }
 
 .rq {
+  &__loading {
+    display: flex;
+    justify-content: center;
+    padding: 40px;
+  }
+
+  &__spinner {
+    display: block;
+    width: 24px;
+    height: 24px;
+    border: 2.5px solid var(--clr-border-medium);
+    border-top-color: var(--clr-primary);
+    border-radius: 50%;
+    animation: rq-spin 0.7s linear infinite;
+  }
   &__info {
     background: var(--clr-bg-page);
     border-radius: 12px;
@@ -293,4 +308,8 @@
       opacity: 0.85;
     }
   }
+}
+
+@keyframes rq-spin {
+  to { transform: rotate(360deg); }
 }

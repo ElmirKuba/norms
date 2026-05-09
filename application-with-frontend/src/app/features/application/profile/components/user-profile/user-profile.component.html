@@ -1,4 +1,8 @@
-@if (user()) {
+@if (loading()) {
+  <div class="user-profile__loading">
+    <span class="user-profile__spinner"></span>
+  </div>
+} @else if (profile()) {
   <header class="user-profile__header">
     <button class="user-profile__back" type="button" (click)="goBack()" aria-label="Назад">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -10,11 +14,13 @@
 
   <div class="user-profile__body">
     <div class="user-profile__card">
-      <div class="user-profile__avatar" [style.background]="user()!.avatarColor">
-        <span class="user-profile__avatar-initials">{{ user()!.initials }}</span>
+      <div class="user-profile__avatar" [style.background]="profile()!.avatarColor">
+        <span class="user-profile__avatar-initials">{{ profile()!.initials }}</span>
       </div>
-      <p class="user-profile__name">{{ user()!.name }}</p>
-      <p class="user-profile__uin">UIN {{ user()!.uin }}</p>
+      <p class="user-profile__name">{{ profile()!.displayName }}</p>
+      @if (profile()!.uin !== null) {
+        <p class="user-profile__uin">UIN {{ profile()!.uin }}</p>
+      }
     </div>
 
     <button class="user-profile__write-btn" type="button" (click)="writeMessage()">
@@ -24,9 +30,15 @@
       Написать
     </button>
   </div>
-}
-
-@if (!user()) {
+} @else {
+  <header class="user-profile__header">
+    <button class="user-profile__back" type="button" (click)="goBack()" aria-label="Назад">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <h1 class="user-profile__header-title">Профиль</h1>
+  </header>
   <div class="user-profile__not-found">
     <p>Пользователь не найден</p>
   </div>

@@ -6,6 +6,22 @@
 }
 
 .search {
+  &__loading {
+    display: flex;
+    justify-content: center;
+    padding: 40px;
+  }
+
+  &__spinner {
+    display: block;
+    width: 22px;
+    height: 22px;
+    border: 2.5px solid var(--clr-border-medium);
+    border-top-color: var(--clr-primary);
+    border-radius: 50%;
+    animation: search-spin 0.7s linear infinite;
+  }
+
   &__header {
     background: var(--clr-surface);
     padding: 14px 20px 12px;
@@ -168,4 +184,8 @@
     color: var(--clr-text-secondary);
     margin: 0;
   }
+}
+
+@keyframes search-spin {
+  to { transform: rotate(360deg); }
 }

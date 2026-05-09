@@ -11,7 +11,7 @@
     <input
       class="search__bar-input"
       type="search"
-      placeholder="UIN или имя"
+      placeholder="UIN или username"
       autocomplete="off"
       [value]="query()"
       (input)="onQueryChange($any($event.target).value)"
@@ -26,18 +26,24 @@
   </div>
 </div>
 
-@if (results().length > 0) {
+@if (loading()) {
+  <div class="search__loading">
+    <span class="search__spinner"></span>
+  </div>
+} @else if (results().length > 0) {
   <div class="search__results">
-    @for (user of results(); track user.id) {
-      <div class="search__item">
-        <div class="search__avatar" [style.background]="user.avatarColor">
-          <span class="search__avatar-initials">{{ user.initials }}</span>
+    @for (item of results(); track item.accountId) {
+      <div class="search__item" (click)="openProfile(item)">
+        <div class="search__avatar" [style.background]="item.avatarColor">
+          <span class="search__avatar-initials">{{ item.initials }}</span>
         </div>
         <div class="search__item-info">
-          <span class="search__item-name">{{ user.name }}</span>
-          <span class="search__item-uin">UIN {{ user.uin }}</span>
+          <span class="search__item-name">{{ item.displayName }}</span>
+          @if (item.uin !== null) {
+            <span class="search__item-uin">UIN {{ item.uin }}</span>
+          }
         </div>
-        <button class="search__item-action" type="button" (click)="writeToUser(user)" aria-label="Написать">
+        <button class="search__item-action" type="button" (click)="openProfile(item); $event.stopPropagation()" aria-label="Открыть профиль">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <path d="M4 18L2 22L6 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4H4C2.9 4 2 4.9 2 6V18H4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
           </svg>
@@ -48,10 +54,10 @@
 } @else if (query()) {
   <div class="search__empty">
     <p class="search__empty-title">Ничего не найдено</p>
-    <p class="search__empty-text">Попробуйте другой UIN или имя</p>
+    <p class="search__empty-text">Попробуйте другой UIN или username</p>
   </div>
 } @else {
   <div class="search__empty">
-    <p class="search__empty-text">Введите UIN или имя</p>
+    <p class="search__empty-text">Введите UIN или username</p>
   </div>
 }

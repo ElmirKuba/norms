@@ -1,7 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import type { WritableSignal } from '@angular/core';
+import type { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { AccountApiService } from '../../services/account-api.service';
 
 /** Подэкран настроек — Смена пароля */
 @Component({
@@ -31,10 +33,16 @@ export class SettingsChangePasswordComponent {
   public readonly showConfirm: WritableSignal<boolean> = signal(false);
 
   /** Статус отправки */
-  public readonly submitState: WritableSignal<'idle' | 'loading' | 'success' | 'error'> = signal('idle');
+  public readonly submitState: WritableSignal<'idle' | 'loading' | 'success'> = signal('idle');
+
+  /** Сообщение об ошибке (null — нет ошибки). */
+  public readonly errorMessage: WritableSignal<string | null> = signal(null);
 
   /** Роутер для навигации */
   private readonly _router: Router = inject(Router);
+
+  /** API для обновления аккаунта */
+  private readonly _accountApi: AccountApiService = inject(AccountApiService);
 
   /** Проверка: форма заполнена корректно */
   public get isFormValid(): boolean {
@@ -50,15 +58,30 @@ export class SettingsChangePasswordComponent {
     void this._router.navigate(['/application/main/settings/account']);
   }
 
-  /** Отправить (мок) */
+  /** Отправить форму смены пароля. */
   public submit(): void {
     if (!this.isFormValid) return;
 
     this.submitState.set('loading');
+    this.errorMessage.set(null);
 
-    // Мок: через 1.2 с — успех
-    setTimeout((): void => {
-      this.submitState.set('success');
-    }, 1200);
+    /* eslint-disable @typescript-eslint/naming-convention -- snake_case API fields */
+    this._accountApi.updateAccount({
+      current_password: this.currentPassword,
+      new_password: this.newPassword,
+    /* eslint-enable @typescript-eslint/naming-convention */
+    }).subscribe({
+      next: (): void => {
+        this.submitState.set('success');
+      },
+      error: (err: HttpErrorResponse): void => {
+        this.submitState.set('idle');
+        if (err.status === 401) {
+          this.errorMessage.set('Неверный текущий пароль');
+        } else {
+          this.errorMessage.set('Ошибка при смене пароля. Попробуйте ещё раз.');
+        }
+      },
+    });
   }
 }

@@ -8,7 +8,13 @@
 </header>
 
 <div class="settings-sub__body">
-  @if (!showAddForm()) {
+  @if (loading()) {
+    <div class="rq__loading">
+      <span class="rq__spinner"></span>
+    </div>
+  }
+
+  @if (!loading() && !showAddForm()) {
     <div class="rq__info">
       <p class="rq__info-text">
         Для восстановления пароля достаточно правильно ответить на <strong>один</strong> из настроенных вопросов.
@@ -49,7 +55,7 @@
             <div class="rq__item">
               <div class="rq__item-info">
                 <span class="rq__item-question">{{ qa.question }}</span>
-                <span class="rq__item-date">Добавлен {{ qa.createdAt }}</span>
+                <span class="rq__item-date">Добавлен {{ formatDate(qa.created_at) }}</span>
               </div>
               <button
                 class="rq__item-edit-btn"

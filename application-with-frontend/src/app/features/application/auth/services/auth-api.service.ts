@@ -86,6 +86,20 @@ export interface AuthAccountResponse {
   /** Данные сессии с токенами. */
   readonly session: AccountResponseSession;
 }
+/** Ответ GET /account/read для чужого аккаунта. */
+export interface ReadOtherAccountResponse {
+  /** ID аккаунта. */
+  readonly id: string;
+  /** UIN или null если не назначен. */
+  readonly uin: string | null;
+  /** Псевдоним (display name) или null. */
+  readonly nickname: string | null;
+  /** Username или null. */
+  readonly username: string | null;
+  /** ISO-8601 дата регистрации. */
+  readonly created_at: string;
+}
+
 /** Ответ GET /account/read для своего аккаунта. */
 export interface ReadSelfResponse {
   /** ID аккаунта. */
@@ -145,6 +159,15 @@ export class AuthApiService {
    */
   public readSelf(): Observable<ReadSelfResponse> {
     return this._http.get<ReadSelfResponse>(`${this._baseUrl}/account/read`);
+  }
+
+  /**
+   * Возвращает публичный профиль чужого аккаунта по ID (GET /account/read?id=).
+   * @param id - ID аккаунта.
+   * @returns Публичные данные аккаунта.
+   */
+  public readAccount(id: string): Observable<ReadOtherAccountResponse> {
+    return this._http.get<ReadOtherAccountResponse>(`${this._baseUrl}/account/read?id=${encodeURIComponent(id)}`);
   }
 
   /**
