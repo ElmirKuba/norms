@@ -213,6 +213,44 @@ _Нет активных задач._
 - **`NewDeviceApplicationComponent`** — список осиротевших собеседников мок; подключить к `GET /chat/read-orphan-peers` в шаге 9
 - **Чаты** — `ChatsApplicationComponent`, `ChatDetailApplicationComponent`, `CreateChatModalComponent` — полностью на моках; реализовать в шаге 9 (ECDH + WSS messaging)
 
+## Шаг 9 — Chats (декомпозиция)
+
+### Фаза 1 — Чаты без шифрования (plaintext байты в encrypted_blob)
+
+**Бэкенд:**
+- [ ] **9.1** — Drizzle-схема: таблицы `chats` + `pending_messages`, `db:push`, обновить `database-schema.md`
+- [ ] **9.2** — `GET /session/read-sessions?accountId=` — список сессий чужого аккаунта (для модалки выбора устройства)
+- [ ] **9.3** — `POST /chat/create` — создание чата (статус `active`, уникальность имени case-insensitive, CHECK session_a_id < session_b_id)
+- [ ] **9.4** — `GET /chat/read-list` — список чатов текущей сессии
+- [ ] **9.5** — `GET /chat/read-orphan-peers` — accountId'ы собеседников из чатов удалённых сессий моего аккаунта
+- [ ] **9.6** — WSS `send_message` → сохранить blob, если получатель онлайн — пушит сразу; `message_sent` → подтверждение отправителю с `message_id`
+- [ ] **9.7** — WSS `message_delivered` от получателя → удалить blob → WSS `message_delivered` отправителю
+- [ ] **9.8** — WSS sync при подключении — `handleConnection` пушит все `pending_messages` для сессии
+- [ ] **9.9** — WSS `message_read` от получателя → WSS `message_read` отправителю
+- [ ] **9.10** — `DELETE /chat/delete/:id` — удаление чата (cascade; WSS `chat_deleted` собеседнику)
+
+**Фронт:**
+- [ ] **9.11** — SQLite инфраструктура: `better-sqlite3` (Electron) + `@capacitor-community/sqlite` (Capacitor); `LocalDbService`; per-account DB + schema (`chats`, `messages`, `peer_devices`)
+- [ ] **9.12** — `LocalChatRepository` — CRUD над `chats` и `messages` в локальной SQLite
+- [ ] **9.13** — `ChatApiService` — HTTP-клиент: create, read-list, read-orphan-peers, delete
+- [ ] **9.14** — `CreateChatModalComponent` → реальный список сессий через API, `POST /chat/create`, запись в SQLite
+- [ ] **9.15** — `ChatsApplicationComponent` → загрузка чатов из локальной SQLite вместо моков
+- [ ] **9.16** — `ChatDetailApplicationComponent` → реальные сообщения из SQLite, отправка через WSS `send_message`
+- [ ] **9.17** — WSS: обработка `message_new` → сохранить в SQLite → отправить `message_delivered`
+- [ ] **9.18** — WSS: sync при подключении — получить накопленные сообщения → SQLite → `message_delivered`
+- [ ] **9.19** — WSS: обновление статусов `message_delivered` / `message_read` в SQLite → reactivity в UI
+- [ ] **9.20** — `NewDeviceApplicationComponent` → `GET /chat/read-orphan-peers` вместо мока
+- [ ] **9.21** — `is_dead` handling: `404 chat_not_found` → `is_dead = true` в SQLite → UI блокирует input
+
+### Фаза 2 — E2E шифрование (ECDH X25519 + HKDF-SHA256 + AES-256-GCM)
+
+- [ ] **9.22** — Бэкенд: `status` / `public_key_a` / `public_key_b` в схеме `chats`; `PATCH /chat/submit-key`; когда оба ключа есть — обнулить, статус → `active`, WSS `chat_key_ready`
+- [ ] **9.23** — Фронт: `chat_keys` таблица в локальной SQLite; мастер-ключ из SecureStorage (keychain)
+- [ ] **9.24** — Фронт: `CryptoService` — Web Crypto API: ECDH X25519 генерация пары, HKDF-SHA256, AES-256-GCM encrypt/decrypt
+- [ ] **9.25** — Фронт: создание чата → генерировать ECDH пару, загружать публичный ключ, статус `pending_key`; UI pending_key в чатах
+- [ ] **9.26** — Фронт: WSS `chat_key_ready` → получить публичный ключ собеседника → AES-ключ → `chat_keys` → зашифровать и отправить все `pending_key` сообщения
+- [ ] **9.27** — Фронт: все исходящие шифруем AES-256-GCM перед WSS, входящие расшифровываем перед записью в `messages.content`
+
 ## Implementation Order
 
 Зависимости между фичами определяют порядок реализации. Внутри группы — параллельно.
