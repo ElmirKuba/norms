@@ -20,6 +20,10 @@ export enum ErrorCode {
   AMBIGUOUS_QUERY = 'ambiguous_query',
   /** Превышен лимит неудачных попыток входа — аккаунт временно заблокирован. */
   LOGIN_RATE_LIMITED = 'login_rate_limited',
+  /** Запрос не содержит ни одного поля для обновления. */
+  NOTHING_TO_UPDATE = 'nothing_to_update',
+  /** Для смены пароля обязателен current_password. */
+  CURRENT_PASSWORD_REQUIRED = 'current_password_required',
 
   // Invite
   /** Код приглашения обязателен при закрытой регистрации. */
@@ -74,6 +78,8 @@ export const ErrorMessage: Record<ErrorCode, string> = {
   [ErrorCode.ACCOUNT_NOT_FOUND]: 'Аккаунт не найден',
   [ErrorCode.AMBIGUOUS_QUERY]: 'Передайте либо id, либо uin, но не оба',
   [ErrorCode.LOGIN_RATE_LIMITED]: 'Слишком много неудачных попыток',
+  [ErrorCode.NOTHING_TO_UPDATE]: 'Нет полей для обновления',
+  [ErrorCode.CURRENT_PASSWORD_REQUIRED]: 'Для смены пароля укажите current_password',
 
   // Invite
   [ErrorCode.INVITE_REQUIRED]: 'Код приглашения обязателен',

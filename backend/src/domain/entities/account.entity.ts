@@ -2,6 +2,8 @@
 export interface AccountEntity {
   /** Уникальный ID аккаунта в формате {uuid-v7}_{unix-ms}. */
   readonly id: string;
+  /** Произвольный псевдоним (display name) или null если не задан. */
+  readonly nickname: string | null;
   /** Опциональный юзернейм без учёта регистра. */
   readonly username: string | null;
   /** Хеш пароля (Argon2id). */
@@ -40,6 +42,8 @@ export interface AccountSearchResult {
 
 /** Частичные данные аккаунта для обновления — изменяются только переданные поля. */
 export interface UpdateAccountData {
+  /** Новый псевдоним (display name), или null чтобы удалить. */
+  readonly nickname?: string | null;
   /** Новый юзернейм, или null чтобы удалить его. */
   readonly username?: string | null;
   /** Новый хеш пароля. */

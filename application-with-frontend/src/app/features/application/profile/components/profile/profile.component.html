@@ -11,27 +11,37 @@
 <div class="profile__body">
   <div class="profile__card">
     <div class="profile__avatar">
-      <span class="profile__avatar-initials">ЕК</span>
+      <span class="profile__avatar-initials">{{ initials() }}</span>
     </div>
     <div class="profile__info">
-      <p class="profile__name">Эльмир К.</p>
-      <p class="profile__uin">UIN 10001</p>
+      <p class="profile__name">{{ displayName() }}</p>
+      @if (uin().length > 0) {
+        <p class="profile__uin">UIN {{ uin() }}</p>
+      }
     </div>
   </div>
 
   <section class="profile__section">
     <div class="profile__row">
-      <span class="profile__row-label">Имя</span>
-      <span class="profile__row-value">Эльмир К.</span>
-    </div>
-    <div class="profile__row">
       <span class="profile__row-label">UIN</span>
-      <span class="profile__row-value profile__row-value--mono">10001</span>
+      @if (uin().length > 0) {
+        <span class="profile__row-value profile__row-value--mono">{{ uin() }}</span>
+      } @else {
+        <span class="profile__row-value profile__row-value--empty">Назначается...</span>
+      }
     </div>
-    <div class="profile__row">
-      <span class="profile__row-label">Username</span>
-      <span class="profile__row-value profile__row-value--empty">Не задан</span>
-    </div>
+    @if (nickname() !== null) {
+      <div class="profile__row">
+        <span class="profile__row-label">Псевдоним</span>
+        <span class="profile__row-value">{{ nickname() }}</span>
+      </div>
+    }
+    @if (username() !== null) {
+      <div class="profile__row">
+        <span class="profile__row-label">Username</span>
+        <span class="profile__row-value">@{{ username() }}</span>
+      </div>
+    }
   </section>
 
   <div class="profile__dev-section">

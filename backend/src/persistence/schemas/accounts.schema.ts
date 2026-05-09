@@ -10,6 +10,8 @@ interface IAccountRow {
   readonly passwordHash: unknown;
   /** Опциональный юзернейм (CITEXT, без учёта регистра). */
   readonly username: unknown;
+  /** Отображаемый псевдоним — произвольный текст, задаётся пользователем. */
+  readonly nickname: unknown;
   /** Оставшееся количество инвайт-кодов. */
   readonly invitesRemaining: unknown;
   /** Флаг администратора. */
@@ -25,6 +27,7 @@ export const accounts = pgTable('accounts', {
   id: text('id').primaryKey(),
   passwordHash: text('password_hash').notNull(),
   username: citext('username').unique(),
+  nickname: text('nickname'),
   invitesRemaining: integer('invites_remaining').notNull().default(3),
   isAdmin: boolean('is_admin').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

@@ -10,26 +10,54 @@
 <div class="settings-sub__body">
   <section class="settings-sub__section">
     <div class="settings-sub__row">
-      <span class="settings-sub__row-label">Имя</span>
-      <span class="settings-sub__row-value">Эльмир К.</span>
-    </div>
-    <div class="settings-sub__row">
       <span class="settings-sub__row-label">UIN</span>
-      <span class="settings-sub__row-value settings-sub__row-value--mono">10001</span>
+      @if (uin().length > 0) {
+        <span class="settings-sub__row-value settings-sub__row-value--mono">{{ uin() }}</span>
+      } @else {
+        <span class="settings-sub__row-value settings-sub__row-value--empty">Назначается...</span>
+      }
     </div>
-    <div class="settings-sub__row">
-      <span class="settings-sub__row-label">Username</span>
-      <span class="settings-sub__row-value settings-sub__row-value--empty">Не назначен</span>
-    </div>
+    @if (username() !== null) {
+      <div class="settings-sub__row">
+        <span class="settings-sub__row-label">Username</span>
+        <span class="settings-sub__row-value">@{{ username() }}</span>
+      </div>
+    }
+    @if (editingNickname) {
+      <div class="settings-sub__row settings-sub__row--edit">
+        <input
+          class="settings-sub__input"
+          type="text"
+          placeholder="Ваш псевдоним..."
+          maxlength="100"
+          [(ngModel)]="nicknameDraft"
+          (keydown.enter)="saveNickname()"
+          (keydown.escape)="cancelEditNickname()"
+          autofocus
+        />
+        <div class="settings-sub__edit-actions">
+          <button class="settings-sub__edit-btn settings-sub__edit-btn--cancel" type="button" (click)="cancelEditNickname()">Отмена</button>
+          <button class="settings-sub__edit-btn settings-sub__edit-btn--save" type="button" (click)="saveNickname()">Сохранить</button>
+        </div>
+      </div>
+    } @else {
+      <div class="settings-sub__row settings-sub__row--clickable" (click)="startEditNickname()">
+        <span class="settings-sub__row-label">Псевдоним</span>
+        @if (savingNickname) {
+          <span class="settings-sub__row-value settings-sub__row-value--empty">Сохраняется...</span>
+        } @else if (nickname() !== null) {
+          <span class="settings-sub__row-value">{{ nickname() }}</span>
+        } @else {
+          <span class="settings-sub__row-value settings-sub__row-value--empty">Не задан</span>
+        }
+        <svg class="settings-sub__row-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    }
   </section>
 
   <section class="settings-sub__section">
-    <button class="settings-sub__action-row" type="button" disabled>
-      <span class="settings-sub__action-label">Сменить имя</span>
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </button>
     <a class="settings-sub__action-row" routerLink="/application/main/settings/change-password">
       <span class="settings-sub__action-label">Сменить пароль</span>
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">

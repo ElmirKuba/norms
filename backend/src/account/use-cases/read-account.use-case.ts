@@ -9,6 +9,8 @@ interface ReadOwnAccountResult {
   readonly id: string;
   /** UIN или null если не назначен. */
   readonly uin: string | null;
+  /** Псевдоним (display name) или null. */
+  readonly nickname: string | null;
   /** Юзернейм или null. */
   readonly username: string | null;
   /** Количество оставшихся инвайтов. */
@@ -25,6 +27,8 @@ interface ReadOtherAccountResult {
   readonly id: string;
   /** UIN или null если не назначен. */
   readonly uin: string | null;
+  /** Псевдоним (display name) или null. */
+  readonly nickname: string | null;
   /** Юзернейм или null. */
   readonly username: string | null;
   /** ISO-8601 дата создания. */
@@ -81,6 +85,7 @@ export class ReadAccountUseCase {
       return {
         id: account.id,
         uin,
+        nickname: account.nickname,
         username: account.username,
         invites_remaining: account.invitesRemaining,
         is_admin: account.isAdmin,
@@ -91,6 +96,7 @@ export class ReadAccountUseCase {
     return {
       id: account.id,
       uin,
+      nickname: account.nickname,
       username: account.username,
       created_at: account.createdAt.toISOString(),
     };

@@ -114,6 +114,7 @@ export class DrizzleAccountRepository extends AccountRepository {
   public async update(id: string, data: UpdateAccountData): Promise<AccountEntity | null> {
     const setValues = {
       updatedAt: new Date(),
+      ...(data.nickname !== undefined ? { nickname: data.nickname } : {}),
       ...(data.username !== undefined ? { username: data.username } : {}),
       ...(data.passwordHash !== undefined ? { passwordHash: data.passwordHash } : {}),
       ...(data.invitesRemaining !== undefined ? { invitesRemaining: data.invitesRemaining } : {}),
@@ -192,6 +193,7 @@ export class DrizzleAccountRepository extends AccountRepository {
   private _toEntity(row: typeof accounts.$inferSelect): AccountEntity {
     return {
       id: row.id,
+      nickname: row.nickname,
       username: row.username,
       passwordHash: row.passwordHash,
       invitesRemaining: row.invitesRemaining,

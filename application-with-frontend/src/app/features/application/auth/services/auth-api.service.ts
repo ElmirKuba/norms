@@ -92,6 +92,8 @@ export interface ReadSelfResponse {
   readonly id: string;
   /** UIN или null. */
   readonly uin: string | null;
+  /** Псевдоним (display name) или null если не задан. */
+  readonly nickname: string | null;
   /** Username или null. */
   readonly username: string | null;
   /** Оставшееся количество инвайтов. */
