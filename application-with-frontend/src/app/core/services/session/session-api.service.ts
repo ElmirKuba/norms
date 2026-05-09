@@ -29,6 +29,11 @@ export interface ApiSession {
   /** ISO-8601 дата последнего обновления (используется как «последний вход»). */
   readonly updated_at: string;
 }
+/** Ответ POST /session/clear-others. */
+export interface ClearOthersResponse {
+  /** Количество завершённых сессий. */
+  readonly kicked_count: number;
+}
 /* eslint-enable @typescript-eslint/naming-convention */
 
 /** HTTP-клиент для эндпоинтов /session/*. */
@@ -81,5 +86,13 @@ export class SessionApiService {
    */
   public updateNickname(nickname: string | null): Observable<unknown> {
     return this._http.patch(`${this._baseUrl}/session/update-nickname`, { nickname });
+  }
+
+  /**
+   * Удаляет все сессии аккаунта, кроме текущей (POST /session/clear-others).
+   * @returns kicked_count — количество завершённых сессий.
+   */
+  public clearOthers(): Observable<ClearOthersResponse> {
+    return this._http.post<ClearOthersResponse>(`${this._baseUrl}/session/clear-others`, {});
   }
 }

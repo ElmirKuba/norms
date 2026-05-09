@@ -95,4 +95,10 @@
       </div>
     }
   </section>
+
+  @if (hasOtherDevices()) {
+    <button class="devices__clear-btn" type="button" (click)="confirmClearOthers()">
+      Завершить все остальные сессии
+    </button>
+  }
 </div>

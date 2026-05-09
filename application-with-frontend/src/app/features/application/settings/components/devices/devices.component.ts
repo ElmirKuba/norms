@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import type { OnInit, WritableSignal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import type { OnInit, Signal, WritableSignal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
@@ -8,7 +8,7 @@ import { MODAL_BOTTOM_SHEET_PARAMS } from '../../../../../shared/modals/constant
 import { ModalHeaderIcon } from '../../../../../shared/modals/types/modal.types';
 import type { DialogModalData } from '../../../../../shared/modals/types/modal.types';
 import { SessionApiService } from '../../../../../core/services/session/session-api.service';
-import type { ApiSession } from '../../../../../core/services/session/session-api.service';
+import type { ApiSession, ClearOthersResponse } from '../../../../../core/services/session/session-api.service';
 
 /** Устройство, отображаемое в списке. */
 interface DeviceItem {
@@ -41,6 +41,11 @@ export class SettingsDevicesComponent implements OnInit {
 
   /** true — идёт загрузка списка устройств. */
   public readonly isLoading: WritableSignal<boolean> = signal(true);
+
+  /** true — есть хотя бы одна чужая сессия (показывать кнопку «Завершить все»). */
+  public readonly hasOtherDevices: Signal<boolean> = computed(
+    (): boolean => this.devices().some((d: DeviceItem): boolean => !d.isCurrent),
+  );
 
   /** Временное значение поля переименования. */
   public renameValue: string = '';
@@ -126,6 +131,23 @@ export class SettingsDevicesComponent implements OnInit {
     this.renamingId.set(null);
   }
 
+  /** Открывает диалог подтверждения завершения всех остальных сессий. */
+  public confirmClearOthers(): void {
+    this._dialog.open<DialogModalComponent, DialogModalData>(DialogModalComponent, {
+      ...MODAL_BOTTOM_SHEET_PARAMS,
+      data: {
+        icon: ModalHeaderIcon.WARNING,
+        title: 'Завершить все остальные сессии?',
+        text: 'Все устройства, кроме текущего, будут отключены.',
+        isConfirmModal: true,
+        confirmBtnText: 'Завершить все',
+        cancelBtnText: 'Отмена',
+        isFooterButtonsVertically: true,
+        confirmCallback: (): void => { this._clearOthers(); },
+      },
+    });
+  }
+
   /**
    * Кикает сессию по ID через API и убирает её из списка.
    * @param id - ID сессии.
@@ -135,6 +157,17 @@ export class SettingsDevicesComponent implements OnInit {
       next: (): void => {
         this.devices.update((list: DeviceItem[]): DeviceItem[] =>
           list.filter((d: DeviceItem): boolean => d.id !== id),
+        );
+      },
+    });
+  }
+
+  /** Завершает все сессии, кроме текущей, и убирает их из списка. */
+  private _clearOthers(): void {
+    this._sessionApi.clearOthers().subscribe({
+      next: (_res: ClearOthersResponse): void => {
+        this.devices.update((list: DeviceItem[]): DeviceItem[] =>
+          list.filter((d: DeviceItem): boolean => d.isCurrent),
         );
       },
     });

@@ -133,6 +133,24 @@
     margin-top: 5px;
   }
 
+  &__clear-btn {
+    width: 100%;
+    padding: 14px 16px;
+    background: none;
+    border: none;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--clr-danger);
+    cursor: pointer;
+    text-align: center;
+    transition: background 0.1s ease;
+
+    &:active {
+      background: var(--clr-danger-tint);
+    }
+  }
+
   &__rename-btn {
     padding: 4px 12px;
     border-radius: 7px;

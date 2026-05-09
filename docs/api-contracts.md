@@ -267,22 +267,25 @@ Errors:
 - 404 `account_not_found`
 
 ### `PATCH /api/v1/account/update`
-Смена пароля.
+Смена пароля и/или псевдонима (nickname). Оба поля опциональны, но хотя бы одно должно быть передано.
 
 Auth required.
 
 Request:
 ```json
 {
-  "current_password": "string",
-  "new_password": "string"
+  "current_password": "string (обязателен если передан new_password)",
+  "new_password": "string (≥8 символов, опционально)",
+  "nickname": "string | null (опционально; null — удалить псевдоним)"
 }
 ```
 
 Response 204.
 
 Errors:
-- 401 `invalid_credentials`
+- 400 `nothing_to_update` — не передано ни одного поля
+- 400 `current_password_required` — передан `new_password` без `current_password`
+- 401 `invalid_credentials` — `current_password` неверен
 
 Смена пароля **не ломает чаты** (мастер-ключ не зависит от пароля, см. [`local-storage.md`](local-storage.md)). Сессии остаются.
 
