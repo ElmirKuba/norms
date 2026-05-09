@@ -60,4 +60,21 @@ export class WssConnectionStore {
       }
     }
   }
+
+  /**
+   * Отправляет событие всем активным сессиям аккаунта, кроме указанной.
+   * Используется для уведомления других устройств без эха на инициатора.
+   * @param accountId - ID аккаунта.
+   * @param excludeSessionId - ID сессии-инициатора (не получит событие).
+   * @param event - Имя события.
+   * @param data - Данные события.
+   */
+  public sendToAccountExcept(accountId: string, excludeSessionId: string, event: string, data: object = {}): void {
+    const payload = JSON.stringify({ event, data });
+    for (const [sessionId, entry] of this._connections) {
+      if (sessionId !== excludeSessionId && entry.accountId === accountId && entry.socket.readyState === 1) {
+        entry.socket.send(payload);
+      }
+    }
+  }
 }

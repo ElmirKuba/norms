@@ -37,6 +37,19 @@ export class WssService {
    */
   public readonly passwordResetAt$: Subject<string> = new Subject<string>();
 
+  /**
+   * Эмитирует ISO-строку `at` при получении события password_changed (смена пароля с другого устройства).
+   * MainApplicationComponent подписывается и показывает баннер безопасности.
+   */
+  public readonly passwordChangedAt$: Subject<string> = new Subject<string>();
+
+  /**
+   * Эмитирует данные новой сессии при получении события session_created.
+   * MainApplicationComponent подписывается и показывает баннер с кнопками «Кикнуть» / «Закрыть».
+   */
+  public readonly sessionCreated$: Subject<{ sessionId: string; systemName: string; platform: string }> =
+    new Subject<{ sessionId: string; systemName: string; platform: string }>();
+
   /** Base URL бэкенда (из InjectionToken). */
   private readonly _apiBaseUrl: string = inject(API_BASE_URL);
 
@@ -139,6 +152,12 @@ export class WssService {
       case 'password_reset_via_recovery':
         this._onPasswordReset(msg.data);
         break;
+      case 'password_changed':
+        this._onPasswordChanged(msg.data);
+        break;
+      case 'session_created':
+        this._onSessionCreated(msg.data);
+        break;
       case 'error':
         this._onWssError(msg.data);
         break;
@@ -188,6 +207,28 @@ export class WssService {
     const at = data['at'];
     if (typeof at !== 'string') return;
     this.passwordResetAt$.next(at);
+  }
+
+  /**
+   * Эмитирует в passwordChangedAt$ при смене пароля с другого устройства.
+   * @param data - Данные события password_changed.
+   */
+  private _onPasswordChanged(data: Record<string, unknown>): void {
+    const at = data['at'];
+    if (typeof at !== 'string') return;
+    this.passwordChangedAt$.next(at);
+  }
+
+  /**
+   * Эмитирует в sessionCreated$ при входе с нового устройства.
+   * @param data - Данные события session_created.
+   */
+  private _onSessionCreated(data: Record<string, unknown>): void {
+    const sessionId = data['session_id'];
+    const systemName = data['system_name'];
+    const platform = data['platform'];
+    if (typeof sessionId !== 'string' || typeof systemName !== 'string' || typeof platform !== 'string') return;
+    this.sessionCreated$.next({ sessionId, systemName, platform });
   }
 
   /**

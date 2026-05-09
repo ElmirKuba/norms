@@ -94,7 +94,7 @@ export class AccountController {
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   public async update(@CurrentUser() user: JwtPayload, @Body() dto: UpdateAccountDto): Promise<void> {
-    await this._updateAccountUseCase.execute(user.sub, dto);
+    await this._updateAccountUseCase.execute(user.sub, user.sessionId, dto);
   }
 
   /**

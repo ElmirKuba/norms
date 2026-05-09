@@ -13,6 +13,7 @@ import * as argon2 from 'argon2';
 import { Redis } from 'ioredis';
 import { AccountRepository } from '../../domain/ports/account.repository.port';
 import { SessionRepository } from '../../domain/ports/session.repository.port';
+import { WssConnectionStore } from '../../wss/wss-connection.store';
 import type { AccountEntity } from '../../domain/entities/account.entity';
 import type { Platform } from '../../common/types/platform.type';
 import { generateRefreshToken } from '../../common/utils/crypto.util';
@@ -55,6 +56,7 @@ export class AuthAccountUseCase {
     private readonly _sessionRepo: SessionRepository,
     private readonly _jwtService: JwtService,
     private readonly _config: ConfigService,
+    private readonly _wss: WssConnectionStore,
     @Inject(REDIS_CLIENT) private readonly _redis: Redis,
   ) {}
 
@@ -112,6 +114,20 @@ export class AuthAccountUseCase {
       platform: session.platform,
       isAdmin: account.isAdmin,
     });
+
+    this._wss.sendToAccount(account.id, 'session_created', {
+      session_id: session.id,
+      system_name: session.systemName,
+      platform: session.platform,
+      at: new Date().toISOString(),
+    });
+
+    // TODO: отправить push-уведомление на все существующие сессии аккаунта (кроме новой).
+    // Текст: "Выполнен вход на новом устройстве. Если это были не вы — кикните сессию."
+    // Платформы: APNs (iOS/iPadOS) и FCM (Android). Electron — только WSS (норм для десктопа).
+    // Реализация: PushService.sendSessionCreated(accountId, excludeSessionId: session.id).
+    // Зависит от: POST /api/v1/push/register-token, sessions.push_token/push_provider.
+    // См. docs/push-notifications.md.
 
     return {
       account: {
