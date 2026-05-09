@@ -113,7 +113,7 @@
       <div class="rq__form">
         <p class="rq__form-label">Выберите вопрос из списка</p>
         <section class="settings-sub__section rq__preset-list">
-          @for (q of presetQuestions; track q.id) {
+          @for (q of presetQuestions(); track q.id) {
             <button
               class="rq__preset-item"
               type="button"

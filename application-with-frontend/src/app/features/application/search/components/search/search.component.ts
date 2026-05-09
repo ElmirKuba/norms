@@ -3,7 +3,7 @@ import type { WritableSignal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Subject, switchMap, debounceTime, of, EMPTY, catchError } from 'rxjs';
+import { Subject, switchMap, debounceTime, map, of, EMPTY, catchError } from 'rxjs';
 import type { Observable } from 'rxjs';
 import { SearchApiService, avatarColorForId } from '../../services/search-api.service';
 import type { SearchResultItem } from '../../services/search-api.service';
@@ -82,12 +82,13 @@ export class SearchApplicationComponent {
         }
         this.loading.set(true);
         return this._searchApi.search(q.trim()).pipe(
-          catchError((): Observable<SearchResultItem[]> => of([])),
+          map((items: SearchResultItem[]): SearchDisplayItem[] => items.map(toDisplayItem)),
+          catchError((): Observable<SearchDisplayItem[]> => of([])),
         );
       }),
       takeUntilDestroyed(this._destroyRef),
-    ).subscribe((items: SearchResultItem[] | SearchDisplayItem[]): void => {
-      this.results.set((items as SearchResultItem[]).map(toDisplayItem));
+    ).subscribe((items: SearchDisplayItem[]): void => {
+      this.results.set(items);
       this.loading.set(false);
     });
   }
