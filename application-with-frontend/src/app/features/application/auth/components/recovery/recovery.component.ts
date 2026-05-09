@@ -2,8 +2,9 @@ import { ChangeDetectionStrategy, Component, computed, signal, inject } from '@a
 import type { WritableSignal, Signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { RECOVERY_PRESET_QUESTIONS } from '../../../settings/types/settings.types';
-import type { RecoveryPresetQuestion } from '../../../settings/types/settings.types';
+import type { HttpErrorResponse } from '@angular/common/http';
+import { RecoveryApiService } from '../../../settings/services/recovery-api.service';
+import type { LoginQuestion, ReadQuestionsForLoginResponse, CheckAnswerResponse } from '../../../settings/services/recovery-api.service';
 
 /** Шаг восстановления */
 type RecoveryStep = 'uin' | 'answer' | 'password';
@@ -17,20 +18,26 @@ type RecoveryStep = 'uin' | 'answer' | 'password';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RecoveryApplicationComponent {
-  /** Preset-вопросы (мок) */
-  public readonly presetQuestions: RecoveryPresetQuestion[] = RECOVERY_PRESET_QUESTIONS;
-
   /** Текущий шаг */
   public readonly step: WritableSignal<RecoveryStep> = signal('uin');
 
   /** UIN введённый пользователем */
   public readonly uin: WritableSignal<string> = signal('');
 
+  /** Вопросы аккаунта (заполняются после шага 1) */
+  public readonly questions: WritableSignal<LoginQuestion[]> = signal([]);
+
+  /** ID аккаунта (из ответа шага 1, нужен для check-answer) */
+  public readonly accountId: WritableSignal<string> = signal('');
+
   /** Выбранный вопрос */
-  public readonly selectedQuestion: WritableSignal<RecoveryPresetQuestion | null> = signal(null);
+  public readonly selectedQuestion: WritableSignal<LoginQuestion | null> = signal(null);
 
   /** Ответ */
   public readonly answer: WritableSignal<string> = signal('');
+
+  /** reset_token из check-answer (нужен для шага 3) */
+  public readonly resetToken: WritableSignal<string> = signal('');
 
   /** Новый пароль */
   public readonly newPassword: WritableSignal<string> = signal('');
@@ -46,6 +53,12 @@ export class RecoveryApplicationComponent {
 
   /** Показывать подтверждение пароля открытым текстом */
   public readonly showConfirmPassword: WritableSignal<boolean> = signal(false);
+
+  /** Идёт API-запрос */
+  public readonly loading: WritableSignal<boolean> = signal(false);
+
+  /** Сообщение об ошибке текущего шага */
+  public readonly errorMessage: WritableSignal<string | null> = signal(null);
 
   /** Кнопка шага 1 активна */
   public readonly isStep1Valid: Signal<boolean> = computed((): boolean => this.uin().trim().length >= 4);
@@ -63,40 +76,105 @@ export class RecoveryApplicationComponent {
   /** Роутер для навигации */
   private readonly _router: Router = inject(Router);
 
-  /** Шаг 1 → 2 */
+  /** API восстановления */
+  private readonly _recoveryApi: RecoveryApiService = inject(RecoveryApiService);
+
+  /** Шаг 1: получить вопросы аккаунта по UIN. */
   public submitUin(): void {
-    if (!this.isStep1Valid()) return;
-    this.step.set('answer');
-    this.answer.set('');
-    this.selectedQuestion.set(null);
+    if (!this.isStep1Valid() || this.loading()) return;
+    this.errorMessage.set(null);
+    this.loading.set(true);
+
+    this._recoveryApi.readQuestionsForLogin(this.uin().trim()).subscribe({
+      next: (res: ReadQuestionsForLoginResponse): void => {
+        this.accountId.set(res.account_id);
+        this.questions.set(res.questions);
+        this.answer.set('');
+        this.selectedQuestion.set(null);
+        this.loading.set(false);
+        this.step.set('answer');
+      },
+      error: (err: HttpErrorResponse): void => {
+        this.loading.set(false);
+        /* eslint-disable @typescript-eslint/no-unsafe-member-access -- HTTP error body */
+        if (err.status === 404 && err.error?.code === 'recovery_not_configured') {
+          this.errorMessage.set('Для этого аккаунта не настроено восстановление.');
+        } else if (err.status === 423) {
+          this.errorMessage.set('Слишком много попыток. Попробуйте позже.');
+        } else if (err.status === 404) {
+          this.errorMessage.set('Аккаунт не найден.');
+        } else {
+          this.errorMessage.set('Ошибка соединения. Попробуйте ещё раз.');
+        }
+        /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+      },
+    });
   }
 
   /**
-   * Выбрать вопрос.
-   * @param q - выбранный preset-вопрос
+   * Выбрать вопрос из списка.
+   * @param q - выбранный вопрос
    */
-  public selectQuestion(q: RecoveryPresetQuestion): void {
+  public selectQuestion(q: LoginQuestion): void {
     this.selectedQuestion.set(q);
     this.showQuestions.set(false);
   }
 
-  /** Шаг 2 → 3 */
+  /** Шаг 2: проверить ответ, получить reset_token. */
   public submitAnswer(): void {
-    if (!this.isStep2Valid()) return;
-    this.step.set('password');
+    const question = this.selectedQuestion();
+    if (!this.isStep2Valid() || question === null || this.loading()) return;
+    this.errorMessage.set(null);
+    this.loading.set(true);
+
+    this._recoveryApi.checkAnswer(this.accountId(), question.id, this.answer().trim()).subscribe({
+      next: (res: CheckAnswerResponse): void => {
+        this.resetToken.set(res.reset_token);
+        this.newPassword.set('');
+        this.confirmPassword.set('');
+        this.loading.set(false);
+        this.step.set('password');
+      },
+      error: (err: HttpErrorResponse): void => {
+        this.loading.set(false);
+        if (err.status === 401) {
+          this.errorMessage.set('Неверный ответ.');
+        } else if (err.status === 423) {
+          this.errorMessage.set('Слишком много попыток. Попробуйте позже.');
+        } else {
+          this.errorMessage.set('Ошибка соединения. Попробуйте ещё раз.');
+        }
+      },
+    });
   }
 
-  /** Шаг 3 → завершение (мок) */
+  /** Шаг 3: сбросить пароль по reset_token. */
   public submitPassword(): void {
-    if (!this.isStep3Valid()) return;
-    void this._router.navigate(['/application/auth/login']);
+    if (!this.isStep3Valid() || this.loading()) return;
+    this.errorMessage.set(null);
+    this.loading.set(true);
+
+    this._recoveryApi.resetPassword(this.resetToken(), this.newPassword()).subscribe({
+      next: (): void => {
+        this.loading.set(false);
+        void this._router.navigate(['/application/auth/login']);
+      },
+      error: (err: HttpErrorResponse): void => {
+        this.loading.set(false);
+        if (err.status === 401) {
+          this.errorMessage.set('Ссылка восстановления устарела. Начните заново.');
+        } else {
+          this.errorMessage.set('Ошибка соединения. Попробуйте ещё раз.');
+        }
+      },
+    });
   }
 
   /** Назад */
   public goBack(): void {
     const current = this.step();
-    if (current === 'answer') { this.step.set('uin'); return; }
-    if (current === 'password') { this.step.set('answer'); return; }
+    if (current === 'answer') { this.errorMessage.set(null); this.step.set('uin'); return; }
+    if (current === 'password') { this.errorMessage.set(null); this.step.set('answer'); return; }
     void this._router.navigate(['/application/auth/login']);
   }
 }

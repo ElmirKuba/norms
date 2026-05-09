@@ -16,13 +16,17 @@
       />
     </div>
 
+    @if (errorMessage() !== null) {
+      <p class="recovery__error">{{ errorMessage() }}</p>
+    }
+
     <button
       class="recovery__btn"
       type="button"
-      [disabled]="!isStep1Valid()"
+      [disabled]="!isStep1Valid() || loading()"
       (click)="submitUin()"
     >
-      Продолжить
+      {{ loading() ? 'Проверяем...' : 'Продолжить' }}
     </button>
   </div>
 }
@@ -39,7 +43,7 @@
         (click)="showQuestions.set(!showQuestions())"
       >
         <span [class.recovery__question-select-placeholder]="!selectedQuestion()">
-          {{ selectedQuestion()?.text ?? 'Выберите вопрос' }}
+          {{ selectedQuestion()?.question ?? 'Выберите вопрос' }}
         </span>
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
           <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -48,13 +52,13 @@
 
       @if (showQuestions()) {
         <div class="recovery__question-list">
-          @for (q of presetQuestions; track q.id) {
+          @for (q of questions(); track q.id) {
             <button
               class="recovery__question-item"
               type="button"
               (click)="selectQuestion(q)"
             >
-              {{ q.text }}
+              {{ q.question }}
             </button>
           }
         </div>
@@ -72,13 +76,17 @@
       />
     </div>
 
+    @if (errorMessage() !== null) {
+      <p class="recovery__error">{{ errorMessage() }}</p>
+    }
+
     <button
       class="recovery__btn"
       type="button"
-      [disabled]="!isStep2Valid()"
+      [disabled]="!isStep2Valid() || loading()"
       (click)="submitAnswer()"
     >
-      Продолжить
+      {{ loading() ? 'Проверяем...' : 'Продолжить' }}
     </button>
   </div>
 }
@@ -150,13 +158,17 @@
       <p class="recovery__error">Пароли не совпадают</p>
     }
 
+    @if (errorMessage() !== null) {
+      <p class="recovery__error">{{ errorMessage() }}</p>
+    }
+
     <button
       class="recovery__btn"
       type="button"
-      [disabled]="!isStep3Valid()"
+      [disabled]="!isStep3Valid() || loading()"
       (click)="submitPassword()"
     >
-      Сохранить
+      {{ loading() ? 'Сохраняем...' : 'Сохранить' }}
     </button>
   </div>
 }

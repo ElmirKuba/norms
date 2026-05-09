@@ -4,6 +4,30 @@ import { HttpClient } from '@angular/common/http';
 import type { Observable } from 'rxjs';
 import { API_BASE_URL } from '../../../../core/api/api-config';
 
+/** Вопрос аккаунта для экрана «Забыл пароль». */
+export interface LoginQuestion {
+  /** ID вопроса (используется в check-answer). */
+  readonly id: string;
+  /** Текст вопроса. */
+  readonly question: string;
+}
+
+/** Ответ GET /recovery/read-questions-for-login. */
+export interface ReadQuestionsForLoginResponse {
+  /** ID аккаунта (нужен для check-answer). */
+  readonly account_id: string;
+  /** Вопросы аккаунта. */
+  readonly questions: LoginQuestion[];
+}
+
+/** Ответ POST /recovery/check-answer. */
+export interface CheckAnswerResponse {
+  /** Одноразовый токен для сброса пароля (TTL 10 мин). */
+  readonly reset_token: string;
+  /** ISO-8601 дата истечения. */
+  readonly expires_at: string;
+}
+
 /** Пресет-вопрос восстановления от бэка. */
 export interface PresetQuestion {
   /** Стабильный ID пресет-вопроса. */
@@ -91,5 +115,48 @@ export class RecoveryApiService {
    */
   public deleteQuestion(id: string): Observable<unknown> {
     return this._http.delete(`${this._baseUrl}/recovery/question/delete/${id}`);
+  }
+
+  /**
+   * Возвращает вопросы аккаунта для флоу восстановления (GET /recovery/read-questions-for-login).
+   * @param login - UIN или username.
+   * @returns account_id + список вопросов аккаунта.
+   */
+  public readQuestionsForLogin(login: string): Observable<ReadQuestionsForLoginResponse> {
+    return this._http.get<ReadQuestionsForLoginResponse>(
+      `${this._baseUrl}/recovery/read-questions-for-login?login=${encodeURIComponent(login)}`,
+    );
+  }
+
+  /**
+   * Проверяет ответ на вопрос (POST /recovery/check-answer).
+   * @param accountId - ID аккаунта.
+   * @param questionId - ID вопроса.
+   * @param answer - Ответ в открытом виде.
+   * @returns reset_token + expires_at.
+   */
+  public checkAnswer(accountId: string, questionId: string, answer: string): Observable<CheckAnswerResponse> {
+    /* eslint-disable @typescript-eslint/naming-convention -- snake_case API fields */
+    return this._http.post<CheckAnswerResponse>(`${this._baseUrl}/recovery/check-answer`, {
+      account_id: accountId,
+      question_id: questionId,
+      answer,
+    });
+    /* eslint-enable @typescript-eslint/naming-convention */
+  }
+
+  /**
+   * Сбрасывает пароль по reset_token (POST /recovery/reset-password).
+   * @param resetToken - Одноразовый токен из check-answer.
+   * @param newPassword - Новый пароль.
+   * @returns Пустой Observable.
+   */
+  public resetPassword(resetToken: string, newPassword: string): Observable<unknown> {
+    /* eslint-disable @typescript-eslint/naming-convention -- snake_case API fields */
+    return this._http.post(`${this._baseUrl}/recovery/reset-password`, {
+      reset_token: resetToken,
+      new_password: newPassword,
+    });
+    /* eslint-enable @typescript-eslint/naming-convention */
   }
 }
