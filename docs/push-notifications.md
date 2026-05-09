@@ -14,6 +14,7 @@ Apple/Google видят только: "пришло уведомление в а
 |---|---|---|
 | Новое сообщение | `{ type: "message", chat_id }` | Тихое пробуждение → локальная расшифровка → локальная нотификация |
 | UIN присвоен | `{ type: "uin_assigned" }` | «Ваш UIN готов — войдите в приложение» |
+| Сброс пароля | `{ type: "password_reset" }` | «Пароль изменён через Recovery. Если это были не вы — смените пароль.» |
 
 > **TODO (UIN push):** `UinGenerationProcessor` шлёт WSS `uin_assigned` — но если iOS убила прилу в фоне, WSS не активен. Нужно безусловно слать push после WSS-события. Реализация: `PushModule` (APNs + FCM), `POST /push/register-token`, `sessions.push_token/push_provider`. Триггер: `UinGenerationProcessor.process()` → `PushService.sendUinAssigned(accountId)`. Помечено TODO-комментарием в процессоре.
 

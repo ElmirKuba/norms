@@ -38,5 +38,14 @@ export class ResetPasswordUseCase {
     this._wss.sendToAccount(accountId, 'password_reset_via_recovery', {
       at: new Date().toISOString(),
     });
+
+    // TODO: помимо WSS, отправить push-уведомление на все сессии аккаунта с push_token.
+    // Если приложение не активно, WSS-событие будет потеряно — пуш гарантирует доставку.
+    // Текст: "Пароль изменён через Recovery. Если это были не вы — смените пароль."
+    // Платформы: APNs (iOS/iPadOS) и FCM (Android). Electron получает событие только через WSS
+    // (Electron Notification API требует запущенного приложения — это ок для десктопа).
+    // Реализация: PushModule + PushService.sendPasswordReset(accountId).
+    // Зависит от: POST /api/v1/push/register-token, sessions.push_token/push_provider.
+    // См. docs/push-notifications.md.
   }
 }

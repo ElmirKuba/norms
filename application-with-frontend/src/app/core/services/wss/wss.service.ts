@@ -275,6 +275,7 @@ export class WssService {
     const delay = Math.min(1000 * (2 ** this._reconnectAttempts), MAX_RECONNECT_DELAY_MS);
     this._reconnectAttempts += 1;
     this._reconnectTimer = setTimeout((): void => {
+      if (this.connectionState() !== 'disconnected') return;
       const token = this._tokenStorage.accessToken;
       if (token !== null) {
         this._openSocket(token);
