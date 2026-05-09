@@ -2,13 +2,19 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, signal }
 import type { OnInit, WritableSignal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
 import { AuthApiService } from '../../../auth/services/auth-api.service';
 import type { ReadSelfResponse } from '../../../auth/services/auth-api.service';
 import { AccountApiService } from '../../services/account-api.service';
+import { DialogModalComponent } from '../../../../../shared/modals/components/dialog-modal/dialog-modal.component';
+import { MODAL_BOTTOM_SHEET_PARAMS } from '../../../../../shared/modals/constants/modal.constants';
+import { ModalHeaderIcon } from '../../../../../shared/modals/types/modal.types';
+import type { DialogModalData } from '../../../../../shared/modals/types/modal.types';
+import { TokenStorageService } from '../../../../../core/services/storage/token-storage.service';
 
 /** Подэкран настроек — Аккаунт */
 @Component({
-  imports: [RouterLink, FormsModule],
+  imports: [RouterLink, FormsModule, DialogModalComponent],
   selector: 'application-settings-account',
   templateUrl: './account.component.html',
   styleUrl: './account.component.scss',
@@ -36,11 +42,17 @@ export class SettingsAccountComponent implements OnInit {
   /** Роутер для навигации */
   private readonly _router: Router = inject(Router);
 
+  /** Сервис диалогов Angular Material. */
+  private readonly _dialog: MatDialog = inject(MatDialog);
+
   /** API-клиент аккаунта */
   private readonly _authApi: AuthApiService = inject(AuthApiService);
 
   /** API для обновления аккаунта */
   private readonly _accountApi: AccountApiService = inject(AccountApiService);
+
+  /** Хранилище токенов — очищается после удаления аккаунта. */
+  private readonly _tokenStorage: TokenStorageService = inject(TokenStorageService);
 
   /** Change detector для OnPush */
   private readonly _cdr: ChangeDetectorRef = inject(ChangeDetectorRef);
@@ -91,8 +103,35 @@ export class SettingsAccountComponent implements OnInit {
     });
   }
 
+  /** Открывает диалог подтверждения удаления аккаунта. */
+  public confirmDeleteAccount(): void {
+    this._dialog.open<DialogModalComponent, DialogModalData>(DialogModalComponent, {
+      ...MODAL_BOTTOM_SHEET_PARAMS,
+      data: {
+        icon: ModalHeaderIcon.WARNING,
+        title: 'Удалить аккаунт?',
+        text: 'Аккаунт, все сессии, инвайты и вопросы восстановления будут удалены без возможности восстановления.',
+        isConfirmModal: true,
+        confirmBtnText: 'Удалить',
+        cancelBtnText: 'Отмена',
+        isFooterButtonsVertically: true,
+        confirmCallback: (): void => { this._deleteAccount(); },
+      },
+    });
+  }
+
   /** Назад к настройкам */
   public goBack(): void {
     void this._router.navigate(['/application/main/settings']);
+  }
+
+  /** Удаляет аккаунт через API, очищает токены и переходит на welcome. */
+  private _deleteAccount(): void {
+    this._accountApi.deleteAccount().subscribe({
+      next: (): void => {
+        this._tokenStorage.clear();
+        void this._router.navigate(['/application/welcome']);
+      },
+    });
   }
 }

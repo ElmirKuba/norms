@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Patch,
+  Delete,
   Body,
   Query,
   HttpCode,
@@ -20,8 +21,9 @@ import { CreateAccountDto } from './dto/create-account.dto';
 import { AuthAccountDto } from './dto/auth-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { UpdateAccountUseCase } from './use-cases/update-account.use-case';
+import { DeleteAccountUseCase } from './use-cases/delete-account.use-case';
 
-/** Контроллер управления аккаунтом: регистрация, авторизация, выход, чтение, обновление. */
+/** Контроллер управления аккаунтом: регистрация, авторизация, выход, чтение, обновление, удаление. */
 @Controller('account')
 export class AccountController {
   public constructor(
@@ -30,6 +32,7 @@ export class AccountController {
     private readonly _logoutUseCase: LogoutUseCase,
     private readonly _readAccountUseCase: ReadAccountUseCase,
     private readonly _updateAccountUseCase: UpdateAccountUseCase,
+    private readonly _deleteAccountUseCase: DeleteAccountUseCase,
   ) {}
 
   /**
@@ -92,5 +95,17 @@ export class AccountController {
   @HttpCode(HttpStatus.NO_CONTENT)
   public async update(@CurrentUser() user: JwtPayload, @Body() dto: UpdateAccountDto): Promise<void> {
     await this._updateAccountUseCase.execute(user.sub, dto);
+  }
+
+  /**
+   * Удаление аккаунта и всех связанных данных (сессии, инвайты, Q/A).
+   * Всем активным сессиям отправляется WSS session_kicked.
+   * @param user - Payload текущего JWT.
+   */
+  @Delete('delete')
+  @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  public async delete(@CurrentUser() user: JwtPayload): Promise<void> {
+    await this._deleteAccountUseCase.execute(user.sub);
   }
 }

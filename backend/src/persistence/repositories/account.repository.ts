@@ -1,11 +1,31 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { eq, like } from 'drizzle-orm';
+import { and, eq, like } from 'drizzle-orm';
 import { AccountRepository } from '../../domain/ports/account.repository.port';
 import type { AccountEntity, AccountSearchResult, CreateAccountData, UpdateAccountData } from '../../domain/entities/account.entity';
 import { generateId } from '../../common/utils/id.util';
 import { accounts, uins } from '../schemas';
 import { DRIZZLE_DB } from '../drizzle.module';
-import type { DrizzleDb } from '../drizzle.module';
+import type { DrizzleDb, DrizzleTransaction } from '../drizzle.module';
+
+/** Строка Drizzle-запроса при поиске по UIN (inner join). */
+interface UinSearchRow {
+  /** ID аккаунта. */
+  readonly accountId: string;
+  /** Username или null. */
+  readonly username: string | null;
+  /** Номер UIN (гарантированно присутствует при inner join). */
+  readonly uin: string;
+}
+
+/** Строка Drizzle-запроса при поиске по username (left join, UIN может отсутствовать). */
+interface UsernameSearchRow {
+  /** ID аккаунта. */
+  readonly accountId: string;
+  /** Username или null. */
+  readonly username: string | null;
+  /** Номер UIN или null. */
+  readonly uin: string | null;
+}
 
 /** Реализация порта AccountRepository через Drizzle ORM. */
 @Injectable()
@@ -157,7 +177,7 @@ export class DrizzleAccountRepository extends AccountRepository {
         .innerJoin(uins, eq(uins.accountId, accounts.id))
         .where(eq(uins.number, q))
         .limit(limit);
-      return rows.map((r): AccountSearchResult => ({
+      return rows.map((r: UinSearchRow): AccountSearchResult => ({
         accountId: r.accountId,
         uin: r.uin,
         username: r.username,
@@ -170,7 +190,7 @@ export class DrizzleAccountRepository extends AccountRepository {
       .leftJoin(uins, eq(uins.accountId, accounts.id))
       .where(like(accounts.username, `${q}%`))
       .limit(limit);
-    return rows.map((r): AccountSearchResult => ({
+    return rows.map((r: UsernameSearchRow): AccountSearchResult => ({
       accountId: r.accountId,
       uin: r.uin ?? null,
       username: r.username,
@@ -178,11 +198,24 @@ export class DrizzleAccountRepository extends AccountRepository {
   }
 
   /**
-   * Удаляет аккаунт по ID.
+   * Удаляет аккаунт по ID в транзакции: отвязывает/удаляет UIN, затем удаляет аккаунт.
+   * Премиум-UIN возвращается в пул (account_id = NULL), обычный — удаляется.
+   * Все связанные сессии, инвайты, Q/A убираются каскадом через FK.
    * @param id - ID аккаунта.
    */
   public async delete(id: string): Promise<void> {
-    await this._db.delete(accounts).where(eq(accounts.id, id));
+    await this._db.transaction(async (tx: DrizzleTransaction): Promise<void> => {
+      await tx
+        .update(uins)
+        .set({ accountId: null, updatedAt: new Date() })
+        .where(and(eq(uins.accountId, id), eq(uins.isPremium, true)));
+
+      await tx
+        .delete(uins)
+        .where(and(eq(uins.accountId, id), eq(uins.isPremium, false)));
+
+      await tx.delete(accounts).where(eq(accounts.id, id));
+    });
   }
 
   /**

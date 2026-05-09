@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "26c2d88c-1354-4a1e-860f-c503f2a58105",
+    "_postman_id": "4b9363a7-69be-40da-b49e-dc36e878c599",
     "name": "norms",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "19244912"
@@ -147,9 +147,7 @@
                   "  pm.collectionVariables.set('refresh_token', res.session.refresh_token);",
                   "}"
                 ],
-                "type": "text/javascript",
-                "packages": {},
-                "requests": {}
+                "type": "text/javascript"
               }
             }
           ],
@@ -158,7 +156,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"login\": \"2086\",\n  \"password\": \"secret123\",\n  \"system_name\": \"iPhone 15\",\n  \"platform\": \"ios\"\n}",
+              "raw": "{\n  \"login\": \"2024\",\n  \"password\": \"kubapass\",\n  \"system_name\": \"iPhone 15\",\n  \"platform\": \"ios\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -189,14 +187,14 @@
             {
               "listen": "test",
               "script": {
-                "type": "text/javascript",
                 "exec": [
-                  "if (pm.response.code === 200) {",
+                  "if (pm.response.code === 201) {",
                   "  const res = pm.response.json();",
                   "  pm.collectionVariables.set('access_token', res.access_token);",
                   "  pm.collectionVariables.set('refresh_token', res.refresh_token);",
                   "}"
-                ]
+                ],
+                "type": "text/javascript"
               }
             }
           ],
@@ -281,7 +279,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "value": "019e0339-025a-7599-aa1b-173845fd7982_1778170528346"
+                  "value": ""
                 }
               ]
             }
@@ -368,15 +366,6 @@
             },
             "method": "POST",
             "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"refresh_token\": \"{{refresh_token}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
             "url": {
               "raw": "{{base_url}}/account/logout",
               "host": [
@@ -424,7 +413,7 @@
           "response": []
         },
         {
-          "name": "Профиль другого аккаунта",
+          "name": "Профиль другого аккаунта (по UIN)",
           "request": {
             "auth": {
               "type": "bearer",
@@ -450,7 +439,7 @@
               "query": [
                 {
                   "key": "id",
-                  "value": "019e02b6-cb54-713d-a2d4-0207c4a43666_1778161994580",
+                  "value": "",
                   "disabled": true
                 },
                 {
@@ -461,6 +450,176 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Сменить пароль",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"secret123\",\n  \"new_password\": \"newsecret123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/account/update",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "account",
+                "update"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Обновить псевдоним",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nickname\": \"Эльмир К.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/account/update",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "account",
+                "update"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Убрать псевдоним (null)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nickname\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/account/update",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "account",
+                "update"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Поиск пользователей",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/search?q=1234&limit=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "1234"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Удалить аккаунт",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/account/delete",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "account",
+                "delete"
+              ]
+            }
+          }
         }
       ]
     },
@@ -636,7 +795,15 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "",
+              "raw": "{{base_url}}/invite/revoke/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "invite",
+                "revoke",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -650,7 +817,7 @@
       ]
     },
     {
-      "name": "Флоу 6 — Recovery",
+      "name": "Флоу 6 — Recovery Q&A (настройки)",
       "item": [
         {
           "name": "1. Пресет-вопросы",
@@ -659,94 +826,186 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/recovery/preset-questions",
-              "host": ["{{base_url}}"],
-              "path": ["recovery", "preset-questions"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "recovery",
+                "preset-questions"
+              ]
             }
           },
           "response": []
         },
         {
-          "name": "2. Создать Q/A пару",
+          "name": "2. Мои вопросы",
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/recovery/question/read-list",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "recovery",
+                "question",
+                "read-list"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Создать вопрос",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const res = pm.response.json();",
+                  "  pm.collectionVariables.set('recovery_question_id', res.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "POST",
             "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"question\": \"Кличка первого питомца\",\n  \"answer\": \"Барсик\"\n}",
-              "options": {"raw": {"language": "json"}}
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{base_url}}/recovery/question/create",
-              "host": ["{{base_url}}"],
-              "path": ["recovery", "question", "create"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "recovery",
+                "question",
+                "create"
+              ]
             }
           },
           "response": []
         },
         {
-          "name": "3. Мои вопросы",
+          "name": "4. Обновить вопрос",
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/recovery/question/read-list",
-              "host": ["{{base_url}}"],
-              "path": ["recovery", "question", "read-list"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "4. Обновить Q/A пару",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "PATCH",
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"answer\": \"Мурзик\"\n}",
-              "options": {"raw": {"language": "json"}}
+              "raw": "{\n  \"question\": \"Кличка первого питомца\",\n  \"answer\": \"Мурзик\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{base_url}}/recovery/question/update/:id",
-              "host": ["{{base_url}}"],
-              "path": ["recovery", "question", "update", ":id"],
-              "variable": [{"key": "id", "value": ""}]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "recovery",
+                "question",
+                "update",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{recovery_question_id}}"
+                }
+              ]
             }
           },
           "response": []
         },
         {
-          "name": "5. Удалить Q/A пару",
+          "name": "5. Удалить вопрос",
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "DELETE",
             "header": [],
             "url": {
               "raw": "{{base_url}}/recovery/question/delete/:id",
-              "host": ["{{base_url}}"],
-              "path": ["recovery", "question", "delete", ":id"],
-              "variable": [{"key": "id", "value": ""}]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "recovery",
+                "question",
+                "delete",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{recovery_question_id}}"
+                }
+              ]
             }
           },
           "response": []
-        },
+        }
+      ]
+    },
+    {
+      "name": "Флоу 7 — Recovery (забыл пароль)",
+      "item": [
         {
-          "name": "6. Вопросы по логину (экран забыл пароль)",
+          "name": "1. Вопросы аккаунта по логину",
           "event": [
             {
               "listen": "test",
@@ -756,7 +1015,7 @@
                   "if (pm.response.code === 200) {",
                   "  const res = pm.response.json();",
                   "  pm.collectionVariables.set('recovery_account_id', res.account_id);",
-                  "  if (res.questions.length > 0) {",
+                  "  if (res.questions && res.questions.length > 0) {",
                   "    pm.collectionVariables.set('recovery_question_id', res.questions[0].id);",
                   "  }",
                   "}"
@@ -768,16 +1027,26 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/recovery/read-questions-for-login?login=2086",
-              "host": ["{{base_url}}"],
-              "path": ["recovery", "read-questions-for-login"],
-              "query": [{"key": "login", "value": "2086"}]
+              "raw": "{{base_url}}/recovery/read-questions-for-login?login=2024",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "recovery",
+                "read-questions-for-login"
+              ],
+              "query": [
+                {
+                  "key": "login",
+                  "value": "2024"
+                }
+              ]
             }
           },
           "response": []
         },
         {
-          "name": "7. Проверить ответ",
+          "name": "2. Проверить ответ",
           "event": [
             {
               "listen": "test",
@@ -798,30 +1067,48 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"account_id\": \"{{recovery_account_id}}\",\n  \"question_id\": \"{{recovery_question_id}}\",\n  \"answer\": \"Барсик\"\n}",
-              "options": {"raw": {"language": "json"}}
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{base_url}}/recovery/check-answer",
-              "host": ["{{base_url}}"],
-              "path": ["recovery", "check-answer"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "recovery",
+                "check-answer"
+              ]
             }
           },
           "response": []
         },
         {
-          "name": "8. Сбросить пароль",
+          "name": "3. Сбросить пароль",
           "request": {
             "method": "POST",
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"reset_token\": \"{{reset_token}}\",\n  \"new_password\": \"newSecret123\"\n}",
-              "options": {"raw": {"language": "json"}}
+              "raw": "{\n  \"reset_token\": \"{{reset_token}}\",\n  \"new_password\": \"newpassword123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{base_url}}/recovery/reset-password",
-              "host": ["{{base_url}}"],
-              "path": ["recovery", "reset-password"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "recovery",
+                "reset-password"
+              ]
             }
           },
           "response": []

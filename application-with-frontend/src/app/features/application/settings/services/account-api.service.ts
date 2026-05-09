@@ -32,4 +32,12 @@ export class AccountApiService {
   public updateAccount(data: UpdateAccountRequest): Observable<unknown> {
     return this._http.patch(`${this._baseUrl}/account/update`, data);
   }
+
+  /**
+   * Удаляет аккаунт и все связанные данные (DELETE /account/delete).
+   * @returns Пустой Observable (204).
+   */
+  public deleteAccount(): Observable<unknown> {
+    return this._http.delete(`${this._baseUrl}/account/delete`);
+  }
 }

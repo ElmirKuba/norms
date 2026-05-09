@@ -37,7 +37,8 @@ export class UpdateAccountUseCase {
       if (!valid) {
         throw new UnauthorizedException(makeError(ErrorCode.INVALID_CREDENTIALS));
       }
-      const newHash = await argon2.hash(dto.new_password!);
+      const newPassword: string = dto.new_password ?? '';
+      const newHash = await argon2.hash(newPassword);
       await this._accountRepo.updatePassword(accountId, newHash);
     }
 
