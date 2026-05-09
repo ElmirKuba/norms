@@ -1,7 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import type { OnInit, WritableSignal } from '@angular/core';
-import { SessionKickedService } from '../../../main/services/session-kicked.service';
-import { MainApplicationComponent } from '../../../main/components/main/main.component';
 import { AuthApiService } from '../../../auth/services/auth-api.service';
 import type { ReadSelfResponse } from '../../../auth/services/auth-api.service';
 
@@ -28,12 +26,6 @@ export class ProfileApplicationComponent implements OnInit {
 
   /** Инициалы для аватара (до 2 символов). */
   public readonly initials: WritableSignal<string> = signal('?');
-
-  /** Сервис модалки кика сессии */
-  private readonly _sessionKicked: SessionKickedService = inject(SessionKickedService);
-
-  /** Shell основного экрана для управления баннером */
-  private readonly _mainShell: MainApplicationComponent = inject(MainApplicationComponent);
 
   /** API-клиент аккаунта */
   private readonly _authApi: AuthApiService = inject(AuthApiService);
@@ -64,13 +56,5 @@ export class ProfileApplicationComponent implements OnInit {
     });
   }
 
-  /** [МОК] Симулировать получение WSS события session_kicked */
-  public mockSessionKick(): void {
-    this._sessionKicked.showKickedModal();
-  }
 
-  /** [МОК] Симулировать получение WSS события password_reset_via_recovery */
-  public mockPasswordReset(): void {
-    this._mainShell.mockPasswordReset();
-  }
 }

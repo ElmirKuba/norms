@@ -5,7 +5,6 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Router } from '@angular/router';
 import { UinModalService } from '../../../uin/services/uin-modal.service';
 import { ChatsStateService } from '../../../chats/services/chats-state.service';
-import { SessionKickedService } from '../../services/session-kicked.service';
 import { WssService } from '../../../../../core/services/wss/wss.service';
 
 /** Основной shell приложения: таббар + router-outlet для дочерних экранов */
@@ -40,9 +39,6 @@ export class MainApplicationComponent implements OnInit {
   /** Сервис состояния чатов */
   private readonly _chatsState: ChatsStateService = inject(ChatsStateService);
 
-  /** Сервис модалки кика сессии */
-  private readonly _sessionKicked: SessionKickedService = inject(SessionKickedService);
-
   /** WSS-сервис для подписки на real-time события */
   private readonly _wss: WssService = inject(WssService);
 
@@ -60,24 +56,10 @@ export class MainApplicationComponent implements OnInit {
     if (state?.['pendingUin'] === true) {
       this._uinModal.showPendingAndWait();
     }
-    // Мок: симулируем password_reset_via_recovery из навигационного state
-    if (state?.['mockPasswordReset'] === true) {
-      this.passwordResetBanner.set(true);
-    }
-  }
-
-  /** [МОК] Симулировать событие session_kicked */
-  public mockSessionKick(): void {
-    this._sessionKicked.showKickedModal();
   }
 
   /** Закрыть баннер сброса пароля */
   public dismissPasswordResetBanner(): void {
     this.passwordResetBanner.set(false);
-  }
-
-  /** [МОК] Показать баннер сброса пароля */
-  public mockPasswordReset(): void {
-    this.passwordResetBanner.set(true);
   }
 }

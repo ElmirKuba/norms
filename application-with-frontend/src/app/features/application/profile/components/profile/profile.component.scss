@@ -142,36 +142,4 @@
     }
   }
 
-  &__dev-section {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 4px 0 8px;
-  }
-
-  &__dev-title {
-    font-size: 11px;
-    color: var(--clr-text-tertiary);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin: 0 0 2px;
-    padding: 0 4px;
-  }
-
-  &__dev-btn {
-    width: 100%;
-    padding: 11px 16px;
-    border-radius: 12px;
-    background: var(--clr-bg-page);
-    border: 1px dashed var(--clr-border-dashed);
-    color: var(--clr-text-secondary);
-    font-size: 13px;
-    text-align: left;
-    cursor: pointer;
-    transition: background 0.1s ease;
-
-    &:active {
-      background: var(--clr-surface-active);
-    }
-  }
 }
