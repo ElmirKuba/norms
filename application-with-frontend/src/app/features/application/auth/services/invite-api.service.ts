@@ -30,6 +30,8 @@ export interface ReferralPerson {
   readonly uin: string | null;
   /** Username или null. */
   readonly username: string | null;
+  /** Псевдоним или null. */
+  readonly nickname: string | null;
   /** ISO-8601 дата регистрации. */
   readonly joined_at: string;
 }

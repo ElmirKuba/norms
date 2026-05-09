@@ -179,6 +179,7 @@ export class SettingsInvitesComponent implements OnInit {
    */
   private _formatInviter(inviter: ReferralPerson | null): string {
     if (inviter === null) return 'Свободная регистрация';
+    if (inviter.nickname !== null) return inviter.nickname;
     if (inviter.username !== null) return `@${inviter.username}`;
     if (inviter.uin !== null) return `UIN ${inviter.uin}`;
     return 'Неизвестный пользователь';
@@ -191,8 +192,8 @@ export class SettingsInvitesComponent implements OnInit {
    * @returns InviteeItem.
    */
   private _mapInvitee(p: ReferralPerson, index: number): InviteeItem {
-    const displayName = p.username !== null ? `@${p.username}` : (p.uin !== null ? `UIN ${p.uin}` : '—');
-    const initial = (p.username ?? p.uin ?? '?').charAt(0).toUpperCase();
+    const displayName = p.nickname ?? (p.username !== null ? `@${p.username}` : (p.uin !== null ? `UIN ${p.uin}` : '—'));
+    const initial = (p.nickname ?? p.username ?? p.uin ?? '?').charAt(0).toUpperCase();
     return {
       id: p.account_id,
       initials: initial,

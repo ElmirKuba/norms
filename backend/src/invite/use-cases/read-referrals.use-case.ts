@@ -12,6 +12,8 @@ interface ReferralItem {
   readonly uin: string | null;
   /** Юзернейм (null если не задан). */
   readonly username: string | null;
+  /** Псевдоним (null если не задан). */
+  readonly nickname: string | null;
   /** ISO-8601 дата вступления. */
   readonly joined_at: string;
 }
@@ -42,6 +44,7 @@ export class ReadReferralsUseCase {
         .select({
           accountId: accounts.id,
           username: accounts.username,
+          nickname: accounts.nickname,
           uin: uins.number,
           joinedAt: referrals.createdAt,
         })
@@ -55,6 +58,7 @@ export class ReadReferralsUseCase {
         .select({
           accountId: accounts.id,
           username: accounts.username,
+          nickname: accounts.nickname,
           uin: uins.number,
           joinedAt: referrals.createdAt,
         })
@@ -72,6 +76,7 @@ export class ReadReferralsUseCase {
             account_id: inviterRow.accountId,
             uin: inviterRow.uin,
             username: inviterRow.username,
+            nickname: inviterRow.nickname,
             joined_at: inviterRow.joinedAt.toISOString(),
           }
         : null;
@@ -80,6 +85,7 @@ export class ReadReferralsUseCase {
       account_id: row.accountId,
       uin: row.uin,
       username: row.username,
+      nickname: row.nickname,
       joined_at: row.joinedAt.toISOString(),
     }));
 

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import type { OnInit, WritableSignal } from '@angular/core';
+import { Router } from '@angular/router';
 import { AuthApiService } from '../../../auth/services/auth-api.service';
 import type { ReadSelfResponse } from '../../../auth/services/auth-api.service';
 
@@ -27,8 +28,16 @@ export class ProfileApplicationComponent implements OnInit {
   /** Инициалы для аватара (до 2 символов). */
   public readonly initials: WritableSignal<string> = signal('?');
 
+  /** Роутер для навигации */
+  private readonly _router: Router = inject(Router);
+
   /** API-клиент аккаунта */
   private readonly _authApi: AuthApiService = inject(AuthApiService);
+
+  /** Перейти на экран редактирования аккаунта (псевдоним). */
+  public goToAccount(): void {
+    void this._router.navigate(['/application/main/settings/account']);
+  }
 
   /** @inheritdoc */
   public ngOnInit(): void {
