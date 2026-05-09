@@ -73,6 +73,19 @@
 - `SessionKickedService` (`main/services/`) — глобальный сервис, открывает bottom-sheet «Сессия завершена», после OK редиректит на `/application/welcome`
 - `MainApplicationComponent` — `passwordResetBanner` signal, жёлтый баннер «Пароль был сброшен через восстановление», закрывается крестиком
 
+### Безопасность — уведомления других сессий + WSS bugfix
+- **WSS double-connection fix** — `_scheduleReconnect` теперь проверяет `connectionState !== 'disconnected'` перед открытием нового сокета; без этого при reconnect создавалось второе соединение, и `sendToAccount` слал в пустоту пока `_connections` был без записей
+- **`SecurityAlertsComponent`** (`core/components/security-alerts/`) — глобальный `position: fixed` оверлей в `RootComponent`; показывает баннеры безопасности на ВСЕХ экранах после авторизации (в т.ч. `main/settings/*` — они не дочерние `MainApplicationComponent`)
+- **`password_changed`** WSS-событие — при смене пароля через `PATCH /account/update` все остальные сессии аккаунта получают уведомление (`sendToAccountExcept`); баннер «Пароль изменён на другом устройстве»
+- **`session_created`** WSS-событие — при входе с нового устройства все существующие сессии получают уведомление с именем устройства; баннер «Выполнен вход с устройства X» + кнопки «Кикнуть» / «Устройства» / «Это я»
+- **`WssConnectionStore.sendToAccountExcept()`** — новый метод, исключает сессию-инициатора из рассылки
+- **Push TODO** в `docs/push-notifications.md` — зафиксированы три типа push-уведомлений безопасности (password_reset, password_changed, session_created) для APNs/FCM; TODO-комментарии в use-cases
+
+### Удаление аккаунта + полировка устройств
+- **`DELETE /account/delete`** — бэкенд (транзакция: premium UIN → SET NULL, обычный → DELETE, аккаунт → DELETE, WSS `session_kicked` всем сессиям) + фронт (диалог подтверждения → вызов API → очистка токенов → redirect на welcome) + Postman
+- **Кик всех других сессий** — кнопка «Завершить все остальные сессии» на экране устройств (`POST /session/clear-others`), `hasOtherDevices` computed signal, диалог подтверждения
+- **`dist-electron/` gitignore fix** — добавлен в `.gitignore`, файлы удалены из git tracking
+
 ### Полировка фронта — перевод с моков на реальный API (финал шага 8)
 - **guestGuard** — защищает `welcome` и `auth/*` от авторизованных пользователей; fix session-restore bug (после рестарта app показывался welcome)
 - **`accounts.nickname`** — столбец в БД, `PATCH /account/update` (бэк + фронт); отображение приоритетом: nickname > @username > UIN XXXXX
