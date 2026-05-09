@@ -184,6 +184,60 @@
 
 _Нет активных задач._
 
+## Полировка приложения (убрать все моки кроме чатов)
+
+Приоритет: сделать до начала шага 9 (Chats + E2E). Порядок — сверху вниз.
+
+### Недостающие бэк-эндпоинты (нужно реализовать)
+
+| Эндпоинт | Нужен для |
+|---|---|
+| `POST /account/change-password` | Смена пароля в настройках |
+| `GET /account/search?q=` | Поиск пользователей по UIN/username |
+| `GET /chat/read-orphan-peers` | Экран «Новое устройство» (осиротевшие собеседники) |
+
+### 1. Свой профиль + настройки аккаунта
+
+**Проблема:** «Эльмир К.» захардкожен в трёх местах.
+
+- `profile/components/profile/profile.component.html` — имя, UIN, username
+- `settings/components/account/account.component.html` — имя
+
+**Что сделать:**
+- Бэк: `GET /account/read` уже есть ✅
+- Фронт: вызвать `AuthApiService.readSelf()` в `ngOnInit`, заполнить сигналы `name / uin / username`
+- Отображать: `username ?? 'Без username'`; инициалы для аватара из имени (UIN → первая цифра, username → первая буква)
+- `SettingsAccountComponent`: те же данные, кнопки смены имени/username пока `disabled` (нет эндпоинтов)
+
+### 2. Recovery Questions (настройки)
+
+**Проблема:** список Q&A — мок, добавление/удаление — мок-сабмит.
+
+- Бэк: все эндпоинты есть ✅ (`GET/POST/PATCH/DELETE /recovery/question/*`, `GET /recovery/preset-questions`)
+- Фронт: `SettingsRecoveryQuestionsComponent` — подключить к реальному API
+
+### 3. Change Password (настройки)
+
+**Проблема:** форма есть, сабмит — мок.
+
+- Бэк: нужен `POST /account/change-password` (текущий пароль + новый) ❌
+- Фронт: после появления эндпоинта — подключить `SettingsChangePasswordComponent`
+
+### 4. Поиск пользователей + UserProfile
+
+**Проблема:** поиск работает по `MOCK_SEARCH_USERS`, чужой профиль тоже из мока.
+
+- Бэк: нужен `GET /account/search?q=` (поиск по UIN или username, публичные данные) ❌
+- Фронт: `SearchApplicationComponent` — заменить `MOCK_SEARCH_USERS` на вызов API
+- Фронт: `UserProfileApplicationComponent` — заменить мок на `GET /account/read?uin=X`
+
+### 5. Экран «Новое устройство»
+
+**Проблема:** список осиротевших собеседников — мок.
+
+- Бэк: нужен `GET /chat/read-orphan-peers` ❌ (граничит с шагом 9, делать вместе с чатами)
+- Фронт: `NewDeviceApplicationComponent` — пока оставить мок, подключить в шаге 9
+
 ## Implementation Order
 
 Зависимости между фичами определяют порядок реализации. Внутри группы — параллельно.
