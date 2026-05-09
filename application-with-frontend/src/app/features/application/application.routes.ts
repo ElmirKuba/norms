@@ -1,5 +1,6 @@
 import type { Routes } from '@angular/router';
 import { authGuard } from '../../core/guards/auth.guard';
+import { guestGuard } from '../../core/guards/guest.guard';
 import type { MainApplicationComponent } from './main/components/main/main.component';
 import type { WelcomeApplicationComponent } from './auth/components/welcome/welcome.component';
 import type { AuthShellComponent } from './auth/components/auth-shell/auth-shell.component';
@@ -33,6 +34,7 @@ export const APPLICATION_ROUTES: Routes = [
   // Стартовый экран
   {
     path: 'welcome',
+    canActivate: [guestGuard],
     loadComponent: async (): Promise<typeof WelcomeApplicationComponent> => {
       const m = await import('./auth/components/welcome/welcome.component');
       return m.WelcomeApplicationComponent;
@@ -42,6 +44,7 @@ export const APPLICATION_ROUTES: Routes = [
   // Auth shell — общий header (back + theme) для экранов регистрации/входа
   {
     path: 'auth',
+    canActivate: [guestGuard],
     loadComponent: async (): Promise<typeof AuthShellComponent> => {
       const m = await import('./auth/components/auth-shell/auth-shell.component');
       return m.AuthShellComponent;
