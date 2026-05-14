@@ -6,19 +6,24 @@
 
 ### Запуск
 
-Открыть 3 терминала (все из `application-with-frontend/`):
+Открыть 4 терминала (все из `application-with-frontend/`):
 
-**Terminal 1** — Electron (запускает ng serve для всех платформ):
+**Terminal 1** — ng serve (общий для всех платформ):
 ```bash
-npm run dev:electron
+npm run dev:serve
 ```
 
-**Terminal 2** — iOS симулятор:
+**Terminal 2** — Electron:
+```bash
+npm run dev:electron:attach
+```
+
+**Terminal 3** — iOS симулятор:
 ```bash
 npm run dev:ios:attach
 ```
 
-**Terminal 3** — Android эмулятор:
+**Terminal 4** — Android эмулятор:
 ```bash
 npm run dev:android:attach
 ```
@@ -36,7 +41,7 @@ npm run dev:android:reverse
 ## Тестирование одной платформы
 
 ```bash
-# Electron
+# Electron (запускает ng serve внутри)
 npm run dev:electron
 
 # iOS симулятор (live reload, без Xcode)
