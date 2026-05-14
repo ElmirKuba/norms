@@ -259,7 +259,7 @@ _Перед стартом фазы 1 — **переключиться обра�
 - [x] **9.17** — WSS: обработка `message_new` → сохранить в SQLite → отправить `message_delivered`
 - [x] **9.18** — WSS: sync при подключении — сервер пушит pending_messages как `message_new`; ChatEventsService подписан раньше wss.connect() — работает автоматически
 - [x] **9.19** — WSS: обновление статусов `message_delivered` / `message_read` в SQLite → reactivity в UI; отправка `message_read` при открытии чата
-- [ ] **9.20** — `NewDeviceApplicationComponent` → `GET /chat/read-orphan-peers` вместо мока
+- [x] **9.20** — `NewDeviceApplicationComponent` → `GET /chat/read-orphan-peers` вместо мока
 - [ ] **9.21** — `is_dead` handling: `404 chat_not_found` → `is_dead = true` в SQLite → UI блокирует input
 
 ### Фаза 2 — E2E шифрование (ECDH X25519 + HKDF-SHA256 + AES-256-GCM)
