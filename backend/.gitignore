@@ -13,3 +13,5 @@ docker/volumes/redis_data/*
 !docker/volumes/redis_data/.gitkeep
 docker/volumes/pgadmin_data/*
 !docker/volumes/pgadmin_data/.gitkeep
+docker/volumes/redisinsight_data/*
+!docker/volumes/redisinsight_data/.gitkeep
