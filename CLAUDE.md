@@ -85,7 +85,7 @@ npm run cap:sync         # ng build + cap sync
 npm run test             # ng test
 ```
 
-Бэкенд (`backend/`) — ещё не инициализирован.
+Бэкенд (`backend/`): `npm run start:dev` — dev-режим, `npm run build` — production.
 
 ## Code Conventions
 
