@@ -239,7 +239,7 @@ _Перед стартом фазы 1 — **переключиться обра�
 
 **Бэкенд:**
 - [x] **9.1** — Drizzle-схема: таблицы `chats` + `pending_messages`, `db:push`, обновить `database-schema.md`
-- [ ] **9.2** — `GET /session/read-sessions?accountId=` — список сессий чужого аккаунта (для модалки выбора устройства)
+- [x] **9.2** — `GET /session/read-sessions?accountId=` — список сессий чужого аккаунта (для модалки выбора устройства)
 - [ ] **9.3** — `POST /chat/create` — создание чата (статус `active`, уникальность имени case-insensitive, CHECK session_a_id < session_b_id)
 - [ ] **9.4** — `GET /chat/read-list` — список чатов текущей сессии
 - [ ] **9.5** — `GET /chat/read-orphan-peers` — accountId'ы собеседников из чатов удалённых сессий моего аккаунта

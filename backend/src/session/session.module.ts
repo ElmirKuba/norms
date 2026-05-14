@@ -4,6 +4,7 @@ import { PersistenceModule } from '../persistence/persistence.module';
 import { SessionController } from './session.controller';
 import { RefreshTokenUseCase } from './use-cases/refresh-token.use-case';
 import { ReadSessionListUseCase } from './use-cases/read-session-list.use-case';
+import { ReadAccountSessionsUseCase } from './use-cases/read-account-sessions.use-case';
 import { DeleteSessionUseCase } from './use-cases/delete-session.use-case';
 import { ClearOtherSessionsUseCase } from './use-cases/clear-other-sessions.use-case';
 import { UpdateNicknameUseCase } from './use-cases/update-nickname.use-case';
@@ -12,6 +13,6 @@ import { UpdateNicknameUseCase } from './use-cases/update-nickname.use-case';
 @Module({
   imports: [AuthModule, PersistenceModule],
   controllers: [SessionController],
-  providers: [RefreshTokenUseCase, ReadSessionListUseCase, DeleteSessionUseCase, ClearOtherSessionsUseCase, UpdateNicknameUseCase],
+  providers: [RefreshTokenUseCase, ReadSessionListUseCase, ReadAccountSessionsUseCase, DeleteSessionUseCase, ClearOtherSessionsUseCase, UpdateNicknameUseCase],
 })
 export class SessionModule {}

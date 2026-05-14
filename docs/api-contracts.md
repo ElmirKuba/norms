@@ -326,6 +326,23 @@ Request:
 
 Response 204.
 
+### `GET /api/v1/session/read-sessions?account_id=`
+Публичные сессии (устройства) любого аккаунта — для выбора устройства при создании чата. Auth required.
+
+Response 200:
+```json
+[
+  {
+    "id": "...",
+    "system_name": "iPhone 14 Pro",
+    "nickname": "Мой айфон" | null,
+    "platform": "ios"
+  }
+]
+```
+
+Если аккаунт не найден или у него нет сессий — пустой массив. Не содержит дат и refresh-хешей.
+
 ---
 
 ## HTTP — UIN

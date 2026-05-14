@@ -1,9 +1,10 @@
-import { Controller, Post, Get, Delete, Patch, Body, Param, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Delete, Patch, Body, Param, Query, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { JwtGuard } from '../auth/jwt.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { JwtPayload } from '../auth/types/jwt-payload.type';
 import { RefreshTokenUseCase } from './use-cases/refresh-token.use-case';
 import { ReadSessionListUseCase } from './use-cases/read-session-list.use-case';
+import { ReadAccountSessionsUseCase } from './use-cases/read-account-sessions.use-case';
 import { DeleteSessionUseCase } from './use-cases/delete-session.use-case';
 import { ClearOtherSessionsUseCase } from './use-cases/clear-other-sessions.use-case';
 import { UpdateNicknameUseCase } from './use-cases/update-nickname.use-case';
@@ -16,6 +17,7 @@ export class SessionController {
   public constructor(
     private readonly _refreshTokenUseCase: RefreshTokenUseCase,
     private readonly _readSessionListUseCase: ReadSessionListUseCase,
+    private readonly _readAccountSessionsUseCase: ReadAccountSessionsUseCase,
     private readonly _deleteSessionUseCase: DeleteSessionUseCase,
     private readonly _clearOtherSessionsUseCase: ClearOtherSessionsUseCase,
     private readonly _updateNicknameUseCase: UpdateNicknameUseCase,
@@ -42,6 +44,19 @@ export class SessionController {
     @CurrentUser() user: JwtPayload,
   ): ReturnType<ReadSessionListUseCase['execute']> {
     return this._readSessionListUseCase.execute(user.sub, user.sessionId);
+  }
+
+  /**
+   * Возвращает публичные сессии (устройства) аккаунта для выбора при создании чата.
+   * @param accountId - ID аккаунта чьи устройства запрашиваются.
+   * @returns Список сессий без чувствительных данных.
+   */
+  @Get('read-sessions')
+  @UseGuards(JwtGuard)
+  public readAccountSessions(
+    @Query('account_id') accountId: string = '',
+  ): ReturnType<ReadAccountSessionsUseCase['execute']> {
+    return this._readAccountSessionsUseCase.execute(accountId);
   }
 
   /**
