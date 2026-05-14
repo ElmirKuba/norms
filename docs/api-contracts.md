@@ -733,6 +733,23 @@ Access TTL короткий (15с по умолчанию), WSS-коннект �
 
 Клиент обрабатывает их так же, как обычные `message_new` — сохраняет в SQLite и шлёт `message_delivered`. Порядок: `created_at ASC` (старые первые).
 
+### Статус прочтения (client → server)
+
+Получатель шлёт когда пользователь открыл чат и увидел сообщение:
+```json
+→ { "event": "message_read", "data": { "message_id": "...", "chat_id": "..." } }
+```
+
+Сервер не трогает БД (blob уже удалён при `message_delivered`), только релеит отправителю:
+```json
+← { "event": "message_read", "data": { "message_id": "...", "chat_id": "..." } }
+```
+
+Ошибки:
+```json
+← { "event": "error", "data": { "code": "chat_not_found" | "not_your_chat" } }
+```
+
 ### Подтверждение доставки (client → server)
 
 Получатель шлёт после записи сообщения в локальную SQLite:

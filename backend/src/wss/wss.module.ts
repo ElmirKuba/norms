@@ -5,6 +5,7 @@ import { WssConnectionStore } from './wss-connection.store';
 import { WssGateway } from './wss.gateway';
 import { SendMessageUseCase } from '../chat/use-cases/send-message.use-case';
 import { MessageDeliveredUseCase } from '../chat/use-cases/message-delivered.use-case';
+import { MessageReadUseCase } from '../chat/use-cases/message-read.use-case';
 
 /**
  * Глобальный WSS-модуль.
@@ -13,7 +14,7 @@ import { MessageDeliveredUseCase } from '../chat/use-cases/message-delivered.use
 @Global()
 @Module({
   imports: [AuthModule, PersistenceModule],
-  providers: [WssConnectionStore, WssGateway, SendMessageUseCase, MessageDeliveredUseCase],
+  providers: [WssConnectionStore, WssGateway, SendMessageUseCase, MessageDeliveredUseCase, MessageReadUseCase],
   exports: [WssConnectionStore],
 })
 export class WssModule {}
