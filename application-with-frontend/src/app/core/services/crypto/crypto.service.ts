@@ -298,9 +298,10 @@ export class CryptoService {
    * @param b64 - base64-строка.
    * @returns Uint8Array.
    */
-  private _b642ab(b64: string): Uint8Array {
+  private _b642ab(b64: string): Uint8Array<ArrayBuffer> {
     const binary = atob(b64);
-    const bytes = new Uint8Array(binary.length);
+    const buf = new ArrayBuffer(binary.length);
+    const bytes = new Uint8Array(buf);
     for (let i = 0; i < binary.length; i++) {
       bytes[i] = binary.charCodeAt(i) & 0xff;
     }

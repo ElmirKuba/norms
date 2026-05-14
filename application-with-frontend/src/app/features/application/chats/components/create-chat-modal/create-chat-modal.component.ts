@@ -230,6 +230,12 @@ export class CreateChatModalComponent implements OnInit {
       keyIv: '',
       encryptedPrivKey: wrapped.encryptedKey,
       privKeyIv: wrapped.keyIv,
+      prevEncryptedKey: '',
+      prevKeyIv: '',
+      myRatchetEncryptedPrivKey: null,
+      myRatchetPrivKeyIv: null,
+      myRatchetPubKey: null,
+      peerRatchetPubKey: null,
       createdAt,
     };
     await this._chatRepo.saveChatKey(chatKey);
