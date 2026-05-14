@@ -4,6 +4,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { JwtPayload } from '../auth/types/jwt-payload.type';
 import { CreateChatUseCase } from './use-cases/create-chat.use-case';
 import { ReadChatListUseCase } from './use-cases/read-chat-list.use-case';
+import { ReadOrphanPeersUseCase } from './use-cases/read-orphan-peers.use-case';
 import { CreateChatDto } from './dto/create-chat.dto';
 
 /** Контроллер чатов. */
@@ -12,6 +13,7 @@ export class ChatController {
   public constructor(
     private readonly _createChatUseCase: CreateChatUseCase,
     private readonly _readChatListUseCase: ReadChatListUseCase,
+    private readonly _readOrphanPeersUseCase: ReadOrphanPeersUseCase,
   ) {}
 
   /**
@@ -25,6 +27,19 @@ export class ChatController {
     @CurrentUser() user: JwtPayload,
   ): ReturnType<ReadChatListUseCase['execute']> {
     return this._readChatListUseCase.execute(user.sessionId);
+  }
+
+  /**
+   * Возвращает аккаунты с чатами на других устройствах, но без чатов на текущем.
+   * @param user - Payload текущего JWT.
+   * @returns Список осиротевших собеседников.
+   */
+  @Get('read-orphan-peers')
+  @UseGuards(JwtGuard)
+  public readOrphanPeers(
+    @CurrentUser() user: JwtPayload,
+  ): ReturnType<ReadOrphanPeersUseCase['execute']> {
+    return this._readOrphanPeersUseCase.execute(user.sub, user.sessionId);
   }
 
   /**

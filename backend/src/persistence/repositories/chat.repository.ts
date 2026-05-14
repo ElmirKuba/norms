@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { eq, or, inArray, desc } from 'drizzle-orm';
+import { eq, or, and, ne, inArray, desc } from 'drizzle-orm';
 import { ChatRepository } from '../../domain/ports/chat.repository.port';
-import type { ChatEntity, ChatListItem, CreateChatData } from '../../domain/entities/chat.entity';
+import type { ChatEntity, ChatListItem, OrphanPeer, CreateChatData } from '../../domain/entities/chat.entity';
 import { generateId } from '../../common/utils/id.util';
 import { chats, sessions, accounts, uins } from '../schemas';
 import { DRIZZLE_DB } from '../drizzle.module';
@@ -106,6 +106,97 @@ export class DrizzleChatRepository extends ChatRepository {
       });
     }
     return result;
+  }
+
+  /**
+   * Возвращает осиротевших собеседников — аккаунты с чатами из других сессий аккаунта,
+   * но без чатов с текущей сессии. 5 батч-запросов, без N+1.
+   * @param myAccountId - ID текущего аккаунта.
+   * @param mySessionId - ID текущей сессии.
+   * @returns Список осиротевших собеседников, last_chat_at DESC.
+   */
+  public async findOrphanPeers(myAccountId: string, mySessionId: string): Promise<OrphanPeer[]> {
+    // Q1: другие сессии моего аккаунта
+    const otherSessionRows = await this._db
+      .select({ id: sessions.id })
+      .from(sessions)
+      .where(and(eq(sessions.accountId, myAccountId), ne(sessions.id, mySessionId)));
+
+    const otherSessionIds = otherSessionRows.map((r: { id: string }): string => r.id);
+    if (otherSessionIds.length === 0) return [];
+
+    // Q2: чаты других сессий → peer-сессии с датой
+    const otherChats = await this._db
+      .select({ sessionAId: chats.sessionAId, sessionBId: chats.sessionBId, createdAt: chats.createdAt })
+      .from(chats)
+      .where(or(inArray(chats.sessionAId, otherSessionIds), inArray(chats.sessionBId, otherSessionIds)));
+
+    const otherSessionIdSet = new Set(otherSessionIds);
+    const peerSessionToLastChat = new Map<string, Date>();
+    for (const c of otherChats) {
+      const peerSessId = otherSessionIdSet.has(c.sessionAId) ? c.sessionBId : c.sessionAId;
+      if (otherSessionIdSet.has(peerSessId)) continue; // чат между двумя моими сессиями
+      const prev = peerSessionToLastChat.get(peerSessId);
+      if (prev === undefined || c.createdAt > prev) peerSessionToLastChat.set(peerSessId, c.createdAt);
+    }
+    if (peerSessionToLastChat.size === 0) return [];
+
+    // Q3: peer-сессии → аккаунты + максимальная дата per account
+    const peerSessionIds = [...peerSessionToLastChat.keys()];
+    const peerSessRows = await this._db
+      .select({ id: sessions.id, accountId: sessions.accountId })
+      .from(sessions)
+      .where(inArray(sessions.id, peerSessionIds));
+
+    const accountToLastChat = new Map<string, Date>();
+    for (const r of peerSessRows) {
+      const lastChat = peerSessionToLastChat.get(r.id);
+      if (lastChat === undefined) continue;
+      const prev = accountToLastChat.get(r.accountId);
+      if (prev === undefined || lastChat > prev) accountToLastChat.set(r.accountId, lastChat);
+    }
+
+    // Q4: чаты текущей сессии → peer-сессии → аккаунты для исключения
+    const currentChats = await this._db
+      .select({ sessionAId: chats.sessionAId, sessionBId: chats.sessionBId })
+      .from(chats)
+      .where(or(eq(chats.sessionAId, mySessionId), eq(chats.sessionBId, mySessionId)));
+
+    const currentPeerSessIds = currentChats.map(
+      (c: { sessionAId: string; sessionBId: string }): string =>
+        c.sessionAId === mySessionId ? c.sessionBId : c.sessionAId,
+    );
+
+    const excludedAccountIds = new Set<string>();
+    if (currentPeerSessIds.length > 0) {
+      const currentPeerSessRows = await this._db
+        .select({ accountId: sessions.accountId })
+        .from(sessions)
+        .where(inArray(sessions.id, currentPeerSessIds));
+      for (const r of currentPeerSessRows) excludedAccountIds.add(r.accountId);
+    }
+
+    const orphanAccountIds = [...accountToLastChat.keys()].filter(
+      (id: string): boolean => !excludedAccountIds.has(id),
+    );
+    if (orphanAccountIds.length === 0) return [];
+
+    // Q5: account + UIN info
+    const accountRows = await this._db
+      .select({ accountId: accounts.id, nickname: accounts.nickname, username: accounts.username, uin: uins.number })
+      .from(accounts)
+      .leftJoin(uins, eq(uins.accountId, accounts.id))
+      .where(inArray(accounts.id, orphanAccountIds));
+
+    return accountRows
+      .map((r: { accountId: string; nickname: string | null; username: string | null; uin: string | null }): OrphanPeer => ({
+        accountId: r.accountId,
+        uin: r.uin,
+        nickname: r.nickname,
+        username: r.username,
+        lastChatAt: accountToLastChat.get(r.accountId) ?? new Date(0),
+      }))
+      .sort((a: OrphanPeer, b: OrphanPeer): number => b.lastChatAt.getTime() - a.lastChatAt.getTime());
   }
 
   /**

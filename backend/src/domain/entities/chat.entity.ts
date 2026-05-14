@@ -25,6 +25,20 @@ export interface ChatEntity {
   readonly updatedAt: Date;
 }
 
+/** Осиротевший собеседник — аккаунт, с которым были чаты с других устройств, но нет с текущего. */
+export interface OrphanPeer {
+  /** ID аккаунта собеседника. */
+  readonly accountId: string;
+  /** UIN собеседника или null. */
+  readonly uin: string | null;
+  /** Никнейм аккаунта или null. */
+  readonly nickname: string | null;
+  /** Username или null. */
+  readonly username: string | null;
+  /** Дата последнего чата с этим аккаунтом с других устройств. */
+  readonly lastChatAt: Date;
+}
+
 /** Элемент списка чатов с данными собеседника. */
 export interface ChatListItem {
   /** ID чата. */
