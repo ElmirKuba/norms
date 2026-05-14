@@ -45,7 +45,6 @@
         class="chat-detail__bubble"
         [class.chat-detail__bubble--own]="msg.isOwn"
         [class.chat-detail__bubble--failed]="msg.status === 'failed'"
-        [class.chat-detail__bubble--pending-key]="msg.status === 'pending_key'"
       >
         <p class="chat-detail__bubble-text">{{ msg.text }}</p>
         <div class="chat-detail__bubble-meta">
@@ -57,7 +56,7 @@
                 <path d="M12 7V13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                 <circle cx="12" cy="17" r="1" fill="currentColor"/>
               </svg>
-            } @else if (msg.status === 'pending_key' || msg.status === 'sending') {
+            } @else if (msg.status === 'sending') {
               <svg class="chat-detail__bubble-status" width="14" height="14" viewBox="0 0 24 24" fill="none">
                 <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8" stroke-dasharray="3 3"/>
               </svg>

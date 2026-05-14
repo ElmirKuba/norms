@@ -7,7 +7,7 @@ import { LocalChatRepository } from '../../../../../core/services/local-db/local
 import type { LocalChatWithPeer, LocalMessage, LocalMessageStatus } from '../../../../../core/services/local-db/local-db.types';
 import { TokenStorageService } from '../../../../../core/services/storage/token-storage.service';
 import { WssService } from '../../../../../core/services/wss/wss.service';
-import type { WssMessageSentData } from '../../../../../core/services/wss/wss.service';
+import type { WssMessageSentData, WssMessageNewData } from '../../../../../core/services/wss/wss.service';
 import { avatarColorForId } from '../../../search/services/search-api.service';
 
 /** Данные чата для отображения. */
@@ -222,6 +222,7 @@ export class ChatDetailApplicationComponent implements OnInit {
 
     this._chatsState.setActiveChat(chatId);
     this._subscribeToMessageSent();
+    this._subscribeToMessageNew();
     void this._load(chatId);
   }
 
@@ -322,6 +323,23 @@ export class ChatDetailApplicationComponent implements OnInit {
     this.messages.set(stored.map(mapMessage));
   }
 
+  /** Подписывается на message_new от WssService для live-обновления UI. */
+  private _subscribeToMessageNew(): void {
+    const sub = this._wss.messageNew$.subscribe((data: WssMessageNewData): void => {
+      if (data.chatId !== this._chatId) return;
+      const content = this._base64ToText(data.encryptedBlob);
+      const incoming: MessageItem = {
+        id: data.messageId,
+        text: content,
+        time: formatTime(Date.now()),
+        isOwn: false,
+        status: 'delivered',
+      };
+      this.messages.update((msgs: readonly MessageItem[]): readonly MessageItem[] => [...msgs, incoming]);
+    });
+    this._destroyRef.onDestroy((): void => { sub.unsubscribe(); });
+  }
+
   /** Подписывается на message_sent от WssService. */
   private _subscribeToMessageSent(): void {
     const sub = this._wss.messageSent$.subscribe((data: WssMessageSentData): void => {
@@ -356,6 +374,24 @@ export class ChatDetailApplicationComponent implements OnInit {
     };
     await this._chatRepo.saveMessage(localMsg);
     await this._chatRepo.updateChatStatus(this._chatId, 'active');
+  }
+
+  /**
+   * Декодирует base64-blob в UTF-8 текст (phase 1 — plaintext).
+   * @param blob - base64-строка.
+   * @returns Текст сообщения.
+   */
+  private _base64ToText(blob: string): string {
+    try {
+      const binary = atob(blob);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i) & 0xff;
+      }
+      return new TextDecoder().decode(bytes);
+    } catch {
+      return '[не удалось расшифровать]';
+    }
   }
 
   /** Помечает первое ожидающее сообщение как failed. */

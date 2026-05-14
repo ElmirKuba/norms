@@ -256,7 +256,7 @@ _Перед стартом фазы 1 — **переключиться обра�
 - [x] **9.14** — `CreateChatModalComponent` → реальный список сессий через API, `POST /chat/create`, запись в SQLite
 - [x] **9.15** — `ChatsApplicationComponent` → загрузка чатов из локальной SQLite вместо моков
 - [x] **9.16** — `ChatDetailApplicationComponent` → реальные сообщения из SQLite, отправка через WSS `send_message`
-- [ ] **9.17** — WSS: обработка `message_new` → сохранить в SQLite → отправить `message_delivered`
+- [x] **9.17** — WSS: обработка `message_new` → сохранить в SQLite → отправить `message_delivered`
 - [ ] **9.18** — WSS: sync при подключении — получить накопленные сообщения → SQLite → `message_delivered`
 - [ ] **9.19** — WSS: обновление статусов `message_delivered` / `message_read` в SQLite → reactivity в UI
 - [ ] **9.20** — `NewDeviceApplicationComponent` → `GET /chat/read-orphan-peers` вместо мока

@@ -17,6 +17,18 @@ interface WssMessage {
   readonly data: Record<string, unknown>;
 }
 
+/** Данные события message_new — входящее сообщение. */
+export interface WssMessageNewData {
+  /** ID сообщения. */
+  readonly messageId: string;
+  /** ID чата. */
+  readonly chatId: string;
+  /** ID сессии отправителя. */
+  readonly senderSessionId: string;
+  /** Зашифрованный blob (base64). В phase 1 — просто UTF-8 контент. */
+  readonly encryptedBlob: string;
+}
+
 /** Данные события message_sent — подтверждение отправки. */
 export interface WssMessageSentData {
   /** Реальный ID сообщения, присвоенный сервером. */
@@ -66,6 +78,13 @@ export class WssService {
    * MainApplicationComponent подписывается и показывает баннер с кнопками «Кикнуть» / «Закрыть».
    */
   public readonly sessionCreated$: Subject<WssSessionCreatedData> = new Subject<WssSessionCreatedData>();
+
+  /**
+   * Эмитирует входящее сообщение (message_new).
+   * ChatEventsService подписывается для сохранения в SQLite и отправки message_delivered.
+   * ChatDetailComponent подписывается для обновления UI.
+   */
+  public readonly messageNew$: Subject<WssMessageNewData> = new Subject<WssMessageNewData>();
 
   /**
    * Эмитирует подтверждение отправки сообщения (message_sent).
@@ -193,6 +212,9 @@ export class WssService {
       case 'session_created':
         this._onSessionCreated(msg.data);
         break;
+      case 'message_new':
+        this._onMessageNew(msg.data);
+        break;
       case 'message_sent':
         this._onMessageSent(msg.data);
         break;
@@ -267,6 +289,24 @@ export class WssService {
     const platform = data['platform'];
     if (typeof sessionId !== 'string' || typeof systemName !== 'string' || typeof platform !== 'string') return;
     this.sessionCreated$.next({ sessionId, systemName, platform });
+  }
+
+  /**
+   * Эмитирует messageNew$ при получении входящего сообщения.
+   * @param data - Данные события message_new.
+   */
+  private _onMessageNew(data: Record<string, unknown>): void {
+    const messageId = data['message_id'];
+    const chatId = data['chat_id'];
+    const senderSessionId = data['sender_session_id'];
+    const encryptedBlob = data['encrypted_blob'];
+    if (
+      typeof messageId !== 'string' ||
+      typeof chatId !== 'string' ||
+      typeof senderSessionId !== 'string' ||
+      typeof encryptedBlob !== 'string'
+    ) return;
+    this.messageNew$.next({ messageId, chatId, senderSessionId, encryptedBlob });
   }
 
   /**

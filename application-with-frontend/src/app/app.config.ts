@@ -17,6 +17,7 @@ import { TokenStorageService } from './core/services/storage/token-storage.servi
 import { SessionApiService } from './core/services/session/session-api.service';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { WssService } from './core/services/wss/wss.service';
+import { ChatEventsService } from './core/services/chat/chat-events.service';
 
 /**
  * Декодирует поле sub (accountId) из JWT без внешних библиотек.
@@ -68,6 +69,7 @@ export const appConfig: ApplicationConfig = {
       const sessionApi = inject(SessionApiService);
       const wss = inject(WssService);
       const localDb = inject(LocalDbService);
+      const chatEvents = inject(ChatEventsService);
 
       await tokenStorage.loadFromStorage();
 
@@ -79,6 +81,7 @@ export const appConfig: ApplicationConfig = {
         tokenStorage.store(result.access_token, result.refresh_token);
         const accountId = decodeAccountId(result.access_token);
         if (accountId !== null) await localDb.initialize(accountId);
+        chatEvents.init();
         wss.connect();
       } catch {
         // Refresh-токен истёк или уже использован — требуется повторный логин
