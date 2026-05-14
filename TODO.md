@@ -250,7 +250,7 @@ _Перед стартом фазы 1 — **переключиться обра�
 - [x] **9.10** — `DELETE /chat/delete/:id` — удаление чата (cascade; WSS `chat_deleted` собеседнику)
 
 **Фронт:**
-- [ ] **9.11** — SQLite инфраструктура: `better-sqlite3` (Electron) + `@capacitor-community/sqlite` (Capacitor); `LocalDbService`; per-account DB + schema (`chats`, `messages`, `peer_devices`)
+- [x] **9.11** — SQLite инфраструктура: `better-sqlite3` (Electron) + `@capacitor-community/sqlite` (Capacitor); `LocalDbService`; per-account DB + schema (`chats`, `messages`, `peer_devices`)
 - [ ] **9.12** — `LocalChatRepository` — CRUD над `chats` и `messages` в локальной SQLite
 - [ ] **9.13** — `ChatApiService` — HTTP-клиент: create, read-list, read-orphan-peers, delete
 - [ ] **9.14** — `CreateChatModalComponent` → реальный список сессий через API, `POST /chat/create`, запись в SQLite
