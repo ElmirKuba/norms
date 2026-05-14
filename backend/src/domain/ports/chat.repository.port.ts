@@ -33,6 +33,13 @@ export abstract class ChatRepository {
   public abstract findPendingMessageById(id: string): Promise<PendingMessageEntity | null>;
 
   /**
+   * Возвращает все недоставленные сообщения для сессии-получателя, отсортированные по дате (старые первые).
+   * @param receiverSessionId - ID сессии-получателя.
+   * @returns Массив сообщений.
+   */
+  public abstract findPendingMessagesByReceiver(receiverSessionId: string): Promise<PendingMessageEntity[]>;
+
+  /**
    * Удаляет недоставленное сообщение по ID.
    * @param id - ID сообщения.
    */

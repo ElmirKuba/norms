@@ -13,6 +13,7 @@ import type { Server, WebSocket } from 'ws';
 import type { IncomingMessage } from 'node:http';
 import { WssConnectionStore } from './wss-connection.store';
 import { SessionRepository } from '../domain/ports/session.repository.port';
+import { ChatRepository } from '../domain/ports/chat.repository.port';
 import { SendMessageUseCase } from '../chat/use-cases/send-message.use-case';
 import { MessageDeliveredUseCase } from '../chat/use-cases/message-delivered.use-case';
 import { generateRefreshToken, sha256Hex } from '../common/utils/crypto.util';
@@ -53,16 +54,17 @@ export class WssGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly _store: WssConnectionStore,
     private readonly _jwtService: JwtService,
     @Inject(SessionRepository) private readonly _sessionRepo: SessionRepository,
+    @Inject(ChatRepository) private readonly _chatRepo: ChatRepository,
     private readonly _sendMessageUseCase: SendMessageUseCase,
     private readonly _messageDeliveredUseCase: MessageDeliveredUseCase,
   ) {}
 
   /**
-   * Валидирует JWT из ?token= при установке соединения. Закрывает сокет при ошибке.
+   * Валидирует JWT, регистрирует соединение, пушит накопленные pending_messages.
    * @param socket - WebSocket-соединение.
    * @param request - HTTP upgrade-запрос.
    */
-  public handleConnection(socket: WebSocket, request: IncomingMessage): void {
+  public async handleConnection(socket: WebSocket, request: IncomingMessage): Promise<void> {
     const token = this._extractToken(request);
     if (token === null) {
       socket.close(4001, 'missing_token');
@@ -79,6 +81,20 @@ export class WssGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     socketSessionMap.set(socket, payload.sessionId);
     this._store.add(payload.sessionId, payload.sub, socket);
+
+    const pending = await this._chatRepo.findPendingMessagesByReceiver(payload.sessionId);
+    for (const msg of pending) {
+      if (socket.readyState !== 1 /* OPEN */) break;
+      socket.send(JSON.stringify({
+        event: 'message_new',
+        data: {
+          message_id: msg.id,
+          chat_id: msg.chatId,
+          sender_session_id: msg.senderSessionId,
+          encrypted_blob: msg.encryptedBlob.toString('base64'),
+        },
+      }));
+    }
   }
 
   /**

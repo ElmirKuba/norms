@@ -231,6 +231,27 @@ export class DrizzleChatRepository extends ChatRepository {
   }
 
   /**
+   * Возвращает все pending_messages для сессии-получателя, старые первые.
+   * @param receiverSessionId - ID сессии-получателя.
+   * @returns Массив сообщений.
+   */
+  public async findPendingMessagesByReceiver(receiverSessionId: string): Promise<PendingMessageEntity[]> {
+    const rows = await this._db
+      .select()
+      .from(pendingMessages)
+      .where(eq(pendingMessages.receiverSessionId, receiverSessionId))
+      .orderBy(pendingMessages.createdAt);
+    return rows.map((row: typeof pendingMessages.$inferSelect): PendingMessageEntity => ({
+      id: row.id,
+      chatId: row.chatId,
+      senderSessionId: row.senderSessionId,
+      receiverSessionId: row.receiverSessionId,
+      encryptedBlob: row.encryptedBlob,
+      createdAt: row.createdAt,
+    }));
+  }
+
+  /**
    * Сохраняет недоставленное сообщение в pending_messages.
    * @param data - Данные сообщения.
    * @returns Созданная сущность сообщения.

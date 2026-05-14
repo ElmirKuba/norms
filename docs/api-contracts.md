@@ -723,6 +723,16 @@ Access TTL короткий (15с по умолчанию), WSS-коннект �
 ← { "event": "error", "data": { "code": "chat_not_found" | "not_your_chat" | "blob_too_large" | "invalid_blob" } }
 ```
 
+### Sync при подключении (server → client, автоматически)
+
+При установке WSS-соединения сервер немедленно пушит все `pending_messages` для этой сессии (накопленные пока устройство было офлайн). Формат каждого сообщения идентичен `message_new`:
+
+```json
+← { "event": "message_new", "data": { "message_id": "...", "chat_id": "...", "sender_session_id": "...", "encrypted_blob": "<base64>" } }
+```
+
+Клиент обрабатывает их так же, как обычные `message_new` — сохраняет в SQLite и шлёт `message_delivered`. Порядок: `created_at ASC` (старые первые).
+
 ### Подтверждение доставки (client → server)
 
 Получатель шлёт после записи сообщения в локальную SQLite:
