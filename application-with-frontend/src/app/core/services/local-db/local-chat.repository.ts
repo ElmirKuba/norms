@@ -1,9 +1,21 @@
 import { inject, Injectable } from '@angular/core';
 
 import { LocalDbService } from './local-db.service';
-import type { LocalChat, LocalChatWithPeer, LocalMessage, LocalMessageStatus, LocalChatStatus, LocalPeerDevice } from './local-db.types';
+import type { LocalChat, LocalChatKey, LocalChatWithPeer, LocalMessage, LocalMessageStatus, LocalChatStatus, LocalPeerDevice } from './local-db.types';
 
 /* eslint-disable @typescript-eslint/naming-convention */
+/** Строка из таблицы chat_keys. */
+interface RawChatKey {
+  /** ID чата. */
+  readonly chat_id: string;
+  /** Зашифрованный ключ (base64). */
+  readonly encrypted_key: string;
+  /** IV шифрования (base64). */
+  readonly key_iv: string;
+  /** Unix-время создания (мс). */
+  readonly created_at: number;
+}
+
 /** Строка из JOIN chats + peer_devices. */
 interface RawChatWithPeer {
   /** ID чата. */
@@ -292,5 +304,44 @@ export class LocalChatRepository {
       [sessionId],
     );
     return row !== undefined ? mapPeerDevice(row) : null;
+  }
+
+  /**
+   * Вставляет или заменяет ключ чата.
+   * @param key - Данные ключа.
+   */
+  public async saveChatKey(key: LocalChatKey): Promise<void> {
+    await this._db.run(
+      `INSERT OR REPLACE INTO chat_keys (chat_id, encrypted_key, key_iv, created_at)
+       VALUES (?, ?, ?, ?)`,
+      [key.chatId, key.encryptedKey, key.keyIv, key.createdAt],
+    );
+  }
+
+  /**
+   * Возвращает ключ чата или null если не найден.
+   * @param chatId - ID чата.
+   * @returns LocalChatKey или null.
+   */
+  public async getChatKey(chatId: string): Promise<LocalChatKey | null> {
+    const row = await this._db.get<RawChatKey>(
+      `SELECT chat_id, encrypted_key, key_iv, created_at FROM chat_keys WHERE chat_id = ?`,
+      [chatId],
+    );
+    if (row === undefined) return null;
+    return {
+      chatId: row.chat_id,
+      encryptedKey: row.encrypted_key,
+      keyIv: row.key_iv,
+      createdAt: row.created_at,
+    };
+  }
+
+  /**
+   * Удаляет ключ чата.
+   * @param chatId - ID чата.
+   */
+  public async deleteChatKey(chatId: string): Promise<void> {
+    await this._db.run(`DELETE FROM chat_keys WHERE chat_id = ?`, [chatId]);
   }
 }

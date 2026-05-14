@@ -44,6 +44,18 @@ export interface LocalChatWithPeer extends LocalChat {
   readonly peer: LocalPeerDevice | null;
 }
 
+/** AES-256-GCM ключ чата, зашифрованный мастер-ключом. */
+export interface LocalChatKey {
+  /** ID чата. */
+  readonly chatId: string;
+  /** Зашифрованный ключ (base64, AES-GCM). */
+  readonly encryptedKey: string;
+  /** IV шифрования (base64). */
+  readonly keyIv: string;
+  /** Unix-время создания (мс). */
+  readonly createdAt: number;
+}
+
 /** Сообщение из локальной SQLite. */
 export interface LocalMessage {
   /** ID сообщения (с сервера). */

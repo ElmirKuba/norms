@@ -264,8 +264,8 @@ _Перед стартом фазы 1 — **переключиться обра�
 
 ### Фаза 2 — E2E шифрование (ECDH X25519 + HKDF-SHA256 + AES-256-GCM)
 
-- [ ] **9.22** — Бэкенд: `status` / `public_key_a` / `public_key_b` в схеме `chats`; `PATCH /chat/submit-key`; когда оба ключа есть — обнулить, статус → `active`, WSS `chat_key_ready`
-- [ ] **9.23** — Фронт: `chat_keys` таблица в локальной SQLite; мастер-ключ из SecureStorage (keychain)
+- [x] **9.22** — Бэкенд: `status` / `public_key_a` / `public_key_b` в схеме `chats`; `PATCH /chat/submit-key`; когда оба ключа есть — обнулить, статус → `active`, WSS `chat_key_ready`
+- [x] **9.23** — Фронт: `chat_keys` таблица в локальной SQLite; мастер-ключ из SecureStorage (keychain)
 - [ ] **9.24** — Фронт: `CryptoService` — Web Crypto API: ECDH X25519 генерация пары, HKDF-SHA256, AES-256-GCM encrypt/decrypt
 - [ ] **9.25** — Фронт: создание чата → генерировать ECDH пару, загружать публичный ключ, статус `pending_key`; UI pending_key в чатах
 - [ ] **9.26** — Фронт: WSS `chat_key_ready` → получить публичный ключ собеседника → AES-ключ → `chat_keys` → зашифровать и отправить все `pending_key` сообщения
