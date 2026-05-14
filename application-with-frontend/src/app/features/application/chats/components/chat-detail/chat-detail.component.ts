@@ -7,7 +7,7 @@ import { LocalChatRepository } from '../../../../../core/services/local-db/local
 import type { LocalChatWithPeer, LocalMessage, LocalMessageStatus } from '../../../../../core/services/local-db/local-db.types';
 import { TokenStorageService } from '../../../../../core/services/storage/token-storage.service';
 import { WssService } from '../../../../../core/services/wss/wss.service';
-import type { WssMessageSentData, WssMessageNewData } from '../../../../../core/services/wss/wss.service';
+import type { WssMessageSentData, WssMessageNewData, WssMessageStatusData } from '../../../../../core/services/wss/wss.service';
 import { avatarColorForId } from '../../../search/services/search-api.service';
 
 /** Данные чата для отображения. */
@@ -223,6 +223,7 @@ export class ChatDetailApplicationComponent implements OnInit {
     this._chatsState.setActiveChat(chatId);
     this._subscribeToMessageSent();
     this._subscribeToMessageNew();
+    this._subscribeToStatusUpdates();
     void this._load(chatId);
   }
 
@@ -309,6 +310,7 @@ export class ChatDetailApplicationComponent implements OnInit {
 
   /**
    * Загружает чат и сообщения из SQLite.
+   * Входящие 'delivered' сообщения помечаются 'read' и сигнализируются серверу.
    * @param chatId - ID чата.
    */
   private async _load(chatId: string): Promise<void> {
@@ -320,7 +322,39 @@ export class ChatDetailApplicationComponent implements OnInit {
     this.chat.set(buildChatView(chatData));
 
     const stored = await this._chatRepo.getMessages(chatId);
-    this.messages.set(stored.map(mapMessage));
+
+    const unread = stored.filter(
+      (m: LocalMessage): boolean => !m.isOutgoing && m.status === 'delivered',
+    );
+
+    for (const msg of unread) {
+      await this._chatRepo.updateMessageStatus(msg.id, 'read');
+      /* eslint-disable @typescript-eslint/naming-convention -- snake_case соответствует API-контракту */
+      this._wss.send('message_read', { message_id: msg.id, chat_id: chatId });
+      /* eslint-enable @typescript-eslint/naming-convention */
+    }
+
+    const withRead = stored.map((m: LocalMessage): LocalMessage =>
+      !m.isOutgoing && m.status === 'delivered' ? { ...m, status: 'read' as const } : m,
+    );
+
+    this.messages.set(withRead.map(mapMessage));
+  }
+
+  /** Подписывается на message_delivered и message_read для обновления статусов в UI. */
+  private _subscribeToStatusUpdates(): void {
+    const updateStatus = (data: WssMessageStatusData, status: 'delivered' | 'read'): void => {
+      if (data.chatId !== this._chatId) return;
+      this.messages.update((msgs: readonly MessageItem[]): readonly MessageItem[] =>
+        msgs.map((m: MessageItem): MessageItem =>
+          m.id === data.messageId ? { ...m, status } : m,
+        ),
+      );
+    };
+
+    const subD = this._wss.messageDelivered$.subscribe((d: WssMessageStatusData): void => { updateStatus(d, 'delivered'); });
+    const subR = this._wss.messageRead$.subscribe((d: WssMessageStatusData): void => { updateStatus(d, 'read'); });
+    this._destroyRef.onDestroy((): void => { subD.unsubscribe(); subR.unsubscribe(); });
   }
 
   /** Подписывается на message_new от WssService для live-обновления UI. */

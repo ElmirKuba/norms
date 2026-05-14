@@ -29,6 +29,14 @@ export interface WssMessageNewData {
   readonly encryptedBlob: string;
 }
 
+/** Данные событий message_delivered / message_read — обновление статуса. */
+export interface WssMessageStatusData {
+  /** ID сообщения. */
+  readonly messageId: string;
+  /** ID чата. */
+  readonly chatId: string;
+}
+
 /** Данные события message_sent — подтверждение отправки. */
 export interface WssMessageSentData {
   /** Реальный ID сообщения, присвоенный сервером. */
@@ -85,6 +93,18 @@ export class WssService {
    * ChatDetailComponent подписывается для обновления UI.
    */
   public readonly messageNew$: Subject<WssMessageNewData> = new Subject<WssMessageNewData>();
+
+  /**
+   * Эмитирует событие message_delivered — наше исходящее сообщение доставлено получателю.
+   * ChatEventsService обновляет SQLite; ChatDetailComponent обновляет UI.
+   */
+  public readonly messageDelivered$: Subject<WssMessageStatusData> = new Subject<WssMessageStatusData>();
+
+  /**
+   * Эмитирует событие message_read — наше исходящее сообщение прочитано получателем.
+   * ChatEventsService обновляет SQLite; ChatDetailComponent обновляет UI.
+   */
+  public readonly messageRead$: Subject<WssMessageStatusData> = new Subject<WssMessageStatusData>();
 
   /**
    * Эмитирует подтверждение отправки сообщения (message_sent).
@@ -215,6 +235,12 @@ export class WssService {
       case 'message_new':
         this._onMessageNew(msg.data);
         break;
+      case 'message_delivered':
+        this._onMessageStatusUpdate(msg.data, this.messageDelivered$);
+        break;
+      case 'message_read':
+        this._onMessageStatusUpdate(msg.data, this.messageRead$);
+        break;
       case 'message_sent':
         this._onMessageSent(msg.data);
         break;
@@ -307,6 +333,18 @@ export class WssService {
       typeof encryptedBlob !== 'string'
     ) return;
     this.messageNew$.next({ messageId, chatId, senderSessionId, encryptedBlob });
+  }
+
+  /**
+   * Разбирает message_delivered / message_read и эмитирует в переданный Subject.
+   * @param data - Данные события.
+   * @param target - Subject для эмита.
+   */
+  private _onMessageStatusUpdate(data: Record<string, unknown>, target: Subject<WssMessageStatusData>): void {
+    const messageId = data['message_id'];
+    const chatId = data['chat_id'];
+    if (typeof messageId !== 'string' || typeof chatId !== 'string') return;
+    target.next({ messageId, chatId });
   }
 
   /**

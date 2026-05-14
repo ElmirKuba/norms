@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { WssService } from '../wss/wss.service';
-import type { WssMessageNewData } from '../wss/wss.service';
+import type { WssMessageNewData, WssMessageStatusData } from '../wss/wss.service';
 import { LocalChatRepository } from '../local-db/local-chat.repository';
 import type { LocalMessage } from '../local-db/local-db.types';
 
@@ -42,6 +42,12 @@ export class ChatEventsService {
   public init(): void {
     this._wss.messageNew$.subscribe((data: WssMessageNewData): void => {
       void this._handleMessageNew(data);
+    });
+    this._wss.messageDelivered$.subscribe((data: WssMessageStatusData): void => {
+      void this._chatRepo.updateMessageStatus(data.messageId, 'delivered');
+    });
+    this._wss.messageRead$.subscribe((data: WssMessageStatusData): void => {
+      void this._chatRepo.updateMessageStatus(data.messageId, 'read');
     });
   }
 
