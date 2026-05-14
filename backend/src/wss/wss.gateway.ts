@@ -13,13 +13,23 @@ import type { Server, WebSocket } from 'ws';
 import type { IncomingMessage } from 'node:http';
 import { WssConnectionStore } from './wss-connection.store';
 import { SessionRepository } from '../domain/ports/session.repository.port';
+import { SendMessageUseCase } from '../chat/use-cases/send-message.use-case';
 import { generateRefreshToken, sha256Hex } from '../common/utils/crypto.util';
 import type { JwtPayload } from '../auth/types/jwt-payload.type';
+import type { HttpException } from '@nestjs/common';
 
 /** DTO входящего сообщения token_refresh. */
 interface TokenRefreshData {
   /** Opaque refresh-токен. */
   readonly refresh_token: string;
+}
+
+/** DTO входящего сообщения send_message. */
+interface SendMessageData {
+  /** ID чата. */
+  readonly chat_id: string;
+  /** Зашифрованный blob в base64. */
+  readonly encrypted_blob: string;
 }
 
 /** WeakMap для хранения sessionId, связанного с каждым WebSocket-соединением. */
@@ -36,6 +46,7 @@ export class WssGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly _store: WssConnectionStore,
     private readonly _jwtService: JwtService,
     @Inject(SessionRepository) private readonly _sessionRepo: SessionRepository,
+    private readonly _sendMessageUseCase: SendMessageUseCase,
   ) {}
 
   /**
@@ -109,6 +120,49 @@ export class WssGateway implements OnGatewayConnection, OnGatewayDisconnect {
       event: 'tokens_updated',
       data: { access_token: accessToken, refresh_token: newRaw },
     }));
+  }
+
+  /**
+   * Принимает сообщение от клиента, сохраняет в pending_messages,
+   * шлёт message_sent отправителю и message_new получателю (если онлайн).
+   * @param data - { chat_id, encrypted_blob (base64) }.
+   * @param socket - Сокет-отправитель.
+   */
+  @SubscribeMessage('send_message')
+  public async handleSendMessage(
+    @MessageBody() data: SendMessageData,
+    @ConnectedSocket() socket: WebSocket,
+  ): Promise<void> {
+    const sessionId = socketSessionMap.get(socket);
+    if (sessionId === undefined) return;
+
+    let result: Awaited<ReturnType<SendMessageUseCase['execute']>>;
+    try {
+      result = await this._sendMessageUseCase.execute(
+        sessionId,
+        data.chat_id ?? '',
+        data.encrypted_blob ?? '',
+      );
+    } catch (err: unknown) {
+      const response = (err as HttpException).getResponse?.() as { code?: string } | undefined;
+      socket.send(JSON.stringify({
+        event: 'error',
+        data: { code: response?.code ?? 'internal_error' },
+      }));
+      return;
+    }
+
+    socket.send(JSON.stringify({
+      event: 'message_sent',
+      data: { message_id: result.messageId, chat_id: result.chatId },
+    }));
+
+    this._store.sendToSession(result.receiverSessionId, 'message_new', {
+      message_id: result.messageId,
+      chat_id: result.chatId,
+      sender_session_id: sessionId,
+      encrypted_blob: result.encryptedBlobBase64,
+    });
   }
 
   /**

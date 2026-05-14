@@ -25,6 +25,34 @@ export interface ChatEntity {
   readonly updatedAt: Date;
 }
 
+/** Недоставленное сообщение на сервере. */
+export interface PendingMessageEntity {
+  /** Уникальный ID сообщения — формат {uuid-v7}_{unix-ms}. */
+  readonly id: string;
+  /** FK → chats.id. */
+  readonly chatId: string;
+  /** FK → sessions.id — отправитель. */
+  readonly senderSessionId: string;
+  /** FK → sessions.id — получатель. */
+  readonly receiverSessionId: string;
+  /** Зашифрованный blob: [iv: 12b][ciphertext][auth_tag: 16b]. */
+  readonly encryptedBlob: Buffer;
+  /** Дата создания сообщения. */
+  readonly createdAt: Date;
+}
+
+/** Данные для сохранения недоставленного сообщения. */
+export interface CreatePendingMessageData {
+  /** FK → chats.id. */
+  readonly chatId: string;
+  /** FK → sessions.id — отправитель. */
+  readonly senderSessionId: string;
+  /** FK → sessions.id — получатель. */
+  readonly receiverSessionId: string;
+  /** Зашифрованный blob. */
+  readonly encryptedBlob: Buffer;
+}
+
 /** Осиротевший собеседник — аккаунт, с которым были чаты с других устройств, но нет с текущего. */
 export interface OrphanPeer {
   /** ID аккаунта собеседника. */

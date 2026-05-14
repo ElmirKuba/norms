@@ -1,9 +1,9 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { eq, or, and, ne, inArray, desc } from 'drizzle-orm';
 import { ChatRepository } from '../../domain/ports/chat.repository.port';
-import type { ChatEntity, ChatListItem, OrphanPeer, CreateChatData } from '../../domain/entities/chat.entity';
+import type { ChatEntity, ChatListItem, OrphanPeer, PendingMessageEntity, CreateChatData, CreatePendingMessageData } from '../../domain/entities/chat.entity';
 import { generateId } from '../../common/utils/id.util';
-import { chats, sessions, accounts, uins } from '../schemas';
+import { chats, sessions, accounts, uins, pendingMessages } from '../schemas';
 import { DRIZZLE_DB } from '../drizzle.module';
 import type { DrizzleDb } from '../drizzle.module';
 
@@ -197,6 +197,35 @@ export class DrizzleChatRepository extends ChatRepository {
         lastChatAt: accountToLastChat.get(r.accountId) ?? new Date(0),
       }))
       .sort((a: OrphanPeer, b: OrphanPeer): number => b.lastChatAt.getTime() - a.lastChatAt.getTime());
+  }
+
+  /**
+   * Сохраняет недоставленное сообщение в pending_messages.
+   * @param data - Данные сообщения.
+   * @returns Созданная сущность сообщения.
+   * @throws Error если INSERT не вернул строк.
+   */
+  public async createPendingMessage(data: CreatePendingMessageData): Promise<PendingMessageEntity> {
+    const rows = await this._db
+      .insert(pendingMessages)
+      .values({
+        id: generateId(),
+        chatId: data.chatId,
+        senderSessionId: data.senderSessionId,
+        receiverSessionId: data.receiverSessionId,
+        encryptedBlob: data.encryptedBlob,
+      })
+      .returning();
+    const row = rows[0];
+    if (row === undefined) throw new Error('INSERT не вернул строк');
+    return {
+      id: row.id,
+      chatId: row.chatId,
+      senderSessionId: row.senderSessionId,
+      receiverSessionId: row.receiverSessionId,
+      encryptedBlob: row.encryptedBlob,
+      createdAt: row.createdAt,
+    };
   }
 
   /**

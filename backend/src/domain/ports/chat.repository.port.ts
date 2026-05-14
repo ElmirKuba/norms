@@ -1,4 +1,4 @@
-import type { ChatEntity, ChatListItem, OrphanPeer, CreateChatData } from '../entities/chat.entity';
+import type { ChatEntity, ChatListItem, OrphanPeer, PendingMessageEntity, CreateChatData, CreatePendingMessageData } from '../entities/chat.entity';
 
 /** Порт (абстракция) для операций с чатами — реализуется в слое персистентности. */
 export abstract class ChatRepository {
@@ -24,6 +24,13 @@ export abstract class ChatRepository {
    * @returns Список осиротевших собеседников, отсортированных по last_chat_at DESC.
    */
   public abstract findOrphanPeers(myAccountId: string, mySessionId: string): Promise<OrphanPeer[]>;
+
+  /**
+   * Сохраняет недоставленное сообщение.
+   * @param data - Данные сообщения.
+   * @returns Созданная сущность сообщения.
+   */
+  public abstract createPendingMessage(data: CreatePendingMessageData): Promise<PendingMessageEntity>;
 
   /**
    * Создаёт и сохраняет новый чат.

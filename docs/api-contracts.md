@@ -698,6 +698,31 @@ Access TTL короткий (15с по умолчанию), WSS-коннект �
 
 При `refresh_reused` клиент должен сам очистить токены и перейти на экран авторизации. Refresh token rotation: каждый `token_refresh` инвалидирует старый refresh и выдаёт новый.
 
+### Отправка сообщения (client → server)
+
+```json
+→ { "event": "send_message", "data": { "chat_id": "...", "encrypted_blob": "<base64>" } }
+```
+
+`encrypted_blob` — base64-строка. Формат blob: `[iv: 12b][ciphertext][auth_tag: 16b]`. В фазе 1 (без шифрования) клиент передаёт plaintext как base64. Лимит: 1MB после декодирования.
+
+Сервер шлёт отправителю подтверждение:
+```json
+← { "event": "message_sent", "data": { "message_id": "...", "chat_id": "..." } }
+```
+
+Если получатель онлайн — сервер шлёт ему сразу:
+```json
+← { "event": "message_new", "data": { "message_id": "...", "chat_id": "...", "sender_session_id": "...", "encrypted_blob": "<base64>" } }
+```
+
+Если получатель офлайн — сообщение остаётся в `pending_messages` до его подключения (шаг 9.8).
+
+Ошибки:
+```json
+← { "event": "error", "data": { "code": "chat_not_found" | "not_your_chat" | "blob_too_large" | "invalid_blob" } }
+```
+
 ### Heartbeat (client → server)
 
 Клиент периодически шлёт `{ "event": "ping", "data": {} }`. Сервер отвечает `{ "event": "pong", "data": {} }`.
