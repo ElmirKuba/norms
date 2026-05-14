@@ -659,6 +659,20 @@ Errors:
 
 ---
 
+### `DELETE /api/v1/chat/delete/:id`
+
+Удаляет чат. Cascade на уровне БД удаляет все `pending_messages`. Собеседник получает WSS `chat_deleted`.
+
+Auth: Bearer.
+
+Response: `204 No Content`
+
+Errors:
+- 404 `chat_not_found`
+- 403 `not_your_chat`
+
+---
+
 ## WSS
 
 ### Подключение
@@ -766,6 +780,15 @@ Access TTL короткий (15с по умолчанию), WSS-коннект �
 ```json
 ← { "event": "error", "data": { "code": "message_not_found" | "not_your_message" } }
 ```
+
+### Удаление чата (server → client)
+
+Когда один из участников удаляет чат через `DELETE /chat/delete/:id`, сервер шлёт собеседнику:
+```json
+← { "event": "chat_deleted", "data": { "chat_id": "..." } }
+```
+
+Клиент помечает чат как `is_dead = true` в локальной SQLite (или удаляет полностью — на усмотрение фронта).
 
 ### Heartbeat (client → server)
 
