@@ -1,44 +1,37 @@
+import { Preferences } from '@capacitor/preferences';
 import { SecureStorageService } from './secure-storage.service';
 
 /**
  * Реализация SecureStorageService для Capacitor (iOS/Android).
- *
- * TODO: реализовать через @capacitor-community/secure-storage-plugin
- * который оборачивает iOS Keychain и Android Keystore.
- * Установка: npm install @capacitor-community/secure-storage-plugin && npx cap sync
- * Документация: https://github.com/martinkasa/capacitor-secure-storage-plugin
- *
- * Текущая заглушка бросает ошибку чтобы сделать отсутствие реализации явным при разработке.
+ * Использует @capacitor/preferences: UserDefaults на iOS, SharedPreferences на Android.
+ * Для production рекомендуется заменить на нативный Keychain/Keystore через
+ * @capacitor-community/secure-storage-plugin.
  */
 export class SecureStorageCapacitorService extends SecureStorageService {
   /**
-   * Не реализовано — требует @capacitor-community/secure-storage-plugin.
-   * @param _key - Ключ записи.
-   * @returns Никогда не возвращает значение.
-   * @throws Error — Capacitor secure storage не реализован.
+   * Возвращает значение из Capacitor Preferences по ключу.
+   * @param key - Ключ записи.
+   * @returns Значение или null если ключ отсутствует.
    */
-  public get(_key: string): Promise<string | null> {
-    throw new Error('SecureStorageCapacitorService: not yet implemented. Install @capacitor-community/secure-storage-plugin.');
+  public async get(key: string): Promise<string | null> {
+    const { value } = await Preferences.get({ key });
+    return value;
   }
 
   /**
-   * Не реализовано — требует @capacitor-community/secure-storage-plugin.
-   * @param _key - Ключ записи.
-   * @param _value - Значение для сохранения.
-   * @returns Никогда не разрешается.
-   * @throws Error — Capacitor secure storage не реализован.
+   * Сохраняет значение в Capacitor Preferences.
+   * @param key - Ключ записи.
+   * @param value - Значение для сохранения.
    */
-  public set(_key: string, _value: string): Promise<void> {
-    throw new Error('SecureStorageCapacitorService: not yet implemented. Install @capacitor-community/secure-storage-plugin.');
+  public async set(key: string, value: string): Promise<void> {
+    await Preferences.set({ key, value });
   }
 
   /**
-   * Не реализовано — требует @capacitor-community/secure-storage-plugin.
-   * @param _key - Ключ записи.
-   * @returns Никогда не разрешается.
-   * @throws Error — Capacitor secure storage не реализован.
+   * Удаляет запись из Capacitor Preferences.
+   * @param key - Ключ записи.
    */
-  public remove(_key: string): Promise<void> {
-    throw new Error('SecureStorageCapacitorService: not yet implemented. Install @capacitor-community/secure-storage-plugin.');
+  public async remove(key: string): Promise<void> {
+    await Preferences.remove({ key });
   }
 }
