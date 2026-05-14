@@ -60,12 +60,11 @@ export class WelcomeWebComponent {
   ) {}
 
   /**
-   * Получить путь к файлу с иконкой svg
-   * @param osType Операционная система
-   * @returns Полный путь к иконке
+   * Получить путь к иконке ОС.
+   * @param osType - Операционная система.
+   * @returns Путь к SVG-иконке.
    */
   public iconSrcPath(osType: OperatingSystem): string {
-    // TODO: ElmirKuba 2026-04-23: Подумать, чтобы не только *.svg, а и другие типы/расширения файлов и валидацией
     return `./../../../../../../assets/images/icons/os/${osType}-icon.svg`;
   }
 

@@ -11,6 +11,8 @@ import { SecureStorageService } from './core/services/secure-storage/secure-stor
 import { secureStorageServiceFactory } from './core/services/secure-storage/secure-storage.provider';
 import { LocalDbService } from './core/services/local-db/local-db.service';
 import { localDbServiceFactory } from './core/services/local-db/local-db.provider';
+import { ClipboardService } from './core/services/clipboard/clipboard.service';
+import { clipboardServiceFactory } from './core/services/clipboard/clipboard.provider';
 import { ThemeService } from './core/services/theme/theme.service';
 import { FeatureFlagsService } from './core/services/feature-flags/feature-flags.service';
 import { TokenStorageService } from './core/services/storage/token-storage.service';
@@ -57,6 +59,11 @@ export const appConfig: ApplicationConfig = {
     {
       provide: LocalDbService,
       useFactory: localDbServiceFactory,
+      deps: [PlatformDetectorService],
+    },
+    {
+      provide: ClipboardService,
+      useFactory: clipboardServiceFactory,
       deps: [PlatformDetectorService],
     },
     provideAppInitializer((): void => {

@@ -1,6 +1,8 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import type { WritableSignal } from '@angular/core';
 import { Router } from '@angular/router';
 import { ButtonSharedComponent } from '../../../../../shared/components/button/button.component';
+import { ClipboardService } from '../../../../../core/services/clipboard/clipboard.service';
 
 /** Экран успешного присвоения UIN */
 @Component({
@@ -15,7 +17,7 @@ export class UinAssignedApplicationComponent {
   protected readonly _uin: string;
 
   /** true — UIN только что скопирован (показывает галочку 1.5 сек). */
-  protected _copied: boolean = false;
+  protected readonly _copied: WritableSignal<boolean> = signal(false);
 
   /** Форматированный UIN для отображения: «8845» → «8 845» */
   protected get _formattedUin(): string {
@@ -25,8 +27,8 @@ export class UinAssignedApplicationComponent {
   /** Роутер для навигации между экранами */
   private readonly _router: Router = inject(Router);
 
-  /** Change detector для принудительного обновления при OnPush (Promise-коллбэк вне zone.js). */
-  private readonly _cdr: ChangeDetectorRef = inject(ChangeDetectorRef);
+  /** Сервис буфера обмена. */
+  private readonly _clipboard: ClipboardService = inject(ClipboardService);
 
   public constructor() {
     const state = window.history.state as Record<string, unknown>;
@@ -36,14 +38,10 @@ export class UinAssignedApplicationComponent {
 
   /** Скопировать UIN в буфер обмена */
   public onCopy(): void {
-    // TODO: заменить на ClipboardService (платформенный сервис)
-    this._copied = true;
-    this._cdr.detectChanges();
-    void navigator.clipboard.writeText(this._uin);
-    setTimeout((): void => {
-      this._copied = false;
-      this._cdr.detectChanges();
-    }, 1500);
+    void this._clipboard.write(this._uin).then((): void => {
+      this._copied.set(true);
+      setTimeout((): void => { this._copied.set(false); }, 1500);
+    });
   }
 
   /** Продолжить — переход на основной экран приложения */

@@ -15,10 +15,7 @@ export class AboutWebComponent {
   /** Ссылка на BadgeTypeIcons — нужна для доступа к enum из шаблона */
   public readonly badgeTypeIcons: typeof BadgeTypeIcons = BadgeTypeIcons;
 
-  /**
-   * Карточки с ключевыми характеристиками продукта.
-   * TODO: заменить imgSrc на реальные SVG-иконки в assets/images/icons/features/
-   */
+  /** Карточки с ключевыми характеристиками продукта. */
   public readonly features: FeatureCard[] = [
     {
       imgSrc: 'assets/images/icons/features/no-tracking.svg',

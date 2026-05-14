@@ -15,10 +15,7 @@ export class SecurityWebComponent {
   /** Ссылка на BadgeTypeIcons — нужна для доступа к enum из шаблона */
   public readonly badgeTypeIcons: typeof BadgeTypeIcons = BadgeTypeIcons;
 
-  /**
-   * Карточки с аспектами безопасности.
-   * TODO: заменить imgSrc на реальные SVG-иконки в assets/images/icons/features/
-   */
+  /** Карточки с аспектами безопасности. */
   public readonly features: SecurityFeatureCard[] = [
     {
       imgSrc: 'assets/images/icons/features/e2e-encryption.svg',

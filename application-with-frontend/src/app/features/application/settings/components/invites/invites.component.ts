@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import type { OnInit, WritableSignal } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
@@ -10,6 +10,7 @@ import { InviteApiService } from '../../../auth/services/invite-api.service';
 import type { InviteCode, ReadReferralsResponse, ReferralPerson } from '../../../auth/services/invite-api.service';
 import { AuthApiService } from '../../../auth/services/auth-api.service';
 import type { ReadSelfResponse } from '../../../auth/services/auth-api.service';
+import { ClipboardService } from '../../../../../core/services/clipboard/clipboard.service';
 
 /** Инвайт для отображения в списке. */
 interface InviteItem {
@@ -94,7 +95,8 @@ export class SettingsInvitesComponent implements OnInit {
   private readonly _authApi: AuthApiService = inject(AuthApiService);
 
   /** Change detector для принудительного обновления при OnPush (Promise-коллбэк вне zone.js). */
-  private readonly _cdr: ChangeDetectorRef = inject(ChangeDetectorRef);
+  /** Сервис буфера обмена. */
+  private readonly _clipboard: ClipboardService = inject(ClipboardService);
 
   /** @inheritdoc */
   public ngOnInit(): void {
@@ -158,12 +160,8 @@ export class SettingsInvitesComponent implements OnInit {
    */
   public copyCode(code: InviteItem): void {
     this.copiedId.set(code.id);
-    this._cdr.markForCheck();
-    void navigator.clipboard.writeText(code.code);
-    setTimeout((): void => {
-      this.copiedId.set(null);
-      this._cdr.markForCheck();
-    }, 1500);
+    void this._clipboard.write(code.code);
+    setTimeout((): void => { this.copiedId.set(null); }, 1500);
   }
 
   /**

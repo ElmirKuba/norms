@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import type { WritableSignal } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { ClipboardService } from '../../../../../core/services/clipboard/clipboard.service';
 
 /** Данные модалки успешного создания инвайта */
 export interface InviteSuccessModalData {
@@ -27,6 +28,9 @@ export class InviteSuccessModalComponent {
   private readonly _dialogRef: MatDialogRef<InviteSuccessModalComponent> =
     inject<MatDialogRef<InviteSuccessModalComponent>>(MatDialogRef);
 
+  /** Сервис буфера обмена. */
+  private readonly _clipboard: ClipboardService = inject(ClipboardService);
+
   /** Закрыть */
   public close(): void {
     this._dialogRef.close();
@@ -34,7 +38,7 @@ export class InviteSuccessModalComponent {
 
   /** Скопировать код */
   public copyCode(): void {
-    void navigator.clipboard.writeText(this.data.code).then((): void => {
+    void this._clipboard.write(this.data.code).then((): void => {
       this.copied.set(true);
       setTimeout((): void => { this.copied.set(false); }, 1500);
     });
