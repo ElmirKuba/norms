@@ -26,7 +26,7 @@
     "dev:android:attach-real": "CAP_DEV=true npx cap sync android && npx cap run android --target=af0b2457",
     "dev:android:reverse": "adb reverse tcp:3000 tcp:3000",
     ":::Electron: DEV-режим (с hot reload Angular):::": ":::Electron: DEV-режим (с hot reload Angular):::",
-    "dev:electron": "npm run electron:compile && concurrently \"ng serve\" \"wait-on http://localhost:4200 && electron dist-electron/main.js --dev\"",
+    "dev:electron": "npm run electron:compile && concurrently \"ng serve --host=0.0.0.0\" \"wait-on http://localhost:4200 && electron dist-electron/main.js --dev\"",
     ":::Electron: PRODUCTION сборка:::": ":::Electron: PRODUCTION сборка:::,",
     "build:electron": "ng build --base-href=./ && npm run electron:compile && electron-builder",
     "build:electron:win": "ng build --base-href=./ && npm run electron:compile && electron-builder --win",

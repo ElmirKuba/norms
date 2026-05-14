@@ -6,24 +6,19 @@
 
 ### Запуск
 
-Открыть 4 терминала (все из `application-with-frontend/`):
+Открыть 3 терминала (все из `application-with-frontend/`):
 
-**Terminal 1** — Angular dev server (один для всех):
+**Terminal 1** — Electron (запускает ng serve для всех платформ):
 ```bash
-npm run dev:serve
+npm run dev:electron
 ```
 
-**Terminal 2** — Electron:
-```bash
-npm run dev:electron:attach
-```
-
-**Terminal 3** — iOS симулятор:
+**Terminal 2** — iOS симулятор:
 ```bash
 npm run dev:ios:attach
 ```
 
-**Terminal 4** — Android эмулятор:
+**Terminal 3** — Android эмулятор:
 ```bash
 npm run dev:android:attach
 ```
@@ -33,7 +28,7 @@ npm run dev:android:attach
 npm run dev:android:reverse
 ```
 
-> Без этого шага API-запросы (`localhost:3000`) в Android эмуляторе не достигают бэкенда на маке.
+> Без этого шага API-запросы в Android эмуляторе не достигают бэкенда на маке.
 > iOS симулятору это не нужно — он разделяет сеть с маком напрямую.
 
 ---
@@ -58,15 +53,11 @@ npm run dev:android:live
 ```bash
 # iOS устройство
 npm run dev:ios:attach-real
-# или solo:
-npm run dev:ios:live-real
 
 # Android устройство
 npm run dev:android:attach-real
 # + после подключения устройства:
 npm run dev:android:reverse
-# или solo:
-npm run dev:android:live-real
 ```
 
 ---
