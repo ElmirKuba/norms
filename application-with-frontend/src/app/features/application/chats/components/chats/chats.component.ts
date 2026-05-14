@@ -1,9 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import type { OnInit, WritableSignal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LocalChatRepository } from '../../../../../core/services/local-db/local-chat.repository';
 import type { LocalChatWithPeer, LocalPeerDevice } from '../../../../../core/services/local-db/local-db.types';
 import { avatarColorForId } from '../../../search/services/search-api.service';
+import { WssService } from '../../../../../core/services/wss/wss.service';
+import type { WssChatDeletedData } from '../../../../../core/services/wss/wss.service';
 
 /** Результат buildPeerDisplay. */
 interface PeerDisplayResult {
@@ -142,15 +144,32 @@ export class ChatsApplicationComponent implements OnInit {
   /** Репозиторий локальной БД. */
   private readonly _chatRepo: LocalChatRepository = inject(LocalChatRepository);
 
+  /** WSS-сервис для live-обновлений. */
+  private readonly _wss: WssService = inject(WssService);
+
+  /** DestroyRef для очистки подписок. */
+  private readonly _destroyRef: DestroyRef = inject(DestroyRef);
+
   /** @inheritdoc */
   public ngOnInit(): void {
     void this._load();
+    this._subscribeToChatDeleted();
   }
 
-  /** Загружает чаты из локальной SQLite. */
+  /** Загружает активные чаты из локальной SQLite (is_dead исключены). */
   private async _load(): Promise<void> {
     const raw = await this._chatRepo.getChats();
-    this.chats.set(raw.map(mapToListItem));
+    this.chats.set(raw.filter((c: LocalChatWithPeer): boolean => c.status !== 'is_dead').map(mapToListItem));
     this.loading.set(false);
+  }
+
+  /** Подписывается на chat_deleted: удаляет чат из списка при получении события. */
+  private _subscribeToChatDeleted(): void {
+    const sub = this._wss.chatDeleted$.subscribe((data: WssChatDeletedData): void => {
+      this.chats.update((list: readonly ChatListItem[]): readonly ChatListItem[] =>
+        list.filter((c: ChatListItem): boolean => c.id !== data.chatId),
+      );
+    });
+    this._destroyRef.onDestroy((): void => { sub.unsubscribe(); });
   }
 }

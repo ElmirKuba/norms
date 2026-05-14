@@ -45,6 +45,12 @@ export interface WssMessageSentData {
   readonly chatId: string;
 }
 
+/** Данные события chat_deleted — чат удалён собеседником. */
+export interface WssChatDeletedData {
+  /** ID удалённого чата. */
+  readonly chatId: string;
+}
+
 /** Данные события session_created — новая сессия аккаунта. */
 export interface WssSessionCreatedData {
   /** ID новой сессии. */
@@ -111,6 +117,12 @@ export class WssService {
    * ChatDetailComponent подписывается чтобы заменить optimistic-запись реальным ID.
    */
   public readonly messageSent$: Subject<WssMessageSentData> = new Subject<WssMessageSentData>();
+
+  /**
+   * Эмитирует chatId при получении события chat_deleted от собеседника.
+   * ChatEventsService обновляет SQLite; ChatDetailComponent и ChatsComponent обновляют UI.
+   */
+  public readonly chatDeleted$: Subject<WssChatDeletedData> = new Subject<WssChatDeletedData>();
 
   /** Base URL бэкенда (из InjectionToken). */
   private readonly _apiBaseUrl: string = inject(API_BASE_URL);
@@ -244,6 +256,9 @@ export class WssService {
       case 'message_sent':
         this._onMessageSent(msg.data);
         break;
+      case 'chat_deleted':
+        this._onChatDeleted(msg.data);
+        break;
       case 'error':
         this._onWssError(msg.data);
         break;
@@ -356,6 +371,16 @@ export class WssService {
     const chatId = data['chat_id'];
     if (typeof messageId !== 'string' || typeof chatId !== 'string') return;
     this.messageSent$.next({ messageId, chatId });
+  }
+
+  /**
+   * Эмитирует chatDeleted$ при получении события chat_deleted от сервера.
+   * @param data - Данные события chat_deleted.
+   */
+  private _onChatDeleted(data: Record<string, unknown>): void {
+    const chatId = data['chat_id'];
+    if (typeof chatId !== 'string') return;
+    this.chatDeleted$.next({ chatId });
   }
 
   /**

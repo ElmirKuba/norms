@@ -7,7 +7,7 @@ import { LocalChatRepository } from '../../../../../core/services/local-db/local
 import type { LocalChatWithPeer, LocalMessage, LocalMessageStatus } from '../../../../../core/services/local-db/local-db.types';
 import { TokenStorageService } from '../../../../../core/services/storage/token-storage.service';
 import { WssService } from '../../../../../core/services/wss/wss.service';
-import type { WssMessageSentData, WssMessageNewData, WssMessageStatusData } from '../../../../../core/services/wss/wss.service';
+import type { WssChatDeletedData, WssMessageSentData, WssMessageNewData, WssMessageStatusData } from '../../../../../core/services/wss/wss.service';
 import { avatarColorForId } from '../../../search/services/search-api.service';
 
 /** Данные чата для отображения. */
@@ -224,6 +224,7 @@ export class ChatDetailApplicationComponent implements OnInit {
     this._subscribeToMessageSent();
     this._subscribeToMessageNew();
     this._subscribeToStatusUpdates();
+    this._subscribeToChatDeleted();
     void this._load(chatId);
   }
 
@@ -426,6 +427,17 @@ export class ChatDetailApplicationComponent implements OnInit {
     } catch {
       return '[не удалось расшифровать]';
     }
+  }
+
+  /** Подписывается на chat_deleted: если текущий чат удалён — переводит UI в режим is_dead. */
+  private _subscribeToChatDeleted(): void {
+    const sub = this._wss.chatDeleted$.subscribe((data: WssChatDeletedData): void => {
+      if (data.chatId !== this._chatId) return;
+      this.chat.update((c: ChatDetailView | null): ChatDetailView | null =>
+        c !== null ? { ...c, isDead: true } : null,
+      );
+    });
+    this._destroyRef.onDestroy((): void => { sub.unsubscribe(); });
   }
 
   /** Помечает первое ожидающее сообщение как failed. */
