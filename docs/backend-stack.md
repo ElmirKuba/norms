@@ -1,71 +1,66 @@
 # Backend stack
 
-Серверная часть «Нормисов». Решение по стеку — зафиксировано. Конкретные API-контракты — в [`api-contracts.md`](api-contracts.md).
+Серверная часть «Нормисов». Реальный стек и архитектура. API-контракты — в [`api-contracts.md`](api-contracts.md).
 
 ## Стек
 
 | Слой | Выбор | Заметки |
 |---|---|---|
-| Фреймворк | **NestJS** | TypeScript, модульная архитектура, DI, decorator-based. Архитектурный референс: [`nest-backend-example/`](../nest-backend-example/) (⚠ MySQL, bcrypt, cookies — **не копировать**, см. предупреждения в корневом `CLAUDE.md`) |
-| БД | **PostgreSQL 16** | LISTEN/NOTIFY, JSONB, `pg_trgm` для поиска по `username`, партиционирование `pending_messages` на будущее |
-| ORM | **Drizzle** (`drizzle-orm/node-postgres` + `pg` + `drizzle-kit`) | Лёгкий, миграции в TS, без магии. Используется `pg` (node-postgres) вместо `postgres-js` — последний ESM-only и несовместим с NestJS CommonJS |
-| Очередь задач | **BullMQ + Redis** | Генерация UIN, rate-limit-счётчики (login/recovery), TTL-хранилище одноразовых токенов (`reset_token`), будущие job'ы (cleanup просроченных blob'ов, push-sender) |
-| Транспорт | HTTPS (REST) + WSS (реалтайм) | См. [`server.md`](server.md) |
+| Фреймворк | **NestJS 11** | TypeScript, модульная архитектура, DI, decorator-based. |
+| БД | **PostgreSQL 16** | `citext` для username, `pgEnum` для platform-полей, `bytea` для encrypted blob'ов (когда дойдём до чатов в шаге 9). |
+| ORM | **Drizzle 0.40** + `pg` 8 (node-postgres) | `drizzle-orm/node-postgres`. `postgres-js` не используется (ESM-only, несовместим с NestJS CommonJS). |
+| Очередь | **BullMQ + ioredis** | Сейчас: генерация UIN (`uin-generation` queue). На будущее: cleanup, push-sender. |
+| Redis | **ioredis** напрямую | Rate-limit-счётчики (login + recovery), TTL-хранилище одноразовых reset_token. |
+| Auth | **@nestjs/jwt** + **argon2** | JWT HS256 для access, opaque 32 байта для refresh. argon2id для паролей и хешей recovery-ответов. |
+| WSS | **@nestjs/websockets** + **@nestjs/platform-ws** (`ws`) | Один глобальный gateway `/ws`. |
+| Валидация | **class-validator** + **class-transformer** | DTO с decorator-based валидацией. |
 
-### Почему не MySQL
-- LISTEN/NOTIFY — встроенный pub/sub. Нужен для сигналов «UIN готов», «кик устройства», «новое сообщение для сессии» без Redis pub/sub.
-- JSONB с индексами — feature flags, metadata сессий, push-debug.
-- `pg_trgm` — like-поиск по `username` без отдельного индекса.
+## Архитектура
 
-### Почему не TypeORM
-`nest-backend-example` использует Drizzle — берём оттуда. Type-safety на уровне схемы, миграции через `drizzle-kit`, без скрытого SQL.
-
-## Хранение сессий
-
-Сессии (`sessions`: refresh_token_hash, updated_at ~каждые 15 сек при активной WSS-ротации) хранятся **только в PostgreSQL**.
-
-Почему не Redis:
-- `chats.session_a_id` / `session_b_id` / `pending_messages.sender/receiver_session_id` — FK на `sessions.id`. Если sessions не в PG — FK-целостность невозможна.
-- Write-нагрузка на UPDATE одной строки `sessions` каждые 15 сек на сессию — для PG это ничто на нашем масштабе.
-- Принцип «одна точка правды, один способ делать вещи».
-
-Если в далёком будущем профиль покажет, что чтение sessions становится bottleneck — добавим **cache-aside** (PG = truth, Redis = read cache, инвалидация on write). Не делаем заранее.
-
-## Архитектура бэкенда (4 слоя)
-
-Используется рекомендуемая архитектура из Части 1 [`BACKEND_ARCHITECTURE.md`](../nest-backend-example/BACKEND_ARCHITECTURE.md):
+Гибрид feature-модулей и слоистой структуры. Папки `presentation/` и `application/` присутствуют как placeholder'ы (.gitkeep), но фактически каждая фича — самостоятельный модуль со своими `controller.ts`, `dto/`, `use-cases/`. Cross-cutting слои (`domain/`, `persistence/`, `common/`) разделены.
 
 ```
 backend/src/
-├── presentation/         Контроллеры, DTO, gateway, ExceptionFilter
-├── application/          Use-case оркестраторы (один класс = один use-case)
-├── domain/               Бизнес-логика, сервисы, порты (abstract class), entities, errors
-├── persistence/          Drizzle-репозитории, schemas, migrations
-├── common/               Guards, декораторы, pipes, shared DTO
-├── config/               database.config, jwt.config, redis.config
-└── app.module.ts
+├── account/           — модуль аккаунтов (controller, dto, use-cases)
+├── invite/            — модуль инвайтов
+├── session/           — модуль сессий
+├── recovery/          — модуль восстановления доступа (Q/A + сброс пароля)
+├── search/            — глобальный поиск
+├── uin/               — UIN: controller + BullMQ-процессор
+├── wss/               — WSS-gateway + connection store
+├── auth/              — shared: JwtModule, JwtGuard, @CurrentUser decorator
+├── redis/             — ioredis-клиент (REDIS_CLIENT token)
+├── config/            — AppConfigController (feature flags)
+├── domain/            — ports (abstract class) + entities
+├── persistence/       — Drizzle: schemas/, repositories/, drizzle.module.ts
+├── common/            — errors/, utils/, types/
+├── presentation/      — пусто (.gitkeep)
+├── application/       — пусто (.gitkeep)
+├── app.module.ts
+└── main.ts
 ```
 
-**Ключевые паттерны:**
-- **Порты** — abstract class в `domain/ports/`, реализация в `persistence/`. NestJS DI связывает через `provide/useClass`.
-- **Errors** — доменные ошибки наследуют NestJS HTTP-исключения (`NotFoundException`, `UnauthorizedException`). Глобальный `ExceptionFilter` формирует ответ.
-- **DTO** — `class-validator` для входных данных в `common/dto/input/`. Выходные DTO в `common/dto/output/`.
-- **Modules** — по слою: `PersistenceModule`, `DomainModule`, `ApplicationModule`, `PresentationModule`, `CommonModule`.
+### Слои внутри гибрида
+
+- **Controller** (feature/*.controller.ts) — HTTP/WSS endpoint, валидация DTO, делегирует use-case.
+- **Use-case** (feature/use-cases/*.use-case.ts) — оркестратор одного сценария. Один класс = один use-case.
+- **Domain port** (domain/ports/*.repository.port.ts) — `abstract class` интерфейс репозитория. Используется в use-case через DI.
+- **Persistence** (persistence/repositories/*.repository.ts) — Drizzle-реализация порта. `provide`'ится как `useClass` через `PersistenceModule`.
+- **Schema** (persistence/schemas/*.schema.ts) — Drizzle table definition с `satisfies SchemaColumnMap<T>` (см. ниже).
+- **Entity** (domain/entities/*.entity.ts) — доменный тип строки (TS interface).
 
 ### Соглашение по ошибкам (`common/errors/error-codes.ts`)
 
-Единый источник правды для кодов и текстов ошибок:
+Единый источник правды:
 
 ```ts
 export enum ErrorCode {
-  /** Описание для ESLint jsdoc/require-jsdoc */
+  /** Описание для jsdoc/require-jsdoc */
   INVITE_NOT_FOUND = 'invite_not_found',
-  // ...
 }
 
 export const ErrorMessage: Record<ErrorCode, string> = {
   [ErrorCode.INVITE_NOT_FOUND]: 'Инвайт не найден',
-  // ...
 };
 
 export function makeError(code: ErrorCode): ErrorBody {
@@ -73,12 +68,14 @@ export function makeError(code: ErrorCode): ErrorBody {
 }
 ```
 
-В use-case: `throw new NotFoundException(makeError(ErrorCode.INVITE_NOT_FOUND))`.  
-Если у ошибки есть дополнительные поля: `{ ...makeError(ErrorCode.LOGIN_RATE_LIMITED), retry_after: n }`.
+В use-case: `throw new NotFoundException(makeError(ErrorCode.INVITE_NOT_FOUND))`.
+Доп. поля: `{ ...makeError(ErrorCode.LOGIN_RATE_LIMITED), retry_after }`.
+
+`ErrorMessage` — `Record<ErrorCode, string>` (а не `Partial`), компилятор заставляет покрыть каждый код.
 
 ### Соглашение по схемам Drizzle (`persistence/schemas/`)
 
-Каждая таблица имеет интерфейс строки + `satisfies SchemaColumnMap<T>` для devtime-контроля полноты:
+Каждая таблица имеет TS-интерфейс строки + `satisfies SchemaColumnMap<T>`:
 
 ```ts
 // define-table.helper.ts
@@ -88,81 +85,86 @@ export type SchemaColumnMap<T> = { [K in keyof T]: PgColumnBuilderBase };
 interface ISessionRow {
   readonly id: unknown;
   readonly accountId: unknown;
-  // ... все колонки — компилятор заставляет перечислить каждую
+  // … каждая колонка обязана быть здесь
 }
 
 export const sessions = pgTable('sessions', {
   id: text('id').primaryKey(),
-  accountId: text('account_id').notNull().references(...),
-  // ...
+  accountId: text('account_id').notNull().references(/* … */),
+  // …
 } satisfies SchemaColumnMap<ISessionRow>);
 ```
 
-`satisfies` (а не присвоение с типом) — сохраняет конкретные типы колонок (`.notNull()`, `.default()`, timestamp → `PgTimestampBuilderInitial`), что нужно Drizzle для ORM-вывода типов.
+`satisfies` (а не присвоение с типом) — сохраняет конкретные типы колонок, что нужно Drizzle для вывода ORM-типов. ESLint override для `schemas/*.ts` — Drizzle callback не аннотируется стандартными средствами.
+
+## Хранение сессий
+
+Только в PostgreSQL — таблица `sessions` (refresh_token_hash, updated_at). Подробнее: [`auth-devices.md`](auth-devices.md#таблица-sessions).
+
+Решение зафиксировано: один источник правды, без cache-aside на старте. Если в будущем профиль покажет, что чтение sessions = bottleneck — добавим Redis read cache с инвалидацией on write.
+
+## Миграции БД
+
+`drizzle-kit push` — изменения схемы применяются напрямую из TS в БД, без файлов миграций. Сценарий:
+
+```bash
+npm run db:push       # синхронизировать схему
+npm run db:comments   # применить COMMENT ON TABLE/COLUMN из docker/sql-files/comments.sql
+npm run db:setup      # = db:push + db:comments
+```
+
+`drizzle-kit generate` / `migrate` доступны в `package.json`, но MVP их не использует — `push` достаточно для итеративной разработки. Папки `backend/drizzle/` нет.
+
+`docker/sql-files/init.sql` запускается через `docker-entrypoint-initdb.d` при первом старте postgres-контейнера — создаёт расширение `citext`. Файл `comments.sql` применяется отдельно через `npm run db:comments`.
 
 ## Структура репозитория
 
 ```
 norms/
-├── application-with-frontend/  ← Angular + Capacitor + Electron (свой package.json)
+├── application-with-frontend/   ← Angular + Capacitor + Electron (свой package.json)
+├── backend/                     ← NestJS (свой package.json)
 │   ├── src/
-│   ├── electron/
-│   ├── ios/
-│   ├── android/
-│   └── dist/
-├── backend/            ← NestJS (свой package.json)
-│   ├── src/
-│   ├── drizzle/        ← миграции
-│   └── docker-compose.yml
+│   └── docker/
+│       ├── compose-files/docker-compose.dev.yml
+│       ├── sql-files/{init.sql, comments.sql}
+│       ├── pgadmin/servers.json
+│       ├── dockerfiles/nest-backend/Dockerfile.dev
+│       └── volumes/             ← persistent данные (gitignored)
 ├── design/
 ├── docs/
-├── nest-backend-example/   ← справочный, удалить после миграции нужных паттернов
+├── nest-backend-example/        ← архитектурный референс, удалить после миграции
 ├── CLAUDE.md
 ├── PROJECT.md
 └── TODO.md
 ```
 
-Два независимых `package.json`, без Nx/Turbo/pnpm-workspaces. Trade-off: типы API-контрактов дублируются руками между `application-with-frontend/` и `backend/` (или копипастятся через codegen позже). Для MVP — ОК.
+Два независимых `package.json`, без Nx/Turbo/pnpm-workspaces. Типы API-контрактов между фронтом и бэком дублируются руками.
 
 ## Docker Compose (dev)
 
-```yaml
-services:
-  postgres:
-    image: postgres:16
-    environment:
-      POSTGRES_DB: norms
-      POSTGRES_USER: norms
-      POSTGRES_PASSWORD: norms
-    volumes:
-      - pg_data:/var/lib/postgresql/data
-    ports: ["5432:5432"]
+`backend/docker/compose-files/docker-compose.dev.yml`. Сервисы:
 
-  redis:
-    image: redis:7-alpine
-    volumes:
-      - redis_data:/data
-    ports: ["6379:6379"]
+| Сервис | Контейнер | Порт | Назначение |
+|---|---|---|---|
+| postgres | `postgres_norms_dev` | 5432 | БД, healthcheck `pg_isready` |
+| redis | `redis_norms_dev` | 6379 | BullMQ + rate-limit + reset_token |
+| pgadmin | `pgadmin_norms_dev` | 8081 | UI для Postgres, автоконфиг через `pgadmin/servers.json` |
+| redisinsight | `redisinsight_norms_dev` | 5540 | UI для Redis |
+| backend | `backend_norms_dev` | 3000 | NestJS (по умолчанию запускается на хосте через `npm run start:dev`, в compose-файле раскомментировать для запуска внутри Docker) |
 
-  pgadmin:
-    image: dpage/pgadmin4
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@example.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-    ports: ["8081:80"]
-    depends_on: [postgres]
-    # servers.json монтируется для автоконфига подключения к postgres
+Volume'ы данных — `backend/docker/volumes/{pg_data, redis_data, redisinsight_data, pgadmin_data}` (gitignored, кроме `.gitkeep`).
 
-  bull-board:
-    # либо отдельный сервис, либо смонтировать Express-роут внутрь бэка
-    # (зависит от финального решения при реализации)
+### npm-скрипты
 
-volumes:
-  pg_data:
-  redis_data:
+```
+docker:up         # docker compose up -d
+docker:dev        # docker compose up (foreground)
+docker:rebuild    # up --build
+docker:down       # down
+docker:logs       # logs -f
 ```
 
-## Env (base)
+## Env (`.env.example`)
 
 ```
 # App
@@ -175,18 +177,27 @@ DATABASE_URL=postgres://norms:norms@localhost:5432/norms
 # Redis (BullMQ, rate-limit, reset_token TTL)
 REDIS_URL=redis://localhost:6379
 
-# Auth (см. auth-devices.md)
+# Auth
 JWT_ACCESS_TTL=15s
 JWT_REFRESH_TTL=30d
-JWT_ACCESS_SECRET=...
-JWT_REFRESH_SECRET=...
+JWT_ACCESS_SECRET=
+JWT_REFRESH_SECRET=
 
 # Devices
 DEVICE_LIMIT=20
 
-# Feature flags (см. invites.md)
+# Invites
+INVITE_TTL_DAYS=7
+
+# Feature flags
 FEATURE_FREE_REGISTRATION=false
 FEATURE_DEV_MODE=false
 ```
 
-Полный список env — пополняется по мере реализации.
+Используются в коде, но **отсутствуют в `.env.example`** (default'ы зашиты):
+- `AUTH_FAIL_LIMIT` (default `5`) — порог неудачных логинов
+- `AUTH_FAIL_WINDOW_SEC` (default `900`) — окно rate-limit
+
+Объявлены в `.env.example`, но **не используются в коде** (задел на будущее):
+- `JWT_REFRESH_TTL` — refresh server-side не истекает (см. [`auth-devices.md`](auth-devices.md#токены))
+- `JWT_REFRESH_SECRET` — refresh-токен opaque, не JWT

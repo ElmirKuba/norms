@@ -21,9 +21,9 @@ iOS/macOS Keychain по умолчанию переживает удаление
 
 ## Хеширование
 
-- **Пароль** хешится на сервере, **argon2id**. Plain-text идёт по TLS — допустимо, реальный секрет (приватные ключи чатов) на сервер не попадает никогда.
-- **Ответ на секретный вопрос** хешится так же — argon2id, индивидуальная соль на каждую запись.
-- **Нормализация ответа перед хешем:** `trim → toLowerCase → collapse multiple spaces → unicode NFC`. Иначе «Москва» и «москва » будут разными ответами.
+- **Пароль** хешится на сервере, **argon2id**. Plain-text идёт по TLS — допустимо, реальный секрет (приватные ключи чатов) на сервер не попадает.
+- **Ответ на секретный вопрос** — argon2id, индивидуальная соль внутри хеша.
+- **Нормализация ответа перед хешем и при проверке:** `trim → toLowerCase → collapse spaces → unicode NFC`. Реализация — функция `normalizeAnswer()` в `check-answer.use-case.ts`. Применяется и при `recovery/question/create`, и при `recovery/check-answer`.
 - Сам **вопрос** хранится открытым текстом (юзер должен его прочитать).
 
 ## Q/A — модель
@@ -100,7 +100,7 @@ Recovery меняет только `password_hash`. **Все существую�
 
 ## Хранение reset_token
 
-`reset_token` — одноразовый случайный токен **32 байта** (генерируется через `crypto.randomBytes(32)`, передаётся клиенту в `base64url` ≈ 43 символа). TTL 10 минут. Выдаётся при успешном ответе на секретный вопрос.
+`reset_token` — одноразовый случайный токен 32 байта (`crypto.randomBytes(32).toString('base64url')`, ~43 символа). TTL 10 минут (`RESET_TOKEN_TTL_SEC = 600`). Выдаётся при успешном ответе на секретный вопрос.
 
 Хранится в Redis:
 
@@ -110,33 +110,35 @@ SET reset_token:{base64url_token} {account_id} EX 600
 
 При вызове `POST /api/v1/recovery/reset-password`:
 1. Бэк читает `GET reset_token:{token}` → получает `account_id`.
-2. Если ключа нет → `401 reset_token_expired` или `reset_token_invalid`.
-3. Если есть → меняет пароль, удаляет ключ из Redis (`DEL`).
+2. Если ключа нет → `401 reset_token_invalid` (или `reset_token_expired`).
+3. Если есть → меняет пароль, удаляет ключ из Redis (`DEL`), отправляет WSS `password_reset_via_recovery` всем сессиям аккаунта.
 
-Redis уже в стеке (BullMQ), переиспользуем. Автоматический TTL заменяет cleanup-job.
+Redis уже в стеке (BullMQ + rate-limit). Автоматический TTL заменяет cleanup-job.
 
 ## Защита от brute-force
 
-Q/A — слабее пароля (ответы часто короткие, словарные). Без rate-limit взламывается перебором.
+Q/A слабее пароля (ответы часто короткие, словарные). Без rate-limit взламывается перебором.
 
-- **Per-account counter** неудачных попыток ответа за окно времени.
-- 5 неудач за 10 минут → блок попыток на 1 час.
-- 5 неудач после разблокировки → блок на 24 часа.
-- 5 неудач ещё раз → блок на 7 дней.
-- Счётчик сбрасывается при **успешном логине** (не при успешном recovery — иначе можно сбросить через recovery и продолжить).
+**Параметры (зашиты в `check-answer.use-case.ts`):**
 
-Реализация — Redis-счётчик (Redis уже в стеке для BullMQ):
-
-```
-# Ключ: recovery_attempts:{account_id}
-# Значение: количество неудачных попыток
-# TTL: обновляется при каждой неудаче на текущий период блокировки
-
-INCR recovery_attempts:{account_id}
-EXPIRE recovery_attempts:{account_id} {lock_period_seconds}
+```ts
+const FAIL_THRESHOLD = 5;                                  // неудач до блокировки
+const LOCK_DURATIONS_SEC = [3600, 86400, 604800];          // 1ч, 24ч, 7д
+const RESET_TOKEN_TTL_SEC = 600;                           // TTL reset_token
 ```
 
-При успешном логине: `DEL recovery_attempts:{account_id}`.
+**Алгоритм:**
+
+1. На каждую неудачу — `INCR recovery_fail_count:{account_id}`.
+2. На первой неудаче — `EXPIRE recovery_fail_count 600` (окно накопления = 10 минут).
+3. Когда счётчик достиг `FAIL_THRESHOLD` (5) — эскалируем:
+   - Читаем текущий уровень `recovery_fail_level:{account_id}` (default 0).
+   - Инкрементируем уровень (max 3).
+   - `SETEX recovery_fail_level {max_lock_sec=604800} {new_level}` — уровень живёт 7 дней (максимальное окно), чтобы повторная неудача после разблокировки эскалировала дальше.
+   - `EXPIRE recovery_fail_count {LOCK_DURATIONS_SEC[level-1]}` — фактическая блокировка.
+4. При следующей попытке: если `count >= FAIL_THRESHOLD` — ответ `423 recovery_rate_limited` с полем `retry_after` (ISO-8601).
+
+**Сброс счётчиков:** при **успешном логине** (`auth-account.use-case.ts`) удаляются оба ключа `recovery_fail_count:*` и `recovery_fail_level:*`. После успешного recovery счётчики НЕ сбрасываются — иначе сам recovery становится способом обнулить защиту.
 
 ## UI
 

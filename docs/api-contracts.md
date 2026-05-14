@@ -1,38 +1,34 @@
 # API контракты
 
-HTTP-ручки и WSS-события для бэка. Стиль именования вдохновлён [`nest-backend-example/`](../nest-backend-example/) — resource/action.
-
-Покрывает сейчас только **текущие задачи Up Next в [`TODO.md`](../TODO.md)** (auth, identity, sessions, invites, recovery, мульти-девайс, app/system). Чаты, сообщения, обмен ключами, push — будут добавлены, когда дойдём до них.
+Реальные HTTP-эндпоинты и WSS-события бэка. Стиль — resource/action.
 
 ## Содержание
 
 1. [Общие принципы](#общие-принципы)
-2. [HTTP — System / App](#http--system--app)
-3. [HTTP — Account & Auth](#http--account--auth)
-4. [HTTP — UIN](#http--uin)
-5. [HTTP — Sessions / Devices](#http--sessions--devices)
+2. [HTTP — App](#http--app)
+3. [HTTP — Account](#http--account)
+4. [HTTP — Session](#http--session)
+5. [HTTP — UIN](#http--uin)
 6. [HTTP — Invites](#http--invites)
 7. [HTTP — Recovery](#http--recovery)
 8. [HTTP — Search](#http--search)
-9. [HTTP — Chats (orphan peers)](#http--chats-orphan-peers)
-10. [HTTP — Admin](#http--admin)
-11. [WSS](#wss)
+9. [WSS](#wss)
 
 ---
 
 ## Общие принципы
 
 ### База
-- `https://normisy.app/api/v1/...` — версионирование явное, задел на breaking changes.
-- WSS: `wss://normisy.app/ws` — один глобальный endpoint, авторизация первым сообщением.
+- HTTP: `https://normisy.app/api/v1/...` — версионирование явное.
+- WSS: `wss://normisy.app/ws?token=<access_token>` — один глобальный endpoint, авторизация query-параметром.
 
 ### Авторизация
-- HTTP: `Authorization: Bearer {access_token}`. Access TTL — `JWT_ACCESS_TTL` (default 15s).
-- Refresh — отдельным эндпоинтом (`POST /api/v1/session/refresh`), refresh-токен в body.
-- Эндпоинты регистрации, авторизации, начала recovery, `invite/check`, `app/downloads`, `app/feature-flags`, `app/migrate` — **публичные** (без Bearer).
+- HTTP: `Authorization: Bearer {access_token}`. Access TTL = `JWT_ACCESS_TTL` (default 15 секунд).
+- Refresh — через `POST /api/v1/session/refresh` (тело: `refresh_token`).
+- Публичные (без Bearer): `account/create`, `account/auth`, `session/refresh`, `invite/check`, `recovery/preset-questions`, `recovery/read-questions-for-login`, `recovery/check-answer`, `recovery/reset-password`, `app/feature-flags`.
 
 ### Формат ошибок
-Используем NestJS `HttpException`-стиль с нормализованным `code`:
+Стиль NestJS `HttpException` + поле `code`:
 
 ```
 HTTP 4xx/5xx
@@ -43,7 +39,7 @@ HTTP 4xx/5xx
 }
 ```
 
-`code` — машинно-читаемый, фронт по нему мапит UI-состояния. `message` — для дев-тулзов и логов, юзеру не показывается без перевода.
+`code` — машинно-читаемый, фронт по нему мапит UI-состояния. `message` — для дев-тулзов и логов.
 
 ### Status codes
 | Code | Когда |
@@ -55,51 +51,33 @@ HTTP 4xx/5xx
 | 401 | Нет токена, токен битый, неправильный пароль |
 | 403 | Нет прав (не админ, чужой ресурс) |
 | 404 | Нет ресурса |
-| 409 | Конфликт (username занят, инвайт уже использован) |
+| 409 | Конфликт (username занят) |
 | 410 | Gone (инвайт-код просрочен) |
 | 423 | Аккаунт залочен (recovery rate-limit) |
 | 429 | Too many requests |
 | 500 | Внутренняя ошибка |
 
 ### Конвенции тел
-- Универсальный ID — строка `{uuid-v7}_{unixtime-ms-13}` (см. [`database.md`](database.md)).
-- **Timestamps — ISO-8601 строкой** (`"2026-04-17T13:45:01.123Z"`). На бэке хранятся как `timestamptz` в UTC. Раньше в инвайтах было `bigint` unixtime ms — заменено на ISO везде для единообразия.
-- Поля snake_case в JSON. (Внутри NestJS — camelCase, через `class-transformer`.)
+- ID — строка `{uuid-v7}_{unixtime-ms-13}` (см. [`database.md`](database.md)).
+- Timestamps — ISO-8601 (`"2026-04-17T13:45:01.123Z"`). На бэке — `timestamptz` в UTC.
+- Поля JSON — snake_case. Внутри NestJS — camelCase, маппинг в DTO.
 
 ### Derived-поля в response
 
-Некоторые поля в ответах **не хранятся в БД** — они аггрегируются/вычисляются на бэке при формировании DTO:
+Поля, которые не хранятся в БД и формируются на бэке:
 
 | Поле | Источник |
 |---|---|
-| `account.uin` (string) | JOIN с таблицей `uins`, отдаётся `uins.number`, не `uins.id`. `null` если UIN ещё не сгенерирован |
-| `session.is_current` (bool) | Сравнение `session.id` с `id` сессии текущего токена |
-| `account.is_admin` | Соответствует `accounts.is_admin`, **возвращается только в `account/read` для своего аккаунта**. Чужим — никогда |
+| `account.uin` (string) | JOIN с `uins`, отдаётся `uins.number`. `null` если ещё не сгенерирован |
+| `session.is_current` (bool) | Сравнение `session.id` с `sessionId` из текущего JWT |
+| `account.is_admin` | `accounts.is_admin`, возвращается только в `account/read` для своего профиля |
 
 ---
 
-## HTTP — System / App
-
-### `GET /api/v1/app/downloads`
-Ссылки на скачивание прилы. Используется браузерным лендингом.
-
-Public.
-
-Response 200:
-```json
-{
-  "ios": "https://apps.apple.com/...",
-  "android": "https://play.google.com/...",
-  "windows": "https://normisy.app/dl/normisy-setup.exe",
-  "macos": "https://normisy.app/dl/normisy.dmg",
-  "linux": "https://normisy.app/dl/normisy.AppImage"
-}
-```
+## HTTP — App
 
 ### `GET /api/v1/app/feature-flags`
-Feature flags для нативной прилы. Возвращает только флаги, относящиеся к UI/поведению клиента.
-
-Public.
+Feature flags для клиента. Public.
 
 Response 200:
 ```json
@@ -109,38 +87,32 @@ Response 200:
 }
 ```
 
-### `GET /api/v1/system/dev/migrate`
-Запуск миграций БД (dev-only, в проде эндпоинт отключён через env).
-
-Public (но `dev_mode === true`, иначе 403).
-
-Response 200: `{ "applied": ["0001_init", "0002_invites"] }`
+Значения читаются из env (`FEATURE_FREE_REGISTRATION`, `FEATURE_DEV_MODE`).
 
 ---
 
-## HTTP — Account & Auth
+## HTTP — Account
 
 ### `POST /api/v1/account/create`
-Регистрация аккаунта. Принимает и код, и пароль — даже если код уже был проверен через `invite/check`.
-
-Public.
+Регистрация аккаунта. Public.
 
 Request:
 ```json
 {
-  "password": "string",
+  "password": "string (≥8 символов)",
   "invite_code": "string | null",
   "system_name": "iPhone 14 Pro",
   "platform": "ios | android | electron"
 }
 ```
 
-- `invite_code` обязателен, если `feature-flags.free_registration === false`. При `free_registration === true` — игнорируется.
-- Код передаётся повторно (не только в `invite/check`) — иначе обходится инвайт-система: перехватив валидный код из check-запроса, атакующий мог бы вызвать create напрямую без кода.
-- Код **потребляется атомарно в транзакции**: проверяется → удаляется → создаётся аккаунт + сессия. `invite/check` код не резервирует.
-- `password` — plain-text, минимум 8 символов, hash на сервере argon2id (см. [`identity.md`](identity.md#пароль), [`recovery.md`](recovery.md#хеширование)).
-- `system_name` — системное имя устройства, передаётся клиентом (макс. 200 символов).
+- `invite_code` обязателен при `free_registration === false`. При `free_registration === true` игнорируется.
+- Код потребляется атомарно в транзакции: проверяется → удаляется → создаётся аккаунт + сессия. `invite/check` код не резервирует — нужно передавать снова.
+- `password` — plain-text по TLS, хешируется argon2id на сервере.
+- `system_name` — системное имя устройства от клиента.
 - `platform` — одно из: `ios`, `android`, `electron`.
+
+После создания аккаунта в очередь BullMQ ставится job генерации UIN. UIN придёт через WSS (`uin_assigned`) или поллингом `uin/read-status`.
 
 Response 201:
 ```json
@@ -150,7 +122,7 @@ Response 201:
     "uin": null,
     "username": null,
     "invites_remaining": 3,
-    "created_at": "2026-04-17T..."
+    "created_at": "..."
   },
   "session": {
     "id": "...",
@@ -162,8 +134,6 @@ Response 201:
 }
 ```
 
-Создаётся account → ставится UIN-job в очередь → создаётся первая сессия → возвращаются токены. UIN придёт позже через WSS (`uin_assigned`) или по поллингу.
-
 Errors:
 - 400 `validation_failed`
 - 410 `invite_expired`
@@ -171,9 +141,7 @@ Errors:
 - 409 `invite_already_used`
 
 ### `POST /api/v1/account/auth`
-Авторизация. Логин = UIN или username (бэк сам определяет: только цифры → UIN, иначе username).
-
-Public.
+Авторизация. Логин = UIN (только цифры) или username (буквы). Public.
 
 Request:
 ```json
@@ -193,23 +161,104 @@ Response 200:
 }
 ```
 
+После успешного логина бэк шлёт WSS `session_created` всем уже подключённым сессиям аккаунта.
+
 Errors:
 - 401 `invalid_credentials`
-- 403 `device_limit_reached` (превышен `DEVICE_LIMIT`)
-- 423 `login_rate_limited` — слишком много неудачных попыток (см. [`auth-devices.md`](auth-devices.md#rate-limit)). Response содержит `retry_after` (ISO-8601) когда блок снимется
+- 403 `device_limit_reached`
+- 423 `login_rate_limited`
 
 ### `POST /api/v1/account/logout`
-Выход из аккаунта на текущем устройстве. Удаляет текущую сессию.
-
-Auth required.
+Выход из текущей сессии. Удаляет запись сессии из БД. Auth required.
 
 Request: пусто.
 Response 204.
 
-### `POST /api/v1/session/refresh`
-Ротация токенов (HTTP-вариант). Используется если WSS не открыт (например, при запуске прилы).
+### `GET /api/v1/account/read`
+Чтение профиля. Auth required.
 
-Public (но валидируется refresh).
+Query (опционально):
+- `?id={account_id}` — поиск по ID
+- `?uin={uin}` — поиск по UIN
+- без параметров — свой профиль
+
+Передавать `id` и `uin` одновременно нельзя.
+
+Response 200 (свой профиль):
+```json
+{
+  "id": "...",
+  "uin": "12345" | null,
+  "nickname": "string" | null,
+  "username": "petya" | null,
+  "invites_remaining": 3,
+  "is_admin": false,
+  "created_at": "..."
+}
+```
+
+Response 200 (чужой профиль):
+```json
+{
+  "id": "...",
+  "uin": "12345" | null,
+  "nickname": "string" | null,
+  "username": "petya" | null,
+  "created_at": "..."
+}
+```
+
+Errors:
+- 400 `ambiguous_query`
+- 404 `account_not_found`
+
+### `PATCH /api/v1/account/update`
+Смена пароля и/или nickname. Auth required.
+
+Request (минимум одно поле):
+```json
+{
+  "current_password": "string (обязателен если передан new_password)",
+  "new_password": "string (≥8 символов, опционально)",
+  "nickname": "string | null (опционально; null — снять)"
+}
+```
+
+Response 204.
+
+При успешной смене пароля всем сессиям аккаунта **кроме текущей** прилетает WSS `password_changed`.
+
+Смена пароля не ломает чаты (мастер-ключ устройства не зависит от пароля, см. [`local-storage.md`](local-storage.md)). Сессии остаются.
+
+Errors:
+- 400 `nothing_to_update`
+- 400 `current_password_required`
+- 401 `invalid_credentials`
+
+### `DELETE /api/v1/account/delete`
+Удаление аккаунта. Auth required.
+
+Request: тело пустое.
+Response 204.
+
+Что удаляется:
+- Все сессии аккаунта (cascade)
+- Все инвайты (cascade)
+- Все Q/A пары (cascade)
+- `referrals` где `invitee_id = account_id` (cascade)
+
+UIN:
+- Премиум-UIN (`is_premium = true`) → отвязывается (`account_id = NULL`)
+- Обычный UIN → удаляется
+
+Всем активным сессиям перед удалением шлётся WSS `session_kicked`.
+
+---
+
+## HTTP — Session
+
+### `POST /api/v1/session/refresh`
+Ротация токенов через HTTP (используется при старте прилы, когда WSS ещё не открыт). Public, валидирует refresh.
 
 Request:
 ```json
@@ -221,118 +270,15 @@ Response 200:
 { "access_token": "...", "refresh_token": "..." }
 ```
 
+Старый refresh инвалидируется. **Reuse detection:** повторное использование уже использованного refresh = компрометация сессии; запись из `sessions` удаляется, онлайн-сессии шлётся WSS `session_kicked`.
+
 Errors:
-- 401 `refresh_invalid` (нет такой записи в sessions / refresh испорчен / уже использован — reuse detection)
+- 401 `refresh_invalid`
 - 401 `refresh_expired`
-
-При успешной ротации: старый refresh инвалидируется, выдаётся новый, `sessions.updated_at` обновляется.
-
-**Reuse detection:** если refresh уже был использован — сессия считается компрометированной, выдаётся `401 refresh_reused`, устройство кикается (запись из `sessions` удаляется, онлайн-девайсу шлётся WSS `session_kicked`).
-
-### `GET /api/v1/account/read`
-Чтение данных аккаунта.
-
-Auth required.
-
-Query (опционально, без параметров — свой аккаунт):
-- `?id={account_id}` — поиск по ID
-- `?uin={uin}` — поиск по UIN
-
-Передавать `id` и `uin` одновременно нельзя → `400 ambiguous_query`.
-
-Response 200 (свой аккаунт):
-```json
-{
-  "id": "...",
-  "uin": "12345" | null,
-  "username": "petya" | null,
-  "invites_remaining": 3,
-  "is_admin": false,
-  "created_at": "..."
-}
-```
-
-Response 200 (чужой аккаунт — без `invites_remaining` и `is_admin`):
-```json
-{
-  "id": "...",
-  "uin": "12345" | null,
-  "username": "petya" | null,
-  "created_at": "..."
-}
-```
-
-Errors:
-- 400 `ambiguous_query`
-- 404 `account_not_found`
-
-### `PATCH /api/v1/account/update`
-Смена пароля и/или псевдонима (nickname). Оба поля опциональны, но хотя бы одно должно быть передано.
-
-Auth required.
-
-Request:
-```json
-{
-  "current_password": "string (обязателен если передан new_password)",
-  "new_password": "string (≥8 символов, опционально)",
-  "nickname": "string | null (опционально; null — удалить псевдоним)"
-}
-```
-
-Response 204.
-
-Errors:
-- 400 `nothing_to_update` — не передано ни одного поля
-- 400 `current_password_required` — передан `new_password` без `current_password`
-- 401 `invalid_credentials` — `current_password` неверен
-
-Смена пароля **не ломает чаты** (мастер-ключ не зависит от пароля, см. [`local-storage.md`](local-storage.md)). Сессии остаются.
-
-### `DELETE /api/v1/account/delete`
-Удаление аккаунта и всех связанных данных.
-
-Auth required.
-
-Request: тело пустое.
-
-Response 204.
-
-Что удаляется каскадом:
-- Все сессии аккаунта
-- Все активные инвайт-коды
-- Все Q/A пары восстановления
-- `referrals` где `invitee_id = account_id`
-- Чаты и pending-сообщения через сессии (когда появятся в шаге 9)
-
-Особое поведение с UIN:
-- Премиум-UIN (`is_premium = true`) → отвязывается (`account_id = NULL`), возвращается в пул
-- Обычный UIN → удаляется
-
-После удаления: всем активным сессиям аккаунта отправляется WSS `session_kicked`.
-
----
-
-## HTTP — UIN
-
-### `GET /api/v1/uin/read-status`
-Статус генерации UIN для текущего аккаунта (для поллинга, если WSS не подключён). Альтернатива: WSS-событие `uin_assigned`.
-
-Auth required.
-
-Response 200:
-```json
-{ "status": "pending" | "assigned", "uin": "12345" | null }
-```
-
----
-
-## HTTP — Sessions / Devices
+- 401 `refresh_reused`
 
 ### `GET /api/v1/session/read-list`
-Все сессии текущего аккаунта.
-
-Auth required.
+Список сессий аккаунта. Auth required.
 
 Response 200:
 ```json
@@ -345,60 +291,61 @@ Response 200:
     "is_current": true,
     "created_at": "...",
     "updated_at": "..."
-  },
-  ...
+  }
 ]
 ```
 
-`is_current` — флаг для UI, чтобы не дать кикнуть себя по случайности.
-
 ### `DELETE /api/v1/session/delete/:id`
-Кик конкретной сессии (своей или чужой в рамках аккаунта).
-
-Auth required.
+Кик сессии. Auth required.
 
 Response 204.
 
-После удаления — кикнутому устройству шлётся WSS `session_kicked` (если онлайн).
+Кикнутой сессии шлётся WSS `session_kicked` (если онлайн).
 
 Errors:
 - 404 `session_not_found`
 - 403 `not_your_session`
 
 ### `POST /api/v1/session/clear-others`
-Удалить все сессии аккаунта, кроме текущей.
-
-Auth required.
+Кик всех сессий аккаунта, кроме текущей. Auth required.
 
 Response 200:
 ```json
 { "kicked_count": 4 }
 ```
 
-### `PATCH /api/v1/session/update-nickname`
-Установить/изменить nickname своей текущей сессии.
+Каждой кикнутой сессии шлётся WSS `session_kicked`.
 
-Auth required.
+### `PATCH /api/v1/session/update-nickname`
+Установить/снять nickname текущей сессии. Auth required.
 
 Request:
 ```json
 { "nickname": "Рабочий мак" | null }
 ```
 
-`null` — снять прозвище.
-
 Response 204.
+
+---
+
+## HTTP — UIN
+
+### `GET /api/v1/uin/read-status`
+Статус генерации UIN текущего аккаунта (поллинг — альтернатива WSS `uin_assigned`). Auth required.
+
+Response 200:
+```json
+{ "status": "pending" | "assigned", "uin": "12345" | null }
+```
 
 ---
 
 ## HTTP — Invites
 
 ### `POST /api/v1/invite/check`
-Проверить валидность инвайт-кода перед регистрацией. Используется для UX: показать экран ввода пароля только если код принят.
+Проверить код перед регистрацией (для UX — показать экран ввода пароля только если код принят). Public.
 
-Public.
-
-**Код не потребляется и не резервируется** — между check и регистрацией кто-то другой может использовать тот же код первым. Поэтому `account/create` тоже принимает код и потребляет его атомарно.
+Код **не потребляется**: между check и create кто-то другой может использовать тот же код первым. Поэтому `account/create` тоже принимает код и потребляет его атомарно.
 
 Request:
 ```json
@@ -411,63 +358,52 @@ Response 200:
 ```
 
 Errors:
-- 404 `invite_not_found` — код не существует **или** истёк (намеренно одна ошибка — чтобы не позволять отличать активные коды от просроченных при переборе)
-- 429 `rate_limited` — агрессивный rate-limit (например, 10 попыток / 15 мин / IP)
-
----
+- 404 `invite_not_found` — код не существует **или** истёк (намеренно одна ошибка — не даём отличать активные от просроченных при переборе)
+- 429 `rate_limited` — превышен порог по IP (10 попыток / 15 минут)
 
 ### `POST /api/v1/invite/create`
-Создать инвайт-код.
+Создать инвайт-код. Auth required.
 
-Auth required.
-
-Request: тело пустое. TTL определяется сервером через env `INVITE_TTL_DAYS` (default 7 дней).
+Request: тело пустое. TTL = `INVITE_TTL_DAYS` env (default 7 дней).
 
 Response 201:
 ```json
 {
   "id": "...",
   "code": "1234567890",
-  "expires_at": "2026-05-17T13:45:01.123Z",
+  "expires_at": "...",
   "created_at": "..."
 }
 ```
 
-После создания `accounts.invites_remaining` декрементируется на 1.
+`accounts.invites_remaining` декрементируется на 1 атомарно в транзакции.
 
 Errors:
 - 403 `no_invites_remaining`
 
 ### `GET /api/v1/invite/read-list`
-Мои активные (не использованные, не отозванные, не просроченные) инвайт-коды.
-
-Auth required.
+Свои активные инвайты (не использованные, не отозванные, не просроченные). Auth required.
 
 Response 200:
 ```json
 [
-  { "id": "...", "code": "1234567890", "expires_at": "2026-05-17T...", "created_at": "..." },
-  ...
+  { "id": "...", "code": "1234567890", "expires_at": "...", "created_at": "..." }
 ]
 ```
 
 ### `DELETE /api/v1/invite/revoke/:id`
-Отозвать инвайт-код.
-
-Auth required.
+Отозвать инвайт. Auth required.
 
 Response 204.
 
-После отзыва `accounts.invites_remaining` инкрементируется на 1.
+`invites_remaining` инкрементируется на 1.
 
 Errors:
 - 404 `invite_not_found`
 - 403 `not_your_invite`
 
 ### `GET /api/v1/invite/read-referrals`
-Реферальная информация: кто пригласил меня + кого пригласил я. Один запрос для всего раздела настроек.
-
-Auth required.
+Реферальная информация: кто пригласил меня + кого пригласил я. Auth required.
 
 Response 200:
 ```json
@@ -480,7 +416,7 @@ Response 200:
 ```
 
 `inviter: null` — зарегистрировался при `free_registration === true` или инвайтер удалил аккаунт.
-`uin: null` — UIN ещё не назначен (генерируется асинхронно).
+`uin: null` — UIN ещё не назначен.
 
 ---
 
@@ -489,25 +425,20 @@ Response 200:
 См. [`recovery.md`](recovery.md).
 
 ### `GET /api/v1/recovery/preset-questions`
-Готовый список вопросов от сервера для UI настройки Q/A.
-
-Public.
+Список пресет-вопросов для UI настройки Q/A. Public.
 
 Response 200:
 ```json
 [
   { "id": "preset_mother_maiden", "text": "Девичья фамилия матери" },
-  { "id": "preset_first_pet", "text": "Кличка первого питомца" },
-  ...
+  { "id": "preset_first_pet", "text": "Кличка первого питомца" }
 ]
 ```
 
-`id` — для статистики «какие вопросы выбирают», но в `recovery_questions` хранится сам `text`.
+`id` — для статистики (какие выбирают чаще), в `recovery_questions` хранится сам `text`.
 
 ### `POST /api/v1/recovery/question/create`
-Добавить Q/A пару.
-
-Auth required.
+Добавить Q/A пару. Auth required.
 
 Request:
 ```json
@@ -522,22 +453,17 @@ Response 201:
 Бэк нормализует `answer` (`trim → lowercase → collapse spaces → NFC`) и хеширует argon2id.
 
 ### `GET /api/v1/recovery/question/read-list`
-Мои Q/A (без хешей ответов).
-
-Auth required.
+Свои Q/A (без хешей). Auth required.
 
 Response 200:
 ```json
 [
-  { "id": "...", "question": "...", "created_at": "...", "updated_at": "..." },
-  ...
+  { "id": "...", "question": "...", "created_at": "...", "updated_at": "..." }
 ]
 ```
 
 ### `PATCH /api/v1/recovery/question/update/:id`
-Изменить вопрос и/или ответ.
-
-Auth required.
+Изменить вопрос и/или ответ. Auth required.
 
 Request:
 ```json
@@ -547,16 +473,12 @@ Request:
 Response 204.
 
 ### `DELETE /api/v1/recovery/question/delete/:id`
-Удалить Q/A пару.
-
-Auth required.
+Удалить Q/A пару. Auth required.
 
 Response 204.
 
 ### `GET /api/v1/recovery/read-questions-for-login`
-Список вопросов аккаунта для экрана «Забыл пароль» (без ответов и хешей).
-
-Public.
+Список вопросов аккаунта для экрана «Забыли пароль». Public.
 
 Query: `?login={uin_or_username}`.
 
@@ -565,8 +487,7 @@ Response 200:
 {
   "account_id": "...",
   "questions": [
-    { "id": "...", "question": "..." },
-    ...
+    { "id": "...", "question": "..." }
   ]
 }
 ```
@@ -574,35 +495,27 @@ Response 200:
 Errors:
 - 404 `account_not_found`
 - 404 `recovery_not_configured` (аккаунт есть, Q/A нет)
-- 423 `recovery_rate_limited` (слишком много неудачных попыток)
+- 423 `recovery_rate_limited`
 
 ### `POST /api/v1/recovery/check-answer`
-Проверить ответ на вопрос. При успехе возвращается одноразовый `reset_token` (TTL 10 минут).
-
-Public.
+Проверить ответ. При успехе — одноразовый `reset_token` (TTL 10 минут, хранится в Redis). Public.
 
 Request:
 ```json
-{
-  "account_id": "...",
-  "question_id": "...",
-  "answer": "..."
-}
+{ "account_id": "...", "question_id": "...", "answer": "..." }
 ```
 
 Response 200:
 ```json
-{ "reset_token": "...", "expires_at": "2026-04-17T13:55:00.000Z" }
+{ "reset_token": "...", "expires_at": "..." }
 ```
 
 Errors:
-- 401 `wrong_answer` (инкрементирует rate-limit-счётчик)
-- 423 `recovery_rate_limited`
+- 401 `wrong_answer` (инкрементирует счётчик неудач)
+- 423 `recovery_rate_limited` (эскалация 1ч → 24ч → 7д после 5 неудач)
 
 ### `POST /api/v1/recovery/reset-password`
-Сменить пароль по `reset_token`.
-
-Public.
+Сменить пароль по `reset_token`. Public.
 
 Request:
 ```json
@@ -611,7 +524,7 @@ Request:
 
 Response 204.
 
-После сброса — всем активным сессиям этого аккаунта прилетает WSS `password_reset_via_recovery`. Сессии **остаются** (см. [`recovery.md`](recovery.md)).
+После сброса всем активным сессиям шлётся WSS `password_reset_via_recovery`. Сессии остаются.
 
 Errors:
 - 401 `reset_token_invalid`
@@ -622,85 +535,36 @@ Errors:
 ## HTTP — Search
 
 ### `GET /api/v1/search`
-Глобальный поиск аккаунтов по UIN или username.
+Глобальный поиск аккаунтов. Auth required.
 
-Auth required.
-
-Query: `?q=...&limit=20`.
-
-Response 200:
-```json
-[
-  { "account_id": "...", "uin": "12345", "username": "petya" | null },
-  ...
-]
-```
-
-**Логика разбора `q`** (соответствует правилам логина из [`identity.md`](identity.md#login)):
-- Первый символ — цифра → UIN, exact match по `uins.number`.
-- Первый символ — буква → username, `pg_trgm`-поиск по `accounts.username` (case-insensitive через CITEXT).
-
-Эти множества не пересекаются, потому что username не может начинаться с цифры (регекс `^[a-zA-Z][a-zA-Z0-9]{2,29}$`).
-
----
-
-## HTTP — Chats (orphan peers)
-
-См. [`devices-and-chats.md`](devices-and-chats.md).
-
-### `GET /api/v1/chat/read-orphan-peers`
-Список аккаунтов, с которыми были чаты с **других моих сессий**, но нет с текущей. Используется для экрана «Welcome» при первом логине новой сессии.
-
-Auth required.
+Query:
+- `?q=...` — строка запроса
+- `?limit=20` — лимит результатов (default 20)
 
 Response 200:
 ```json
 [
-  {
-    "account_id": "...",
-    "uin": "12345",
-    "username": "petya" | null,
-    "last_chat_at": "2026-04-10T..."
-  },
-  ...
+  { "account_id": "...", "uin": "12345", "username": "petya" | null }
 ]
 ```
 
-Бэк делает: `SELECT DISTINCT peer_account_id FROM chats WHERE (session_a_id IN my_other_sessions OR session_b_id IN my_other_sessions) AND peer NOT IN (chats from my current session)`.
+Логика разбора `q` (см. правила логина в [`identity.md`](identity.md)):
+- Первый символ — цифра → exact match по `uins.number`
+- Первый символ — буква → поиск по `accounts.username` (case-insensitive через CITEXT)
 
----
-
-## HTTP — Admin
-
-Все админ-эндпоинты защищены `AdminGuard` — проверяет `accounts.is_admin = true` для аккаунта из текущего токена. Назначение `is_admin` — только напрямую в БД (не через API). См. [`identity.md`](identity.md), [`database-schema.md`](database-schema.md#accounts).
-
-### `POST /api/v1/admin/account/grant-username`
-Выдать username аккаунту (только админ).
-
-Auth required + admin-роль.
-
-Request:
-```json
-{ "account_id": "...", "username": "petya" }
-```
-
-Response 204.
-
-Errors:
-- 403 `not_admin`
-- 409 `username_taken`
-- 400 `username_invalid` (формат `^[a-zA-Z][a-zA-Z0-9]{2,29}$`)
+Множества не пересекаются: username не может начинаться с цифры (регекс `^[a-zA-Z][a-zA-Z0-9]{2,29}$`).
 
 ---
 
 ## WSS
 
 ### Подключение
+
 `wss://normisy.app/ws?token=<access_token>`
 
-Авторизация — access-токен в query-параметре при upgrade. Если токен отсутствует или невалиден, сервер закрывает сокет с кодом `4001`.
+Access-токен в query при upgrade. Если токена нет или он невалиден — сокет закрывается кодом `4001`.
 
-После установки соединения — двухсторонний канал. Сервер пушит события, клиент может присылать команды.
+После установки — двухсторонний канал. Сервер пушит события, клиент может слать команды.
 
 ### Формат сообщений
 
@@ -712,70 +576,76 @@ Errors:
 
 ### Ротация токенов (client → server)
 
-Access TTL = `JWT_ACCESS_TTL` (default 15s). WSS-соединение живёт часами. Клиент обновляет токены, не разрывая соединение.
+Access TTL короткий (15с по умолчанию), WSS-коннект живёт часами. Клиент обновляет токены без реконнекта.
 
-**Клиент декодирует `exp` из JWT и за 3 секунды до истечения отправляет:**
+Клиент декодирует `exp` из JWT и **за 3 секунды до истечения** отправляет:
 ```json
 → { "event": "token_refresh", "data": { "refresh_token": "..." } }
 ```
 
-**Сервер отвечает новой парой:**
+Сервер отвечает новой парой:
 ```json
 ← { "event": "tokens_updated", "data": { "access_token": "...", "refresh_token": "..." } }
 ```
 
-**Ошибка (reuse detection):**
+Ошибка (reuse detection):
 ```json
 ← { "event": "error", "data": { "code": "refresh_reused" } }
 ```
-При reuse клиент должен сам очистить токены и перейти на экран авторизации.
 
-**Refresh token rotation:** каждый `token_refresh` инвалидирует старый refresh и выдаёт новый. Reuse detection: повторное использование уже использованного refresh = компрометация, сессия кикается.
+При `refresh_reused` клиент должен сам очистить токены и перейти на экран авторизации. Refresh token rotation: каждый `token_refresh` инвалидирует старый refresh и выдаёт новый.
 
-### Heartbeat
-Клиент шлёт `{ "event": "ping", "data": {} }` периодически для поддержания соединения. Сервер отвечает `{ "event": "pong", "data": {} }`.
+### Heartbeat (client → server)
 
-**Background на мобилке:** при переходе прилы в фон (`AppLifecycleService` → `pause`) iOS/Android приостанавливают JavaScript → клиент не успевает отправлять ping → сервер закроет коннект. Это нормально. При возврате прилы в foreground (`resume`) клиент устанавливает новое WSS-соединение.
+Клиент периодически шлёт `{ "event": "ping", "data": {} }`. Сервер отвечает `{ "event": "pong", "data": {} }`.
+
+**Background на мобилке:** при переходе прилы в фон iOS/Android приостанавливают JavaScript, клиент не успевает шлёть ping, сервер закрывает коннект. Это нормально. При возврате в foreground клиент устанавливает новое WSS-соединение.
 
 ### События (server → client)
 
-Все события приходят в формате `{ "event": "...", "data": {...} }`.
-
 #### `session_kicked`
-Сессия удалена (кик другой моей сессией, админ-кик). Прила переходит на экран авторизации.
+Сессия удалена (кик другой сессией, удаление аккаунта, refresh reuse). Клиент очищает токены и редиректит на welcome.
 
 ```json
 { "event": "session_kicked", "data": {} }
 ```
 
-После события сервер закрывает коннект. Клиент очищает токены и редиректит на welcome.
+После события сервер закрывает коннект.
 
 #### `password_reset_via_recovery`
-Пароль был сброшен через recovery. Прила показывает баннер «проверь свои устройства».
+Пароль был сброшен через recovery. Прила показывает баннер «проверь свои устройства». Сессии остаются.
 
 ```json
 { "event": "password_reset_via_recovery", "data": { "at": "2026-04-17T..." } }
 ```
 
-Сессии остаются активными.
+#### `password_changed`
+Пароль был изменён через `account/update` на другом устройстве. Шлётся всем сессиям аккаунта **кроме инициатора**. Прила показывает security-баннер.
+
+```json
+{ "event": "password_changed", "data": { "at": "2026-04-17T..." } }
+```
+
+#### `session_created`
+Создана новая сессия (логин с другого устройства). Шлётся всем уже подключённым сессиям аккаунта. Прила показывает security-баннер с кнопками «Кикнуть» / «Устройства» / «Это я».
+
+```json
+{
+  "event": "session_created",
+  "data": {
+    "session_id": "...",
+    "system_name": "MacBook Air",
+    "platform": "electron",
+    "at": "..."
+  }
+}
+```
 
 #### `uin_assigned`
-UIN сгенерирован для текущего аккаунта. Снимаем модалку «не выходи пока UIN не пришёл».
+UIN сгенерирован для текущего аккаунта. Прила снимает модалку «не выходи пока UIN не пришёл».
 
 ```json
 { "event": "uin_assigned", "data": { "uin": "12345" } }
 ```
 
-Шлётся всем активным сессиям этого аккаунта (если у юзера уже несколько сессий до выдачи UIN).
-
----
-
-## Что добавится позже
-
-Когда дойдём до чатов, сообщений, push:
-- `POST /api/v1/chat/create`, `GET /api/v1/chat/read-list`, `DELETE /api/v1/chat/delete/:id`
-- `POST /api/v1/chat/exchange-key` — публичный ключ при создании чата (см. [`encryption.md`](encryption.md))
-- `POST /api/v1/message/send` (или WSS-команда `send_message`) — при отправке в удалённый чат вернёт `404 chat_not_found` (см. [`devices-and-chats.md`](devices-and-chats.md#мёртвые-чаты-на-устройстве-собеседника)). Клиент по этому коду помечает локальный чат `is_dead = true`.
-- WSS `message_received`, `message_status_update`, `key_exchange_request`, `key_exchange_complete`
-- `POST /api/v1/push/register-token` — регистрация APNs/FCM токена (см. [`push-notifications.md`](push-notifications.md))
-- Privacy modes ([`privacy.md`](privacy.md) → TODO)
+Шлётся всем активным сессиям аккаунта.

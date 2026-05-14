@@ -30,20 +30,36 @@
 ```
 src/app/
   app.routes.ts          — корневые маршруты, делегирует в web/ и application/
-  app.config.ts          — provideRouter, DI платформенных сервисов
+  app.config.ts          — provideRouter, provideHttpClient(withFetch, withInterceptors), APP_INITIALIZER, DI
   core/
-    components/root/     — RootComponent (точка входа)
+    api/                 — API_BASE_URL InjectionToken (default http://localhost:3000/api/v1)
+    components/
+      root/              — RootComponent (точка входа + контейнер SecurityAlerts)
+      security-alerts/   — глобальный position:fixed оверлей с баннерами безопасности (всех экранов после login)
+    guards/
+      auth.guard.ts      — защита /application/main и /application/main/*
+      guest.guard.ts     — защита /welcome и /auth/* (после рестарта — fix session-restore bug)
+      platform.guard.ts  — web → /web/*, native → /application/*
+    interceptors/
+      auth.interceptor.ts — Bearer header + 401 retry с queue через BehaviorSubject
     services/
-      platform/          — PlatformDetectorService (определяет ОС/платформу)
-      storage/           — StorageService (abstract) + фабрика реализаций
+      feature-flags/     — FeatureFlagsService (APP_INITIALIZER: GET /app/feature-flags)
+      platform/          — PlatformDetectorService
+      storage/           — StorageService (abstract) + TokenStorageService (использует SecureStorage)
+      secure-storage/    — SecureStorageService: Electron safeStorage IPC, Capacitor — TODO
+      session/           — SessionApiService (read-list, delete, clear-others, update-nickname)
+      theme/             — ThemeService (provideAppInitializer)
+      wss/               — WssService (connect/disconnect/reconnect, ping/pong, token_refresh за 3с до exp)
   features/
-    web/                 — публичная веб-заглушка (лендинг)
-    application/         — само приложение (мессенджер)
+    web/                 — публичная веб-заглушка (welcome, about, security)
+    application/         — мессенджер: auth, uin, main (shell), chats, search, settings, profile, new-device
   shared/
-    components/          — переиспользуемые UI-компоненты
-    services/            — переиспользуемые сервисы
-    types/               — общие типы
+    components/          — badge, button, input
+    modals/              — DialogModalComponent + ModalHeader/Content/Footer + types/constants
+    services/, types/    — переиспользуемое
 ```
+
+См. также: [`platform-services.md`](platform-services.md) — детали реализаций платформенных сервисов.
 
 ---
 
@@ -123,26 +139,26 @@ application/
 
 | Роут | Компонент | Статус |
 |---|---|---|
-| `/application/welcome` | `WelcomeApplicationComponent` | ✅ готов |
-| `/application/auth/invite-code` | `InviteCodeApplicationComponent` | ✅ готов |
-| `/application/auth/create-account` | `CreateAccountApplicationComponent` | ✅ готов |
-| `/application/auth/login` | `LoginApplicationComponent` | ✅ готов |
-| `/application/auth/recovery` | `RecoveryApplicationComponent` | ✅ 3 шага: UIN → Q&A → новый пароль |
-| `/application/uin/assigned` | `UinAssignedApplicationComponent` | ✅ готов |
-| `/application/main` | `MainApplicationComponent` (shell + таббар) | ✅ готов |
-| `/application/main/chats` | `ChatsApplicationComponent` | ✅ список с моками |
-| `/application/main/chats/:chatId` | `ChatDetailApplicationComponent` | ✅ чат с моками, таббар виден |
-| `/application/main/search` | `SearchApplicationComponent` | ✅ с моками |
-| `/application/main/settings` | `SettingsApplicationComponent` | ✅ кликабельные пункты |
-| `/application/main/settings/account` | `SettingsAccountComponent` | ✅ с моками, без таббара |
-| `/application/main/settings/devices` | `SettingsDevicesComponent` | ✅ с моками, без таббара |
-| `/application/main/settings/privacy` | `SettingsPrivacyComponent` | ✅ MVP-инфо, без таббара |
-| `/application/main/settings/recovery` | `SettingsRecoveryQuestionsComponent` | ✅ Q&A + добавление, без таббара |
-| `/application/main/settings/invites` | `SettingsInvitesComponent` | ✅ коды + отзыв + копирование, без таббара |
-| `/application/main/user/:accountId` | `UserProfileApplicationComponent` | ✅ профиль + кнопка «Написать», без таббара |
-| `/application/new-device` | `NewDeviceApplicationComponent` | ✅ список orphan peers |
-| `/application/main/profile` | `ProfileApplicationComponent` | ✅ с моками + mock-триггеры WSS |
-| `/application/main/settings/change-password` | `SettingsChangePasswordComponent` | ✅ форма смены пароля, mock-submit |
+| `/application/welcome` | `WelcomeApplicationComponent` | ✅ API (feature flags) |
+| `/application/auth/invite-code` | `InviteCodeApplicationComponent` | ✅ API |
+| `/application/auth/create-account` | `CreateAccountApplicationComponent` | ✅ API |
+| `/application/auth/login` | `LoginApplicationComponent` | ✅ API |
+| `/application/auth/recovery` | `RecoveryApplicationComponent` | ✅ API (все 3 шага) |
+| `/application/uin/assigned` | `UinAssignedApplicationComponent` | ✅ API (UIN из WSS uin_assigned) |
+| `/application/main` | `MainApplicationComponent` (shell + таббар) | ✅ |
+| `/application/main/chats` | `ChatsApplicationComponent` | 🔶 мок (шаг 9.15) |
+| `/application/main/chats/:chatId` | `ChatDetailApplicationComponent` | 🔶 мок (шаг 9.16) |
+| `/application/main/search` | `SearchApplicationComponent` | ✅ API (debounce 300ms) |
+| `/application/main/settings` | `SettingsApplicationComponent` | ✅ |
+| `/application/main/settings/account` | `SettingsAccountComponent` | ✅ API (read + update nickname) |
+| `/application/main/settings/devices` | `SettingsDevicesComponent` | ✅ API (sessions CRUD) |
+| `/application/main/settings/privacy` | `SettingsPrivacyComponent` | ✅ MVP-инфо |
+| `/application/main/settings/recovery` | `SettingsRecoveryQuestionsComponent` | ✅ API (Q&A CRUD) |
+| `/application/main/settings/invites` | `SettingsInvitesComponent` | ✅ API (create/revoke/read/referrals) |
+| `/application/main/settings/change-password` | `SettingsChangePasswordComponent` | ✅ API (PATCH /account/update) |
+| `/application/main/user/:accountId` | `UserProfileApplicationComponent` | ✅ API (account/read?id=) |
+| `/application/main/profile` | `ProfileApplicationComponent` | ✅ API |
+| `/application/new-device` | `NewDeviceApplicationComponent` | 🔶 мок (шаг 9.20: GET /chat/read-orphan-peers) |
 
 **Модалки (не роуты):**
 
@@ -160,8 +176,13 @@ application/
 | Событие | Где обрабатывается | Визуал |
 |---|---|---|
 | `uin_assigned` (WSS) | `MainApplicationComponent` → `UinModalService` | Закрывает UIN Pending модалку, navigate → `/uin/assigned` |
-| `session_kicked` (WSS) | `SessionKickedService` | Блокирующая модалка, после «Войти снова» → `/application/welcome` |
-| `password_reset_via_recovery` (WSS) | `MainApplicationComponent.passwordResetBanner` signal | Баннер поверх контента с кнопками «Сменить пароль» / «Закрыть» |
+| `session_kicked` (WSS) | `SessionKickedService` | Блокирующая bottom-sheet, после «Войти снова» → `/application/welcome` + `tokenStorage.clear()` |
+| `password_reset_via_recovery` (WSS) | `MainApplicationComponent.passwordResetBanner` signal | Жёлтый баннер «Пароль был сброшен через восстановление», закрывается крестиком |
+| `password_changed` (WSS) | `SecurityAlertsComponent` (глобальный оверлей в `RootComponent`) | Security-баннер «Пароль изменён на другом устройстве» |
+| `session_created` (WSS) | `SecurityAlertsComponent` | Security-баннер «Выполнен вход с устройства X» + «Кикнуть» / «Устройства» / «Это я» |
+| `refresh_reused` (WSS error) | `WssService` → `TokenStorageService.clear()` → navigate `/application/welcome` | — |
+
+`SecurityAlertsComponent` рендерится в `RootComponent` как `position: fixed` оверлей — баннеры видны на ВСЕХ экранах после авторизации, в т.ч. `main/settings/*` (они не дочерние `MainApplicationComponent`).
 
 ---
 

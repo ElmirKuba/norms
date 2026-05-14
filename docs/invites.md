@@ -70,27 +70,49 @@ UIN генерируется асинхронно после создания а
 |---|---|---|
 | `invites_remaining` | `integer`, default 3 | Сколько инвайтов осталось. Декремент при создании кода, инкремент при отзыве. Админ может пополнить через БД / админку |
 
+## Эндпоинты
+
+См. [`api-contracts.md`](api-contracts.md#http--invites).
+
+| Эндпоинт | Назначение |
+|---|---|
+| `POST /api/v1/invite/check` | Проверка кода до регистрации, без потребления. Public, rate-limit по IP |
+| `POST /api/v1/invite/create` | Создание кода, атомарный декремент `invites_remaining` |
+| `GET /api/v1/invite/read-list` | Свои активные коды |
+| `DELETE /api/v1/invite/revoke/:id` | Отзыв кода, инкремент `invites_remaining` |
+| `GET /api/v1/invite/read-referrals` | Кто пригласил меня + кого пригласил я |
+
 ## Логика
 
 ### Создание инвайта
-1. Проверить `invites_remaining > 0`.
-2. Сгенерировать случайный 10-значный код, проверить уникальность, retry при коллизии.
-3. Записать в `invites` с `expires_at`.
-4. Декремент `invites_remaining` в `accounts`.
+Один запрос, одна транзакция: проверить `invites_remaining > 0`, сгенерировать 10-значный код с retry на коллизии (unique-индекс), записать в `invites` с `expires_at = now() + INVITE_TTL_DAYS`, декрементировать `invites_remaining` в `accounts`.
 
-### Использование инвайта
-1. Фронт отправляет код.
-2. Бэк ищет в `invites`. Нет → ошибка "код не найден".
-3. Если `current_unixtime > expires_at` → ошибка "код устарел", удаляем запись. **Не** возвращаем +1 инвайтеру.
-4. Код валиден → создаём аккаунт, записываем в `referrals`, удаляем запись из `invites`.
+### Использование инвайта (внутри `POST /account/create`)
+
+Атомарно в одной транзакции (см. [`database-schema.md`](database-schema.md#создание-аккаунта)):
+
+1. Найти `invites` по `code`. Нет → `404 invite_not_found`.
+2. `expiresAt < new Date()` → удаляем запись, `410 invite_expired`. `invites_remaining` инвайтеру **не возвращается** — TTL истёк по его решению.
+3. Иначе — удаляем `invites`-запись, создаём `accounts`, создаём `referrals` (`inviterId = invite.accountId`, `inviteeId = newAccountId`), создаём первую `sessions`.
 
 ### Отзыв инвайта
-1. Создатель нажимает "отозвать" в настройках.
-2. Удаляем запись из `invites`.
-3. Инкремент `invites_remaining` в `accounts` (+1 обратно).
+
+`DELETE /api/v1/invite/revoke/:id` в одной транзакции: удалить запись из `invites` (проверка владельца через `WHERE id=? AND account_id=?`, иначе `404 invite_not_found` / `403 not_your_invite`), инкрементировать `invites_remaining`.
 
 ### Просроченные коды
-Сборщика мусора нет. Просроченные записи удаляются при попытке использования.
+
+GC нет. Записи удаляются при попытке использования через `account/create`. `invite/check` НЕ удаляет просроченные — для проверяющего не отличает «не найден» и «истёк» (одна ошибка `404 invite_not_found`), чтобы не позволять перебирать пространство активных кодов.
+
+### Rate-limit на `invite/check`
+
+`check-invite.use-case.ts`:
+
+| Параметр | Значение | Где |
+|---|---|---|
+| Ключ | `invite:check:ip:{ip}` | Redis |
+| Лимит | 10 попыток | `_maxAttempts` const |
+| Окно | 900 сек (15 минут) | `_windowSec` const |
+| Ответ при превышении | `429 rate_limited` | `RATE_LIMITED` error code |
 
 ## UI в настройках
 

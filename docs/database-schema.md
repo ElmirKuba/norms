@@ -9,18 +9,18 @@ Backend-стек: см. [`backend-stack.md`](backend-stack.md). Кросс-cutti
 1. [Глобальные принципы](#глобальные-принципы)
 2. [Расширения и custom-типы](#расширения-и-custom-типы)
 3. [Enums](#enums)
-4. [Таблицы](#таблицы)
+4. [Конвенция devtime-контроля схем](#конвенция-devtime-контроля-схем)
+5. [Таблицы](#таблицы)
    - [`accounts`](#accounts)
    - [`uins`](#uins)
    - [`sessions`](#sessions)
    - [`invites`](#invites)
    - [`referrals`](#referrals)
    - [`recovery_questions`](#recovery_questions)
-   - [`chats`](#chats)
-   - [`pending_messages`](#pending_messages)
-5. [Сводная таблица cascade-правил](#сводная-таблица-cascade-правил)
-6. [Транзакционные сценарии](#транзакционные-сценарии)
-7. [Миграции](#миграции)
+6. [Сводная таблица cascade-правил](#сводная-таблица-cascade-правил)
+7. [Транзакционные сценарии](#транзакционные-сценарии)
+8. [Миграции](#миграции)
+9. [Будущие таблицы](#будущие-таблицы)
 
 ---
 
@@ -28,17 +28,17 @@ Backend-стек: см. [`backend-stack.md`](backend-stack.md). Кросс-cutti
 
 | Аспект | Решение |
 |---|---|
-| Schema namespace | `public` (не разбиваем по фичам) |
+| Schema namespace | `public` |
 | ID | `text`, формат `{uuid-v7}_{unixtime-ms-13}` (см. [`database.md`](database.md)) |
-| Time | `timestamp with time zone` (`timestamptz`) везде. Хранится в UTC, выдаётся клиенту с TZ |
+| Time | `timestamptz` везде. Хранится в UTC. |
 | Default времени | `DEFAULT now()` для `created_at` / `updated_at` |
-| `updated_at` | Обновляется приложением в каждом UPDATE (или триггером — TODO решить позже) |
+| `updated_at` | Обновляется приложением в каждом UPDATE (`.set({ ..., updatedAt: new Date() })`) |
 | Naming в TS | `camelCase` |
-| Naming в БД | `snake_case` (Drizzle `casing: 'snake_case'`) |
-| Бинарные данные | `bytea` |
-| Регистронезависимая уникальность | `CITEXT` extension |
-| Индексы на FK | **Создаём явно** на каждый FK (PG не делает это автоматически) |
-| Hard delete | Везде, кроме `uins.is_premium = true` (там только отвязка) |
+| Naming в БД | `snake_case` (явные имена в `text('column_name')` — Drizzle не делает авто-конвертацию) |
+| Бинарные данные | `bytea` (через custom-type, см. ниже) |
+| Регистронезависимая уникальность | `citext` extension |
+| Индексы на FK | Создаются явно для часто запрашиваемых FK |
+| Hard delete | Везде, кроме `uins.is_premium = true` (там — отвязка) |
 
 ---
 
@@ -48,29 +48,72 @@ Backend-стек: см. [`backend-stack.md`](backend-stack.md). Кросс-cutti
 CREATE EXTENSION IF NOT EXISTS citext;
 ```
 
-Drizzle-обёртка для `citext`:
+Применяется автоматически при первом старте postgres-контейнера через `backend/docker/sql-files/init.sql`.
+
+Drizzle custom-types — `backend/src/persistence/schemas/custom-types.ts`:
 
 ```ts
 import { customType } from 'drizzle-orm/pg-core';
 
+/** Регистронезависимый строковый тип PostgreSQL. */
 export const citext = customType<{ data: string }>({
-  dataType() {
-    return 'citext';
-  },
+  dataType: (): string => 'citext',
+});
+
+/** Бинарный тип для encrypted blob'ов. */
+export const bytea = customType<{ data: Buffer }>({
+  dataType: (): string => 'bytea',
 });
 ```
+
+`bytea` уже определён, но фактически используется будет в шаге 9 (см. [Будущие таблицы](#будущие-таблицы)).
 
 ---
 
 ## Enums
 
-Все доменные значения с фиксированным набором — через `pgEnum`. Расширение значения = миграция (`ALTER TYPE ... ADD VALUE`).
+`backend/src/persistence/schemas/enums.ts`:
 
 ```ts
 import { pgEnum } from 'drizzle-orm/pg-core';
 
+/** Платформа устройства. */
 export const platformEnum = pgEnum('platform', ['ios', 'android', 'electron']);
+
+/** Статус чата (используется будущей таблицей chats — шаг 9). */
 export const chatStatusEnum = pgEnum('chat_status', ['pending_key', 'active']);
+```
+
+`chatStatusEnum` объявлен, но `chats` пока не существует.
+
+---
+
+## Конвенция devtime-контроля схем
+
+Каждая таблица имеет TS-интерфейс строки с `unknown`-полями + `satisfies SchemaColumnMap<T>`. Компилятор заставляет перечислить каждую колонку (см. [`backend-stack.md`](backend-stack.md#соглашение-по-схемам-drizzle-persistenceschemas)):
+
+```ts
+interface IAccountRow {
+  /** PK — {uuid-v7}_{unix-ms}. */
+  readonly id: unknown;
+  readonly passwordHash: unknown;
+  // … каждая колонка обязана быть здесь
+}
+
+export const accounts = pgTable('accounts', {
+  id: text('id').primaryKey(),
+  // …
+} satisfies SchemaColumnMap<IAccountRow>);
+```
+
+Index-фабрика — массив, не объект (Drizzle ≥ 0.34 API):
+
+```ts
+export const sessions = pgTable('sessions', {
+  // … колонки
+} satisfies SchemaColumnMap<ISessionRow>, (t) => [
+  index('sessions_account_id_idx').on(t.accountId),
+]);
 ```
 
 ---
@@ -82,23 +125,23 @@ export const chatStatusEnum = pgEnum('chat_status', ['pending_key', 'active']);
 Учётная запись.
 
 ```ts
-import { pgTable, text, integer, timestamp } from 'drizzle-orm/pg-core';
-import { citext } from './custom-types';
-
 export const accounts = pgTable('accounts', {
   id: text('id').primaryKey(),
   passwordHash: text('password_hash').notNull(),                    // argon2id
-  username: citext('username').unique(),                            // nullable, CI-unique через CITEXT, формат `^[a-zA-Z][a-zA-Z0-9]{2,29}$`
+  username: citext('username').unique(),                            // nullable, CI-unique, формат ^[a-zA-Z][a-zA-Z0-9]{2,29}$
+  nickname: text('nickname'),                                        // nullable, произвольный текст
   invitesRemaining: integer('invites_remaining').notNull().default(3),
-  isAdmin: boolean('is_admin').notNull().default(false),            // защита /api/v1/admin/*
+  isAdmin: boolean('is_admin').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-});
+} satisfies SchemaColumnMap<IAccountRow>);
 ```
 
-**Индексы:** `username` уникален автоматически через `.unique()`. CITEXT делает сравнение регистронезависимым нативно — отдельный функциональный индекс `LOWER(username)` не нужен.
+**`username`** — уникален автоматически через `.unique()`. CITEXT делает сравнение регистронезависимым нативно.
 
-**`is_admin`** — выставляется напрямую в БД (миграция или ручной UPDATE). Через API не назначается. Guard `AdminGuard` проверяет это поле для всех `/api/v1/admin/*` эндпоинтов.
+**`nickname`** — отображаемый псевдоним (display name). В отличие от `username` (буквенный логин), может содержать пробелы, кириллицу, что угодно. Не используется для логина и поиска. Приоритет отображения: `nickname > username > UIN`.
+
+**`is_admin`** — устанавливается напрямую в БД. Через API не назначается. Подразумевается `AdminGuard` для `/api/v1/admin/*` эндпоинтов (сами эндпоинты ещё не реализованы).
 
 **Смысл полей:** [`identity.md`](identity.md).
 
@@ -106,111 +149,100 @@ export const accounts = pgTable('accounts', {
 
 ### `uins`
 
-Числовой публичный идентификатор. 1:1 с `accounts`. Отдельная таблица — изолирует генерацию, резервирование «красивых» номеров и потенциальный обмен/продажу.
+Числовой публичный идентификатор. 1:1 с `accounts`, отдельная таблица — изолирует генерацию и резервирование «красивых» номеров.
 
 ```ts
-import { pgTable, text, boolean, timestamp, index, uniqueIndex } from 'drizzle-orm/pg-core';
-import { sql } from 'drizzle-orm';
-import { accounts } from './accounts';
-
 export const uins = pgTable('uins', {
   id: text('id').primaryKey(),
-  accountId: text('account_id').references(() => accounts.id, { onDelete: 'no action' }), // см. ниже
+  accountId: text('account_id').references((): AnyPgColumn => accounts.id, { onDelete: 'no action' }),
   number: text('number').notNull().unique(),                        // 4–10 цифр
-  isPremium: boolean('is_premium').notNull().default(false),        // «красивый» UIN — возвращается в пул при удалении аккаунта
+  isPremium: boolean('is_premium').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-}, (t) => ({
-  accountIdUniqueIdx: uniqueIndex('uins_account_id_unique')
+} satisfies SchemaColumnMap<IUinRow>, (t) => [
+  uniqueIndex('uins_account_id_unique')
     .on(t.accountId)
-    .where(sql`${t.accountId} IS NOT NULL`),                        // partial unique: 1 UIN на аккаунт, NULL допускается несколько раз
-}));
+    .where(sql`${t.accountId} IS NOT NULL`),
+]);
 ```
 
-**FK-стратегия:** `ON DELETE NO ACTION` — удаление аккаунта обрабатывается **в коде** в транзакции (см. [Транзакционные сценарии](#транзакционные-сценарии)). Премиум-UIN отвязывается (`SET NULL`), обычный — удаляется (`DELETE`).
+**FK `ON DELETE NO ACTION`** — удаление аккаунта обрабатывается в коде в транзакции. Премиум-UIN отвязывается (`SET NULL`), обычный — удаляется (`DELETE`).
 
-**`is_premium`** — флаг устанавливается при резервировании «красивых» номеров скриптом или админом.
+**Partial unique index** — 1 UIN на аккаунт, при `account_id IS NULL` ограничение не действует (премиум-UIN в пуле может быть много).
 
 ---
 
 ### `sessions`
 
-Сессия = устройство. Одна таблица.
+Сессия = устройство.
 
 ```ts
-import { pgTable, text, timestamp, index } from 'drizzle-orm/pg-core';
-import { accounts } from './accounts';
-import { platformEnum } from './enums';
-
 export const sessions = pgTable('sessions', {
   id: text('id').primaryKey(),
   accountId: text('account_id')
     .notNull()
-    .references(() => accounts.id, { onDelete: 'cascade' }),
+    .references((): AnyPgColumn => accounts.id, { onDelete: 'cascade' }),
   systemName: text('system_name').notNull(),
   platform: platformEnum('platform').notNull(),
-  nickname: text('nickname'),                                       // nullable
+  nickname: text('nickname'),                                       // nullable, прозвище устройства
   refreshTokenHash: text('refresh_token_hash').notNull(),           // SHA-256 hex (64 символа)
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-}, (t) => ({
-  accountIdIdx: index('sessions_account_id_idx').on(t.accountId),
-}));
+} satisfies SchemaColumnMap<ISessionRow>, (t) => [
+  index('sessions_account_id_idx').on(t.accountId),
+]);
 ```
 
-**`refresh_token_hash`:** хранится **только хеш** (SHA-256). Серверу хеш достаточен для сравнения при ротации/reuse-detection. Утечка БД ≠ угон сессий. Argon2 не нужен — это не пароль, перебирать смысла нет (сам токен случайный 32+ байта).
+**`refresh_token_hash`** — хранится только SHA-256. Plain-токен живёт у клиента. См. [`auth-devices.md`](auth-devices.md#токены).
 
-**Лимит устройств** через env (`DEVICE_LIMIT`, default 20) — application-level check при создании сессии.
+**Лимит устройств** — `DEVICE_LIMIT` env (default 20), application-level check.
 
 ---
 
 ### `invites`
 
-10-значные коды приглашений. Одноразовые: после использования — `DELETE`.
+10-значные коды приглашений. Одноразовые: после использования — `DELETE` в той же транзакции.
 
 ```ts
-import { pgTable, text, timestamp, index } from 'drizzle-orm/pg-core';
-import { accounts } from './accounts';
-
 export const invites = pgTable('invites', {
   id: text('id').primaryKey(),
   accountId: text('account_id')
     .notNull()
-    .references(() => accounts.id, { onDelete: 'cascade' }),         // создатель удалил → коды инвалидируются
-  code: text('code').notNull().unique(),                             // 10 цифр
+    .references((): AnyPgColumn => accounts.id, { onDelete: 'cascade' }),
+  code: text('code').notNull().unique(),
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-}, (t) => ({
-  accountIdIdx: index('invites_account_id_idx').on(t.accountId),
-}));
+} satisfies SchemaColumnMap<IInviteRow>, (t) => [
+  index('invites_account_id_idx').on(t.accountId),
+]);
 ```
 
-**`expires_at`** — `timestamptz`. **Не `bigint` unixtime** — унификация со всеми остальными временными полями.
+`expires_at` — `timestamptz`, не `bigint`. TTL по умолчанию = `INVITE_TTL_DAYS` env (default 7 дней).
 
 ---
 
 ### `referrals`
 
-Кто кого пригласил. История зачисления.
+История «кто кого пригласил».
 
 ```ts
-import { pgTable, text, timestamp, index } from 'drizzle-orm/pg-core';
-import { accounts } from './accounts';
-
 export const referrals = pgTable('referrals', {
   id: text('id').primaryKey(),
-  inviterId: text('inviter_id').references(() => accounts.id, { onDelete: 'set null' }), // создатель удалил → запись остаётся, инвайтер = NULL
+  inviterId: text('inviter_id')
+    .references((): AnyPgColumn => accounts.id, { onDelete: 'set null' }),
   inviteeId: text('invitee_id')
     .notNull()
-    .unique()                                                       // один аккаунт приглашён один раз
-    .references(() => accounts.id, { onDelete: 'cascade' }),        // приглашённый удалил → запись бесполезна
+    .unique()
+    .references((): AnyPgColumn => accounts.id, { onDelete: 'cascade' }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-}, (t) => ({
-  inviterIdIdx: index('referrals_inviter_id_idx').on(t.inviterId),
-}));
+} satisfies SchemaColumnMap<IReferralRow>, (t) => [
+  index('referrals_inviter_id_idx').on(t.inviterId),
+]);
 ```
 
-**`inviter_id` nullable + ON DELETE SET NULL** — Петя остаётся полноправным участником, даже если Вася (его инвайтер) удалил аккаунт. UI показывает «приглашён удалённым аккаунтом».
+**`inviter_id` nullable + SET NULL** — приглашённый остаётся в системе, даже если инвайтер удалил аккаунт. UI показывает «приглашён удалённым аккаунтом».
+
+**`invitee_id` unique** — один аккаунт приглашён один раз.
 
 ---
 
@@ -219,114 +251,21 @@ export const referrals = pgTable('referrals', {
 Q/A пары для восстановления пароля.
 
 ```ts
-import { pgTable, text, timestamp, index } from 'drizzle-orm/pg-core';
-import { accounts } from './accounts';
-
 export const recoveryQuestions = pgTable('recovery_questions', {
   id: text('id').primaryKey(),
   accountId: text('account_id')
     .notNull()
-    .references(() => accounts.id, { onDelete: 'cascade' }),         // нет аккаунта → Q/A бессмысленны
+    .references((): AnyPgColumn => accounts.id, { onDelete: 'cascade' }),
   question: text('question').notNull(),                              // открытый текст
-  answerHash: text('answer_hash').notNull(),                         // argon2id (соль внутри хеша)
+  answerHash: text('answer_hash').notNull(),                         // argon2id (соль внутри)
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-}, (t) => ({
-  accountIdIdx: index('recovery_questions_account_id_idx').on(t.accountId),
-}));
+} satisfies SchemaColumnMap<IRecoveryQuestionRow>, (t) => [
+  index('recovery_questions_account_id_idx').on(t.accountId),
+]);
 ```
 
----
-
-### `chats`
-
-Чат = пара устройств. Подробнее: [`encryption.md`](encryption.md).
-
-```ts
-import { pgTable, text, timestamp, index, uniqueIndex, check } from 'drizzle-orm/pg-core';
-import { sql } from 'drizzle-orm';
-import { sessions } from './sessions';
-import { chatStatusEnum } from './enums';
-
-export const chats = pgTable('chats', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  sessionAId: text('session_a_id')
-    .notNull()
-    .references(() => sessions.id, { onDelete: 'cascade' }),
-  sessionBId: text('session_b_id')
-    .notNull()
-    .references(() => sessions.id, { onDelete: 'cascade' }),
-  createdBySessionId: text('created_by_session_id')
-    .notNull()
-    .references(() => sessions.id, { onDelete: 'no action' }),       // запись всё равно умрёт через session_a/b CASCADE
-  status: chatStatusEnum('status').notNull().default('pending_key'),
-  publicKeyA: text('public_key_a'),                                  // X25519 public, base64 (~44 символа). NULL после обмена
-  publicKeyB: text('public_key_b'),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-}, (t) => ({
-  sessionAIdx: index('chats_session_a_idx').on(t.sessionAId),
-  sessionBIdx: index('chats_session_b_idx').on(t.sessionBId),
-  createdByIdx: index('chats_created_by_idx').on(t.createdBySessionId),
-
-  // Уникальность названия чата в пределах пары устройств (case-insensitive)
-  pairNameUnique: uniqueIndex('chats_pair_name_unique')
-    .on(t.sessionAId, t.sessionBId, sql`LOWER(${t.name})`),
-
-  // Нормализация порядка пары: всегда session_a_id < session_b_id
-  pairOrderCheck: check('chats_pair_order_check', sql`${t.sessionAId} < ${t.sessionBId}`),
-
-  // Создатель чата — одна из двух сторон
-  createdByValidCheck: check('chats_created_by_valid_check',
-    sql`${t.createdBySessionId} IN (${t.sessionAId}, ${t.sessionBId})`),
-}));
-```
-
-**Constraint `session_a_id < session_b_id`** — гарантирует что `(A,B)` и `(B,A)` это одна и та же пара (нельзя создать дубль через перестановку). Приложение нормализует ID перед INSERT.
-
-**Constraint `created_by_session_id IN (session_a_id, session_b_id)`** — создатель чата всегда одна из двух сторон, а не сторонняя сессия.
-
----
-
-### `pending_messages`
-
-Временное хранилище зашифрованных сообщений.
-
-```ts
-import { pgTable, text, customType, timestamp, index, check } from 'drizzle-orm/pg-core';
-import { sql } from 'drizzle-orm';
-import { chats } from './chats';
-import { sessions } from './sessions';
-
-const bytea = customType<{ data: Buffer }>({
-  dataType() {
-    return 'bytea';
-  },
-});
-
-export const pendingMessages = pgTable('pending_messages', {
-  id: text('id').primaryKey(),
-  chatId: text('chat_id')
-    .notNull()
-    .references(() => chats.id, { onDelete: 'cascade' }),
-  senderSessionId: text('sender_session_id')
-    .notNull()
-    .references(() => sessions.id, { onDelete: 'cascade' }),
-  receiverSessionId: text('receiver_session_id')
-    .notNull()
-    .references(() => sessions.id, { onDelete: 'cascade' }),
-  encryptedBlob: bytea('encrypted_blob').notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-}, (t) => ({
-  chatIdIdx: index('pending_messages_chat_id_idx').on(t.chatId),
-  receiverIdx: index('pending_messages_receiver_idx').on(t.receiverSessionId),
-
-  // Лимит 1MB на сообщение (защита от DoS через гигантские blob'ы)
-  blobSizeCheck: check('pending_messages_blob_size_check',
-    sql`octet_length(${t.encryptedBlob}) <= 1048576`),
-}));
-```
+Ответ перед хешированием нормализуется: `trim → lowercase → collapse spaces → NFC`. См. [`recovery.md`](recovery.md).
 
 ---
 
@@ -337,22 +276,20 @@ export const pendingMessages = pgTable('pending_messages', {
 | Что произойдёт | Где |
 |---|---|
 | Сессии — каскадно удалены | `sessions` (FK CASCADE) |
-| Чаты, где удалённые сессии в любой стороне — каскадно удалены | `chats` (FK CASCADE через sessions) |
-| Pending-сообщения для удалённых чатов/сессий — каскадно удалены | `pending_messages` (FK CASCADE) |
-| Активные инвайт-коды создателя — каскадно удалены | `invites` (FK CASCADE) |
-| Q/A — каскадно удалены | `recovery_questions` (FK CASCADE) |
+| Активные инвайты — каскадно удалены | `invites` (FK CASCADE) |
+| Q/A пары — каскадно удалены | `recovery_questions` (FK CASCADE) |
 | `referrals.invitee_id = X` — каскадно удалены | `referrals` (FK CASCADE) |
-| `referrals.inviter_id = X` — обнуляется (запись остаётся) | `referrals` (FK SET NULL) |
-| Премиум-UIN — отвязывается (`account_id = NULL`) | `uins` — **в коде, в той же транзакции** |
-| Обычный UIN — удаляется | `uins` — **в коде, в той же транзакции** |
+| `referrals.inviter_id = X` — `SET NULL` | `referrals` (FK SET NULL) |
+| Премиум-UIN — отвязывается (`account_id = NULL`) | `uins` — **в коде, в транзакции** |
+| Обычный UIN — удаляется | `uins` — **в коде, в транзакции** |
 
 При **удалении сессии** (кик):
 
 | Что произойдёт | Где |
 |---|---|
-| Чаты, где сессия в любой стороне — каскадно удалены | `chats` (FK CASCADE) |
-| Pending-сообщения по этой сессии (sender/receiver) — каскадно удалены | `pending_messages` (FK CASCADE) |
-| Локальный SQLite собеседника — помечает чат `is_dead = true` (см. [`devices-and-chats.md`](devices-and-chats.md)) | устройство собеседника |
+| Только запись из `sessions` | (на текущий момент чатов/pending_messages нет) |
+
+После удаления — WSS `session_kicked` всем удалённым сессиям, если онлайн.
 
 ---
 
@@ -365,10 +302,10 @@ await db.transaction(async (tx) => {
   // 1. Если требуется инвайт — проверяем код, удаляем запись
   if (!featureFlags.freeRegistration) {
     const invite = await tx.query.invites.findFirst({ where: eq(invites.code, code) });
-    if (!invite) throw new HttpException('invite_not_found', 404);
+    if (!invite) throw new NotFoundException(makeError(ErrorCode.INVITE_NOT_FOUND));
     if (invite.expiresAt < new Date()) {
       await tx.delete(invites).where(eq(invites.id, invite.id));
-      throw new HttpException('invite_expired', 410);
+      throw new HttpException(makeError(ErrorCode.INVITE_EXPIRED), 410);
     }
     await tx.delete(invites).where(eq(invites.id, invite.id));
 
@@ -381,13 +318,13 @@ await db.transaction(async (tx) => {
   }
 
   // 3. Создаём аккаунт
-  await tx.insert(accounts).values({ id: newAccountId, passwordHash, ... });
+  await tx.insert(accounts).values({ id: newAccountId, passwordHash, /* … */ });
 
   // 4. Создаём первую сессию
-  await tx.insert(sessions).values({ id: sessionId, accountId: newAccountId, ... });
+  await tx.insert(sessions).values({ id: sessionId, accountId: newAccountId, /* … */ });
 });
 
-// 5. После транзакции — ставим UIN-job в BullMQ
+// 5. После коммита — UIN-job в BullMQ
 await uinQueue.add('generate', { accountId: newAccountId });
 ```
 
@@ -404,67 +341,27 @@ await db.transaction(async (tx) => {
   await tx.delete(uins)
     .where(and(eq(uins.accountId, accountId), eq(uins.isPremium, false)));
 
-  // 3. Удалить аккаунт — CASCADE подхватывает sessions, chats, pending_messages,
-  //    invites, recovery_questions, referrals (invitee_id),
-  //    referrals (inviter_id) → SET NULL
+  // 3. Удалить аккаунт — CASCADE подхватывает остальное
   await tx.delete(accounts).where(eq(accounts.id, accountId));
 });
 ```
 
-После коммита — отправить WSS `session_kicked` всем активным сессиям этого аккаунта (если они онлайн), чтобы они закрыли коннект и переключились на экран авторизации.
+Перед удалением use-case рассылает WSS `session_kicked` всем активным сессиям аккаунта.
 
 ### Создание инвайт-кода
 
-**Атомарная операция с pessimistic lock** на строке `accounts` — иначе двойной клик при `invites_remaining = 1` создаст 2 записи и счётчик уйдёт в `-1`.
-
-```ts
-await db.transaction(async (tx) => {
-  // 1. Блокируем строку аккаунта: SELECT ... FOR UPDATE
-  const [account] = await tx
-    .select({ invitesRemaining: accounts.invitesRemaining })
-    .from(accounts)
-    .where(eq(accounts.id, myAccountId))
-    .for('update');
-
-  if (!account || account.invitesRemaining <= 0) {
-    throw new HttpException('no_invites_remaining', 403);
-  }
-
-  // 2. Генерируем уникальный код (retry на коллизии — внешний цикл, не показан)
-  const code = generateInviteCode();
-
-  // 3. Создаём запись
-  await tx.insert(invites).values({
-    id: generateId(),
-    accountId: myAccountId,
-    code,
-    expiresAt,
-  });
-
-  // 4. Декремент
-  await tx.update(accounts)
-    .set({
-      invitesRemaining: sql`${accounts.invitesRemaining} - 1`,
-      updatedAt: new Date(),
-    })
-    .where(eq(accounts.id, myAccountId));
-});
-```
-
-### Использование инвайт-кода (часть транзакции «Создание аккаунта»)
-
-См. выше. Просроченный код **удаляется** при попытке использования (`expiresAt < now()`), `invites_remaining` создателя **не возвращается** — TTL истёк по его вине/решению.
+Атомарный декремент `invites_remaining` через условный `UPDATE ... WHERE invites_remaining > 0 RETURNING`. Если возврата нет → `403 no_invites_remaining`. Затем `INSERT` в `invites`.
 
 ### Отзыв инвайт-кода
 
 ```ts
 await db.transaction(async (tx) => {
-  // Удаление + проверка владельца через WHERE (если запись чужая — rowCount = 0)
-  const result = await tx.delete(invites)
-    .where(and(eq(invites.id, inviteId), eq(invites.accountId, myAccountId)));
+  const deleted = await tx.delete(invites)
+    .where(and(eq(invites.id, inviteId), eq(invites.accountId, myAccountId)))
+    .returning({ id: invites.id });
 
-  if (result.rowCount === 0) {
-    throw new HttpException('invite_not_found_or_not_yours', 404);
+  if (deleted.length === 0) {
+    throw new NotFoundException(makeError(ErrorCode.INVITE_NOT_FOUND));
   }
 
   await tx.update(accounts)
@@ -479,47 +376,57 @@ await db.transaction(async (tx) => {
 ### Ротация refresh-токена
 
 ```ts
-const newRefreshToken = generateRandomBytes(32);
-const newHash = sha256(newRefreshToken);
+const oldHash = sha256Hex(rawRefreshToken);
+const { raw: newRaw, hash: newHash } = generateRefreshToken();
 
-await db.transaction(async (tx) => {
-  // Reuse detection: WHERE текущий хеш совпадает
-  const result = await tx.update(sessions)
-    .set({ refreshTokenHash: newHash, updatedAt: new Date() })
-    .where(and(eq(sessions.id, sessionId), eq(sessions.refreshTokenHash, oldHash)));
+const rows = await db.update(sessions)
+  .set({ refreshTokenHash: newHash, updatedAt: new Date() })
+  .where(eq(sessions.refreshTokenHash, oldHash))
+  .returning();
 
-  if (result.rowCount === 0) {
-    // Хеш не совпал — токен подменён или уже использован
-    await tx.delete(sessions).where(eq(sessions.id, sessionId));
-    throw new HttpException('refresh_reused', 401);
-  }
-});
+if (rows.length === 0) {
+  // Хеш не совпал — токен уже использован или подменён
+  throw new UnauthorizedException(makeError(ErrorCode.REFRESH_REUSED));
+}
 ```
+
+Сама сессия при `refresh_reused` сейчас **не удаляется** — атакующий получает 401, легитимный пользователь продолжает работать с новой парой токенов. См. [`auth-devices.md`](auth-devices.md#ротация-токенов).
 
 ---
 
 ## Миграции
 
-- Инструмент: **drizzle-kit**.
-- Команды:
-  ```bash
-  npm run drizzle:generate          # генерация миграции из изменений в schema/
-  npm run drizzle:migrate           # применение миграций
-  ```
-- **Файлы миграций** — `backend/drizzle/` (стандарт drizzle-kit).
-- **Конфиг** — `backend/drizzle.config.ts` в корне `backend/`.
-- **Drizzle-схемы** (TypeScript-определения таблиц, импортируемые отсюда) — `backend/src/persistence/schemas/` (4-слойная архитектура, см. [`backend-stack.md`](backend-stack.md#архитектура-бэкенда-4-слоя)).
-- Каждая миграция — `.sql` файл + автогенерированный `_meta/`.
-- Первая миграция должна включать `CREATE EXTENSION IF NOT EXISTS citext;` (Drizzle сгенерирует это, если CITEXT используется в схеме).
-- Production: миграции запускаются ручной командой при деплое (`npm run drizzle:migrate`). Dev — есть `GET /api/v1/system/dev/migrate` (см. [`api-contracts.md`](api-contracts.md)) под флагом `dev_mode`.
+Используется `drizzle-kit push` — изменения схемы применяются напрямую из TS в БД, без файлов миграций. Папки `backend/drizzle/` нет.
+
+```bash
+npm run db:push       # синхронизировать схему БД с TS
+npm run db:comments   # применить COMMENT ON TABLE/COLUMN из docker/sql-files/comments.sql
+npm run db:setup      # = db:push + db:comments
+npm run db:studio     # Drizzle Studio (UI для просмотра данных)
+```
+
+Команды `db:generate` / `db:migrate` доступны (стандартные скрипты drizzle-kit), но MVP их не использует.
+
+`docker/sql-files/init.sql` (CITEXT extension) — выполняется автоматически через `docker-entrypoint-initdb.d` при первом старте postgres-контейнера.
+
+Конфиг — `backend/drizzle.config.ts`. Схемы — `backend/src/persistence/schemas/*.schema.ts`.
+
+---
+
+## Будущие таблицы
+
+Появятся в шаге 9 (см. [TODO 9.1](../TODO.md)):
+
+- **`chats`** — пара сессий, статус (`pending_key` / `active`), публичные ключи ECDH, имя чата (unique per pair, case-insensitive).
+- **`pending_messages`** — `bytea encrypted_blob`, FK на `chats` + `sessions` (sender/receiver). Лимит 1MB на blob через CHECK constraint.
+
+Точные определения будут зафиксированы здесь после реализации 9.1. Концептуальные требования описаны в [`encryption.md`](encryption.md) и [`devices-and-chats.md`](devices-and-chats.md).
 
 ---
 
 ## Связанные доки
 
-- [`database.md`](database.md) — кросс-cutting (формат ID, общие столбцы, обзор).
-- [`backend-stack.md`](backend-stack.md) — выбор стека (PostgreSQL, Drizzle, Redis, BullMQ).
-- [`identity.md`](identity.md), [`auth-devices.md`](auth-devices.md), [`invites.md`](invites.md), [`recovery.md`](recovery.md), [`encryption.md`](encryption.md) — описание сущностей и бизнес-правил каждой таблицы.
-- [`devices-and-chats.md`](devices-and-chats.md) — мульти-девайс UX, обработка мёртвых чатов на устройстве собеседника.
-- [`local-storage.md`](local-storage.md) — локальная SQLite на устройстве.
-- [`api-contracts.md`](api-contracts.md) — REST/WSS контракты, использующие эти таблицы.
+- [`database.md`](database.md) — кросс-cutting (формат ID, общие столбцы).
+- [`backend-stack.md`](backend-stack.md) — стек, миграции, схемы Drizzle.
+- [`identity.md`](identity.md), [`auth-devices.md`](auth-devices.md), [`invites.md`](invites.md), [`recovery.md`](recovery.md) — бизнес-правила сущностей.
+- [`api-contracts.md`](api-contracts.md) — REST/WSS контракты.
