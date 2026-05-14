@@ -2,46 +2,49 @@
   <h1 class="chats__header-title">Чаты</h1>
 </header>
 
-<div class="chats__list">
-  @for (chat of chats; track chat.id) {
-    <a class="chats__item" [routerLink]="[chat.id]">
-      <div class="chats__avatar" [style.background]="chat.avatarColor">
-        <span class="chats__avatar-initials">{{ chat.initials }}</span>
-      </div>
+@if (loading()) {
+  <div class="chats__loading">
+    <span>Загрузка...</span>
+  </div>
+} @else {
+  <div class="chats__list">
+    @for (chat of chats(); track chat.id) {
+      <a class="chats__item" [routerLink]="[chat.id]">
+        <div class="chats__avatar" [style.background]="chat.avatarColor">
+          <span class="chats__avatar-initials">{{ chat.initials }}</span>
+        </div>
 
-      <div class="chats__item-body">
-        <div class="chats__item-top">
-          <span class="chats__item-contact">
-            {{ chat.name }} · {{ chat.uin }}@if (chat.username) { · @{{ chat.username }}}
-          </span>
-          <span class="chats__item-time">{{ chat.time }}</span>
-        </div>
-        <div class="chats__item-chatname">{{ chat.chatName }} · {{ chat.deviceLabel }}</div>
-        <div class="chats__item-bottom">
-          <div class="chats__item-last-row">
-            @if (chat.pendingKey) {
-              <svg class="chats__item-status-icon chats__item-status-icon--pending" width="13" height="13" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" stroke-dasharray="3 3"/>
-              </svg>
-            }
-            <span class="chats__item-last">{{ chat.lastMessage }}</span>
+        <div class="chats__item-body">
+          <div class="chats__item-top">
+            <span class="chats__item-contact">
+              {{ chat.peerDisplay }}@if (chat.uin) { · {{ chat.uin }}}@if (chat.username) { · @{{ chat.username }}}
+            </span>
+            <span class="chats__item-time">{{ chat.formattedTime }}</span>
           </div>
-          @if (chat.unread > 0) {
-            <span class="chats__badge">{{ chat.unread }}</span>
-          }
+          <div class="chats__item-chatname">{{ chat.chatName }} · {{ chat.deviceLabel }}</div>
+          <div class="chats__item-bottom">
+            <div class="chats__item-last-row">
+              @if (chat.pendingKey) {
+                <svg class="chats__item-status-icon chats__item-status-icon--pending" width="13" height="13" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" stroke-dasharray="3 3"/>
+                </svg>
+              }
+              <span class="chats__item-last"></span>
+            </div>
+          </div>
         </div>
+      </a>
+    } @empty {
+      <div class="chats__empty">
+        <div class="chats__empty-icon">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <path d="M8 36L4 44L12 40H40C42.2 40 44 38.2 44 36V12C44 9.8 42.2 8 40 8H8C5.8 8 4 9.8 4 12V36C4 36 6 36 8 36Z" stroke="#C7C7CC" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M14 20H34M14 28H26" stroke="#C7C7CC" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <p class="chats__empty-title">Нет чатов</p>
+        <p class="chats__empty-text">Начните новый разговор</p>
       </div>
-    </a>
-  } @empty {
-    <div class="chats__empty">
-      <div class="chats__empty-icon">
-        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-          <path d="M8 36L4 44L12 40H40C42.2 40 44 38.2 44 36V12C44 9.8 42.2 8 40 8H8C5.8 8 4 9.8 4 12V36C4 36 6 36 8 36Z" stroke="#C7C7CC" stroke-width="2" stroke-linejoin="round"/>
-          <path d="M14 20H34M14 28H26" stroke="#C7C7CC" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-      </div>
-      <p class="chats__empty-title">Нет чатов</p>
-      <p class="chats__empty-text">Начните новый разговор</p>
-    </div>
-  }
-</div>
+    }
+  </div>
+}

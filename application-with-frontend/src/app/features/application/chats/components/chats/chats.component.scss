@@ -149,6 +149,15 @@
     justify-content: center;
   }
 
+  &__loading {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: var(--clr-text-secondary);
+  }
+
   &__empty {
     flex: 1 1 auto;
     display: flex;
