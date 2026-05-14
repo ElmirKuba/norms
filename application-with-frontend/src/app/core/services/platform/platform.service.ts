@@ -10,6 +10,18 @@ interface ElectronSecureStorageAPI {
   readonly remove: (key: string) => Promise<void>;
 }
 
+/** LocalDb API, доступный через Electron preload. */
+interface ElectronLocalDbAPI {
+  /** Открывает/создаёт per-account БД и применяет схему. */
+  readonly init: (accountId: string) => Promise<void>;
+  /** Выполняет запись (INSERT / UPDATE / DELETE). */
+  readonly run: (accountId: string, sql: string, params: readonly unknown[]) => Promise<void>;
+  /** Возвращает все строки SELECT-запроса. */
+  readonly all: <T>(accountId: string, sql: string, params: readonly unknown[]) => Promise<readonly T[]>;
+  /** Возвращает первую строку SELECT-запроса или undefined. */
+  readonly get: <T>(accountId: string, sql: string, params: readonly unknown[]) => Promise<T | undefined>;
+}
+
 declare global {
   /** Расширение глобального Window для платформенных API */
   interface Window {
@@ -23,6 +35,8 @@ declare global {
       readonly onDeepLink: (callback: (url: string) => void) => void;
       /** Шифрованное хранилище через OS keychain. */
       readonly secureStorage: ElectronSecureStorageAPI;
+      /** Локальная SQLite-БД через IPC. */
+      readonly localDb: ElectronLocalDbAPI;
     };
     /** API Capacitor, доступный на нативных платформах */
     // eslint-disable-next-line @typescript-eslint/naming-convention -- внешнее API Capacitor использует PascalCase

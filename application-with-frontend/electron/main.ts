@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, safeStorage } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
+import Database from 'better-sqlite3';
 
 const isDev = process.argv.includes('--dev');
 
@@ -100,4 +101,64 @@ ipcMain.handle('get-app-version', () => {
 
 ipcMain.handle('get-platform', () => {
   return process.platform;
+});
+
+// --- Local SQLite DB (better-sqlite3, per-account) ---
+// DB-файл: userData/norms-{accountId}.db
+// WAL-режим для конкурентного чтения; foreign_keys ON.
+
+const LOCAL_DB_SCHEMA = `
+PRAGMA foreign_keys = ON;
+CREATE TABLE IF NOT EXISTS peer_devices (
+  session_id TEXT PRIMARY KEY, account_id TEXT NOT NULL,
+  uin TEXT, nickname TEXT, username TEXT,
+  system_name TEXT NOT NULL, device_nickname TEXT
+);
+CREATE TABLE IF NOT EXISTS chats (
+  id TEXT PRIMARY KEY, name TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending_key',
+  peer_session_id TEXT NOT NULL,
+  created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS chats_peer_session_id_idx ON chats(peer_session_id);
+CREATE TABLE IF NOT EXISTS messages (
+  id TEXT PRIMARY KEY, chat_id TEXT NOT NULL,
+  sender_session_id TEXT NOT NULL, content TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'sending',
+  is_outgoing INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS messages_chat_id_created_at_idx ON messages(chat_id, created_at);
+`.trim();
+
+const dbCache = new Map<string, Database.Database>();
+
+function getDb(accountId: string): Database.Database {
+  const cached = dbCache.get(accountId);
+  if (cached !== undefined) return cached;
+  const dbPath = path.join(app.getPath('userData'), `norms-${accountId}.db`);
+  const db = new Database(dbPath);
+  db.pragma('journal_mode = WAL');
+  db.pragma('foreign_keys = ON');
+  dbCache.set(accountId, db);
+  return db;
+}
+
+ipcMain.handle('localdb:init', (_event, accountId: string): void => {
+  const db = getDb(accountId);
+  db.exec(LOCAL_DB_SCHEMA);
+});
+
+ipcMain.handle('localdb:run', (_event, accountId: string, sql: string, params: unknown[]): void => {
+  const db = getDb(accountId);
+  db.prepare(sql).run(params);
+});
+
+ipcMain.handle('localdb:all', (_event, accountId: string, sql: string, params: unknown[]): unknown[] => {
+  const db = getDb(accountId);
+  return db.prepare(sql).all(params);
+});
+
+ipcMain.handle('localdb:get', (_event, accountId: string, sql: string, params: unknown[]): unknown => {
+  const db = getDb(accountId);
+  return db.prepare(sql).get(params);
 });

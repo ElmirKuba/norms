@@ -14,4 +14,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
     set: (key: string, value: string): Promise<void> => ipcRenderer.invoke('secure-storage:set', key, value),
     remove: (key: string): Promise<void> => ipcRenderer.invoke('secure-storage:remove', key),
   },
+
+  // Локальная SQLite-БД (better-sqlite3 в main process, per-account файл)
+  localDb: {
+    init: (accountId: string): Promise<void> =>
+      ipcRenderer.invoke('localdb:init', accountId),
+    run: (accountId: string, sql: string, params: readonly unknown[]): Promise<void> =>
+      ipcRenderer.invoke('localdb:run', accountId, sql, params),
+    all: <T>(accountId: string, sql: string, params: readonly unknown[]): Promise<readonly T[]> =>
+      ipcRenderer.invoke('localdb:all', accountId, sql, params),
+    get: <T>(accountId: string, sql: string, params: readonly unknown[]): Promise<T | undefined> =>
+      ipcRenderer.invoke('localdb:get', accountId, sql, params),
+  },
 });

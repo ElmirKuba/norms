@@ -17,6 +17,16 @@ interface WssMessage {
   readonly data: Record<string, unknown>;
 }
 
+/** Данные события session_created — новая сессия аккаунта. */
+export interface WssSessionCreatedData {
+  /** ID новой сессии. */
+  readonly sessionId: string;
+  /** Системное имя устройства. */
+  readonly systemName: string;
+  /** Платформа: ios | android | windows | macos | linux. */
+  readonly platform: string;
+}
+
 const PING_INTERVAL_MS = 30_000;
 const TOKEN_REFRESH_AHEAD_MS = 3_000;
 const MAX_RECONNECT_DELAY_MS = 30_000;
@@ -47,8 +57,7 @@ export class WssService {
    * Эмитирует данные новой сессии при получении события session_created.
    * MainApplicationComponent подписывается и показывает баннер с кнопками «Кикнуть» / «Закрыть».
    */
-  public readonly sessionCreated$: Subject<{ sessionId: string; systemName: string; platform: string }> =
-    new Subject<{ sessionId: string; systemName: string; platform: string }>();
+  public readonly sessionCreated$: Subject<WssSessionCreatedData> = new Subject<WssSessionCreatedData>();
 
   /** Base URL бэкенда (из InjectionToken). */
   private readonly _apiBaseUrl: string = inject(API_BASE_URL);
@@ -132,7 +141,7 @@ export class WssService {
     if (typeof raw.data !== 'string') return;
     let msg: WssMessage;
     try {
-      /* eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- WSS JSON-протокол */
+       
       msg = JSON.parse(raw.data) as WssMessage;
       if (typeof msg.event !== 'string') return;
     } catch {
@@ -364,7 +373,7 @@ export class WssService {
     try {
       const padded = parts[1].replace(/-/gu, '+').replace(/_/gu, '/');
       const decoded = atob(padded);
-      /* eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- JWT payload decode */
+       
       const payload = JSON.parse(decoded) as Record<string, unknown>;
       const exp = payload['exp'];
       return typeof exp === 'number' ? exp : null;
