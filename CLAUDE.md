@@ -31,16 +31,6 @@ See [TODO.md](TODO.md) for what's done, in progress, and planned.
   - `devices-and-chats.md` — мульти-девайс UX, осиротевшие собеседники на новом устройстве, onboarding-модалка
   - `frontend-architecture.md` — структура папок фронта, конвенции фич, адаптив, платформенный DI, CSS
 - `design/` — дизайн-файлы (Pencil .pen). Инструкции: [`design/CLAUDE.md`](design/CLAUDE.md).
-- `nest-backend-example/` — справочный NestJS бэкенд (форк kuba-game, почищен). **Только архитектурный референс**, удалить после миграции паттернов.
-  - [`nest-backend-example/BACKEND_ARCHITECTURE.md`](nest-backend-example/BACKEND_ARCHITECTURE.md) — описание слоёв (рекомендуемая 4-слойная + текущая 5-слойная).
-  - [`nest-backend-example/BUGS.md`](nest-backend-example/BUGS.md) — известные баги.
-  - **⚠ Критические отличия от реального проекта (НЕ копировать вслепую):**
-    - Пример использует **MySQL** → проект использует **PostgreSQL 16** (`drizzle-orm/postgres-js`, не `drizzle-orm/mysql2`).
-    - Пример использует **bcrypt** → проект использует **argon2id** (см. `docs/recovery.md`).
-    - Пример хранит токены в **cookies** → проект использует **`Authorization: Bearer`** header + WSS-ротацию (см. `docs/auth-devices.md`).
-    - Пример оборачивает всё в **Result<T>** → проект использует **NestJS exceptions** (рекомендуемая архитектура из Части 1 `BACKEND_ARCHITECTURE.md`).
-    - Пример использует **`/api/`** prefix → проект использует **`/api/v1/`** (см. `docs/api-contracts.md`).
-  - **Что брать из примера:** 4-слойную архитектуру (Presentation → Application → Domain → Persistence), паттерн портов (abstract class в Domain, реализация в Persistence), структуру модулей, нейминг файлов. **Не брать:** MySQL-типы, bcrypt, cookies, Result-обёртки, 5-слойную архитектуру.
 
 ## Tech Stack
 
