@@ -6,3 +6,5 @@ export * from './sessions.schema';
 export * from './invites.schema';
 export * from './referrals.schema';
 export * from './recovery-questions.schema';
+export * from './chats.schema';
+export * from './pending-messages.schema';

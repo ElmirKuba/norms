@@ -17,10 +17,11 @@ Backend-стек: см. [`backend-stack.md`](backend-stack.md). Кросс-cutti
    - [`invites`](#invites)
    - [`referrals`](#referrals)
    - [`recovery_questions`](#recovery_questions)
+   - [`chats`](#chats)
+   - [`pending_messages`](#pending_messages)
 6. [Сводная таблица cascade-правил](#сводная-таблица-cascade-правил)
 7. [Транзакционные сценарии](#транзакционные-сценарии)
 8. [Миграции](#миграции)
-9. [Будущие таблицы](#будущие-таблицы)
 
 ---
 
@@ -269,6 +270,80 @@ export const recoveryQuestions = pgTable('recovery_questions', {
 
 ---
 
+### `chats`
+
+Чат между двумя конкретными устройствами. Технически device-to-device, UI показывает аккаунт.
+
+```ts
+export const chats = pgTable('chats', {
+  id: text('id').primaryKey(),
+  name: citext('name').notNull(),                                      // citext — CI-уникальность, не шифруется
+  sessionAId: text('session_a_id')
+    .notNull()
+    .references((): AnyPgColumn => sessions.id, { onDelete: 'cascade' }),
+  sessionBId: text('session_b_id')
+    .notNull()
+    .references((): AnyPgColumn => sessions.id, { onDelete: 'cascade' }),
+  createdBySessionId: text('created_by_session_id')
+    .references((): AnyPgColumn => sessions.id, { onDelete: 'set null' }),
+  status: chatStatusEnum('status').notNull().default('pending_key'),
+  publicKeyA: text('public_key_a'),                                    // X25519 pubkey session_a (base64), NULL после обмена
+  publicKeyB: text('public_key_b'),                                    // X25519 pubkey session_b (base64), NULL после обмена
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+} satisfies SchemaColumnMap<IChatRow>, (t) => [
+  check('chats_session_order_check', sql`${t.sessionAId} < ${t.sessionBId}`),
+  uniqueIndex('chats_pair_name_unique').on(t.sessionAId, t.sessionBId, t.name),
+  index('chats_session_a_id_idx').on(t.sessionAId),
+  index('chats_session_b_id_idx').on(t.sessionBId),
+]);
+```
+
+**`session_a_id` / `session_b_id`** — всегда нормализованы: `session_a_id < session_b_id` (CHECK constraint). Гарантирует, что пара `(A,B)` и `(B,A)` хранится одинаково. INSERT обязан упорядочить ID перед записью.
+
+**`name` — `citext`** — название чата хранится в case-insensitive типе. Unique index `chats_pair_name_unique` автоматически регистронезависим.
+
+**`created_by_session_id` — `SET NULL`** — историческая информация. Если создатель кикнут, чат к тому моменту уже удалён каскадом через `session_a_id` / `session_b_id`.
+
+**`public_key_a` / `public_key_b`** — X25519 публичные ключи (base64), используются только в процессе обмена ключами. После завершения (`status → active`) обнуляются сервером. Подробнее: [`encryption.md`](encryption.md).
+
+**Бизнес-правила:** между одной парой устройств может быть несколько чатов с разными именами. Чаты не синхронизируются между устройствами одного аккаунта. Подробнее: [`devices-and-chats.md`](devices-and-chats.md).
+
+---
+
+### `pending_messages`
+
+Временное серверное хранилище недоставленных зашифрованных сообщений.
+
+```ts
+export const pendingMessages = pgTable('pending_messages', {
+  id: text('id').primaryKey(),
+  chatId: text('chat_id')
+    .notNull()
+    .references((): AnyPgColumn => chats.id, { onDelete: 'cascade' }),
+  senderSessionId: text('sender_session_id')
+    .notNull()
+    .references((): AnyPgColumn => sessions.id, { onDelete: 'cascade' }),
+  receiverSessionId: text('receiver_session_id')
+    .notNull()
+    .references((): AnyPgColumn => sessions.id, { onDelete: 'cascade' }),
+  encryptedBlob: bytea('encrypted_blob').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+} satisfies SchemaColumnMap<IPendingMessageRow>, (t) => [
+  check('pending_messages_blob_size_check', sql`octet_length(${t.encryptedBlob}) <= 1048576`),
+  index('pending_messages_receiver_session_id_idx').on(t.receiverSessionId),
+  index('pending_messages_chat_id_idx').on(t.chatId),
+]);
+```
+
+**`encrypted_blob`** — формат `[iv: 12b][ciphertext][auth_tag: 16b]`. Лимит 1MB через CHECK constraint.
+
+**Жизненный цикл:** сервер хранит blob до тех пор, пока получатель не выйдет онлайн и не подтвердит доставку. После подтверждения — `DELETE`. Если сессия кикнута — `pending_messages` удаляются каскадом (расшифровать их на новом устройстве всё равно невозможно).
+
+**Индекс по `receiver_session_id`** — для быстрой выборки всех недоставленных при подключении устройства.
+
+---
+
 ## Сводная таблица cascade-правил
 
 При **удалении аккаунта** (`DELETE FROM accounts WHERE id = X`):
@@ -287,7 +362,10 @@ export const recoveryQuestions = pgTable('recovery_questions', {
 
 | Что произойдёт | Где |
 |---|---|
-| Только запись из `sessions` | (на текущий момент чатов/pending_messages нет) |
+| Чаты, где сессия — `session_a_id` или `session_b_id` | `chats` (FK CASCADE) |
+| Все `pending_messages` удалённых чатов | `pending_messages` (FK CASCADE via chats) |
+| Все `pending_messages`, где сессия — отправитель | `pending_messages` (FK CASCADE via sender_session_id) |
+| Все `pending_messages`, где сессия — получатель | `pending_messages` (FK CASCADE via receiver_session_id) |
 
 После удаления — WSS `session_kicked` всем удалённым сессиям, если онлайн.
 
@@ -410,17 +488,6 @@ npm run db:studio     # Drizzle Studio (UI для просмотра данны�
 `docker/sql-files/init.sql` (CITEXT extension) — выполняется автоматически через `docker-entrypoint-initdb.d` при первом старте postgres-контейнера.
 
 Конфиг — `backend/drizzle.config.ts`. Схемы — `backend/src/persistence/schemas/*.schema.ts`.
-
----
-
-## Будущие таблицы
-
-Появятся в шаге 9 (см. [TODO 9.1](../TODO.md)):
-
-- **`chats`** — пара сессий, статус (`pending_key` / `active`), публичные ключи ECDH, имя чата (unique per pair, case-insensitive).
-- **`pending_messages`** — `bytea encrypted_blob`, FK на `chats` + `sessions` (sender/receiver). Лимит 1MB на blob через CHECK constraint.
-
-Точные определения будут зафиксированы здесь после реализации 9.1. Концептуальные требования описаны в [`encryption.md`](encryption.md) и [`devices-and-chats.md`](devices-and-chats.md).
 
 ---
 
