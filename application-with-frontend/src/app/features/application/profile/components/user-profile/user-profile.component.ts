@@ -16,6 +16,10 @@ interface UserProfileDisplay {
   readonly displayName: string;
   /** UIN или null. */
   readonly uin: string | null;
+  /** Никнейм или null. */
+  readonly nickname: string | null;
+  /** Username или null. */
+  readonly username: string | null;
   /** Инициалы для аватара (до 2 символов). */
   readonly initials: string;
   /** Цвет аватара. */
@@ -48,7 +52,15 @@ function buildDisplay(data: ReadOtherAccountResponse): UserProfileDisplay {
     initials = '?';
   }
 
-  return { accountId: data.id, displayName, uin: data.uin, initials, avatarColor: avatarColorForId(data.id) };
+  return {
+    accountId: data.id,
+    displayName,
+    uin: data.uin,
+    nickname: data.nickname,
+    username: data.username,
+    initials,
+    avatarColor: avatarColorForId(data.id),
+  };
 }
 
 /** Профиль чужого пользователя */
@@ -116,14 +128,15 @@ export class UserProfileApplicationComponent implements OnInit {
     this._onboarding.openIfNeeded((): void => {
       this._createChatModal.open(
         {
-          id: currentProfile.accountId,
-          name: currentProfile.displayName,
-          uin: currentProfile.uin ?? '',
+          accountId: currentProfile.accountId,
+          displayName: currentProfile.displayName,
           initials: currentProfile.initials,
           avatarColor: currentProfile.avatarColor,
-          devices: [],
+          uin: currentProfile.uin,
+          nickname: currentProfile.nickname,
+          username: currentProfile.username,
         },
-        (_deviceId: string, _chatName: string): void => {
+        (_chatId: string): void => {
           void this._router.navigate(['/application/main/chats']);
         },
       );

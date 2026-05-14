@@ -1,36 +1,33 @@
 import { Injectable, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MODAL_BOTTOM_SHEET_PARAMS } from '../../../../shared/modals/constants/modal.constants';
-import {
-  CreateChatModalComponent,
-} from '../components/create-chat-modal/create-chat-modal.component';
+import { CreateChatModalComponent } from '../components/create-chat-modal/create-chat-modal.component';
 import type { CreateChatModalData, CreateChatModalResult } from '../components/create-chat-modal/create-chat-modal.component';
-import type { MockSearchUser } from '../../search/types/search.types';
 
-/** Сервис открытия модалки выбора устройства при создании чата */
+/** Сервис открытия модалки выбора устройства при создании чата. */
 @Injectable({ providedIn: 'root' })
 export class CreateChatModalService {
-  /** Сервис диалогов Angular Material */
+  /** Сервис диалогов Angular Material. */
   private readonly _dialog: MatDialog = inject(MatDialog);
 
   /**
-   * Открывает модалку создания чата (выбор устройства → название).
-   * @param user — пользователь, которому пишем
-   * @param onCreated — вызывается с deviceId и chatName после подтверждения
+   * Открывает модалку создания чата (выбор устройства → название → создание).
+   * @param data - Данные аккаунта собеседника.
+   * @param onCreated - Вызывается с chatId после успешного создания.
    */
-  public open(user: MockSearchUser, onCreated: (deviceId: string, chatName: string) => void): void {
+  public open(data: CreateChatModalData, onCreated: (chatId: string) => void): void {
     const ref = this._dialog.open<
       CreateChatModalComponent,
       CreateChatModalData,
       CreateChatModalResult
     >(CreateChatModalComponent, {
       ...MODAL_BOTTOM_SHEET_PARAMS,
-      data: { user },
+      data,
     });
 
     ref.afterClosed().subscribe((result: CreateChatModalResult | undefined): void => {
-      if (result !== undefined && result.deviceId.length > 0 && result.chatName.length > 0) {
-        onCreated(result.deviceId, result.chatName);
+      if (result !== undefined) {
+        onCreated(result.chatId);
       }
     });
   }
