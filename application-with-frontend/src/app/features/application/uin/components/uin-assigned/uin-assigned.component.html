@@ -17,12 +17,12 @@
       <span class="uin-assigned__card-number">{{ _formattedUin }}</span>
       <button
         class="uin-assigned__copy"
-        [class.uin-assigned__copy--copied]="_copied"
+        [class.uin-assigned__copy--copied]="_copied()"
         type="button"
         (click)="onCopy()"
-        [attr.aria-label]="_copied ? 'Скопировано' : 'Скопировать'"
+        [attr.aria-label]="_copied() ? 'Скопировано' : 'Скопировать'"
       >
-        @if (_copied) {
+        @if (_copied()) {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
             <path d="M5 12L10 17L19 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>

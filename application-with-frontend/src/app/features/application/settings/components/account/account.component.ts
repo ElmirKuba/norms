@@ -14,7 +14,7 @@ import { TokenStorageService } from '../../../../../core/services/storage/token-
 
 /** Подэкран настроек — Аккаунт */
 @Component({
-  imports: [RouterLink, FormsModule, DialogModalComponent],
+  imports: [RouterLink, FormsModule],
   selector: 'application-settings-account',
   templateUrl: './account.component.html',
   styleUrl: './account.component.scss',
