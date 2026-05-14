@@ -17,6 +17,14 @@ interface WssMessage {
   readonly data: Record<string, unknown>;
 }
 
+/** Данные события message_sent — подтверждение отправки. */
+export interface WssMessageSentData {
+  /** Реальный ID сообщения, присвоенный сервером. */
+  readonly messageId: string;
+  /** ID чата. */
+  readonly chatId: string;
+}
+
 /** Данные события session_created — новая сессия аккаунта. */
 export interface WssSessionCreatedData {
   /** ID новой сессии. */
@@ -59,6 +67,12 @@ export class WssService {
    */
   public readonly sessionCreated$: Subject<WssSessionCreatedData> = new Subject<WssSessionCreatedData>();
 
+  /**
+   * Эмитирует подтверждение отправки сообщения (message_sent).
+   * ChatDetailComponent подписывается чтобы заменить optimistic-запись реальным ID.
+   */
+  public readonly messageSent$: Subject<WssMessageSentData> = new Subject<WssMessageSentData>();
+
   /** Base URL бэкенда (из InjectionToken). */
   private readonly _apiBaseUrl: string = inject(API_BASE_URL);
 
@@ -100,6 +114,18 @@ export class WssService {
     this._intentionalDisconnect = false;
     this._reconnectAttempts = 0;
     this._openSocket(token);
+  }
+
+  /**
+   * Отправляет WSS-сообщение если соединение открыто.
+   * @param event - Имя события.
+   * @param data - Данные события.
+   * @returns true если сообщение отправлено, false если сокет не открыт.
+   */
+  public send(event: string, data: Record<string, unknown>): boolean {
+    if (this._socket?.readyState !== WebSocket.OPEN) return false;
+    this._socket.send(JSON.stringify({ event, data }));
+    return true;
   }
 
   /** Закрывает соединение без авто-реконнекта (вызывается при logout). */
@@ -166,6 +192,9 @@ export class WssService {
         break;
       case 'session_created':
         this._onSessionCreated(msg.data);
+        break;
+      case 'message_sent':
+        this._onMessageSent(msg.data);
         break;
       case 'error':
         this._onWssError(msg.data);
@@ -238,6 +267,17 @@ export class WssService {
     const platform = data['platform'];
     if (typeof sessionId !== 'string' || typeof systemName !== 'string' || typeof platform !== 'string') return;
     this.sessionCreated$.next({ sessionId, systemName, platform });
+  }
+
+  /**
+   * Эмитирует messageSent$ при получении подтверждения отправки.
+   * @param data - Данные события message_sent.
+   */
+  private _onMessageSent(data: Record<string, unknown>): void {
+    const messageId = data['message_id'];
+    const chatId = data['chat_id'];
+    if (typeof messageId !== 'string' || typeof chatId !== 'string') return;
+    this.messageSent$.next({ messageId, chatId });
   }
 
   /**

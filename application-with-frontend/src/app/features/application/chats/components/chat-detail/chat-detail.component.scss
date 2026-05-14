@@ -117,6 +117,24 @@
     color: var(--clr-warning);
   }
 
+  &__dead-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    padding: 8px 16px;
+    background: var(--clr-error-tint, #fff0f0);
+    border-bottom: 1px solid var(--clr-error-border, #ffc5c5);
+    font-size: 12px;
+    color: var(--clr-error, #e53e3e);
+    line-height: 1.4;
+    flex-shrink: 0;
+  }
+
+  &__dead-banner-icon {
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
   &__messages {
     flex: 1 1 auto;
     overflow-y: auto;
