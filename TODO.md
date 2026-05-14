@@ -252,7 +252,7 @@ _Перед стартом фазы 1 — **переключиться обра�
 **Фронт:**
 - [x] **9.11** — SQLite инфраструктура: `better-sqlite3` (Electron) + `@capacitor-community/sqlite` (Capacitor); `LocalDbService`; per-account DB + schema (`chats`, `messages`, `peer_devices`)
 - [x] **9.12** — `LocalChatRepository` — CRUD над `chats` и `messages` в локальной SQLite
-- [ ] **9.13** — `ChatApiService` — HTTP-клиент: create, read-list, read-orphan-peers, delete
+- [x] **9.13** — `ChatApiService` — HTTP-клиент: create, read-list, read-orphan-peers, delete; `SessionApiService.readSessions()` — публичные сессии чужого аккаунта
 - [ ] **9.14** — `CreateChatModalComponent` → реальный список сессий через API, `POST /chat/create`, запись в SQLite
 - [ ] **9.15** — `ChatsApplicationComponent` → загрузка чатов из локальной SQLite вместо моков
 - [ ] **9.16** — `ChatDetailApplicationComponent` → реальные сообщения из SQLite, отправка через WSS `send_message`

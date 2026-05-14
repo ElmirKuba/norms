@@ -34,6 +34,18 @@ export interface ClearOthersResponse {
   /** Количество завершённых сессий. */
   readonly kicked_count: number;
 }
+
+/** Публичная сессия чужого аккаунта в ответе GET /session/read-sessions. */
+export interface ApiPeerSession {
+  /** ID сессии. */
+  readonly id: string;
+  /** Системное имя устройства. */
+  readonly system_name: string;
+  /** Прозвище устройства или null. */
+  readonly nickname: string | null;
+  /** Платформа. */
+  readonly platform: string;
+}
 /* eslint-enable @typescript-eslint/naming-convention */
 
 /** HTTP-клиент для эндпоинтов /session/*. */
@@ -94,5 +106,18 @@ export class SessionApiService {
    */
   public clearOthers(): Observable<ClearOthersResponse> {
     return this._http.post<ClearOthersResponse>(`${this._baseUrl}/session/clear-others`, {});
+  }
+
+  /**
+   * Возвращает публичные сессии любого аккаунта — для выбора устройства при создании чата (GET /session/read-sessions).
+   * @param accountId - ID аккаунта.
+   * @returns Массив публичных сессий (без дат и refresh-хешей).
+   */
+  public readSessions(accountId: string): Observable<readonly ApiPeerSession[]> {
+    /* eslint-disable @typescript-eslint/naming-convention -- snake_case соответствует API-контракту */
+    return this._http.get<readonly ApiPeerSession[]>(`${this._baseUrl}/session/read-sessions`, {
+      params: { account_id: accountId },
+    });
+    /* eslint-enable @typescript-eslint/naming-convention */
   }
 }
