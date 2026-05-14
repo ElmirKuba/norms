@@ -26,6 +26,19 @@ export abstract class ChatRepository {
   public abstract findOrphanPeers(myAccountId: string, mySessionId: string): Promise<OrphanPeer[]>;
 
   /**
+   * Находит недоставленное сообщение по ID.
+   * @param id - ID сообщения.
+   * @returns Сущность сообщения или null.
+   */
+  public abstract findPendingMessageById(id: string): Promise<PendingMessageEntity | null>;
+
+  /**
+   * Удаляет недоставленное сообщение по ID.
+   * @param id - ID сообщения.
+   */
+  public abstract deletePendingMessageById(id: string): Promise<void>;
+
+  /**
    * Сохраняет недоставленное сообщение.
    * @param data - Данные сообщения.
    * @returns Созданная сущность сообщения.

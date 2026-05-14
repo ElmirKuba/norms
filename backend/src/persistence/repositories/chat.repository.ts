@@ -200,6 +200,37 @@ export class DrizzleChatRepository extends ChatRepository {
   }
 
   /**
+   * Находит недоставленное сообщение по ID.
+   * @param id - ID сообщения.
+   * @returns Сущность или null.
+   */
+  public async findPendingMessageById(id: string): Promise<PendingMessageEntity | null> {
+    const rows = await this._db
+      .select()
+      .from(pendingMessages)
+      .where(eq(pendingMessages.id, id))
+      .limit(1);
+    const row = rows[0];
+    if (row === undefined) return null;
+    return {
+      id: row.id,
+      chatId: row.chatId,
+      senderSessionId: row.senderSessionId,
+      receiverSessionId: row.receiverSessionId,
+      encryptedBlob: row.encryptedBlob,
+      createdAt: row.createdAt,
+    };
+  }
+
+  /**
+   * Удаляет недоставленное сообщение по ID.
+   * @param id - ID сообщения.
+   */
+  public async deletePendingMessageById(id: string): Promise<void> {
+    await this._db.delete(pendingMessages).where(eq(pendingMessages.id, id));
+  }
+
+  /**
    * Сохраняет недоставленное сообщение в pending_messages.
    * @param data - Данные сообщения.
    * @returns Созданная сущность сообщения.

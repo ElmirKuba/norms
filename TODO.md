@@ -244,7 +244,7 @@ _Перед стартом фазы 1 — **переключиться обра�
 - [x] **9.4** — `GET /chat/read-list` — список чатов текущей сессии
 - [x] **9.5** — `GET /chat/read-orphan-peers` — accountId'ы собеседников из чатов удалённых сессий моего аккаунта
 - [x] **9.6** — WSS `send_message` → сохранить blob, если получатель онлайн — пушит сразу; `message_sent` → подтверждение отправителю с `message_id`
-- [ ] **9.7** — WSS `message_delivered` от получателя → удалить blob → WSS `message_delivered` отправителю
+- [x] **9.7** — WSS `message_delivered` от получателя → удалить blob → WSS `message_delivered` отправителю
 - [ ] **9.8** — WSS sync при подключении — `handleConnection` пушит все `pending_messages` для сессии
 - [ ] **9.9** — WSS `message_read` от получателя → WSS `message_read` отправителю
 - [ ] **9.10** — `DELETE /chat/delete/:id` — удаление чата (cascade; WSS `chat_deleted` собеседнику)

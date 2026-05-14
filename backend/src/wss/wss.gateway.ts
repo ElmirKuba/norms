@@ -14,6 +14,7 @@ import type { IncomingMessage } from 'node:http';
 import { WssConnectionStore } from './wss-connection.store';
 import { SessionRepository } from '../domain/ports/session.repository.port';
 import { SendMessageUseCase } from '../chat/use-cases/send-message.use-case';
+import { MessageDeliveredUseCase } from '../chat/use-cases/message-delivered.use-case';
 import { generateRefreshToken, sha256Hex } from '../common/utils/crypto.util';
 import type { JwtPayload } from '../auth/types/jwt-payload.type';
 import type { HttpException } from '@nestjs/common';
@@ -22,6 +23,12 @@ import type { HttpException } from '@nestjs/common';
 interface TokenRefreshData {
   /** Opaque refresh-токен. */
   readonly refresh_token: string;
+}
+
+/** DTO входящего сообщения message_delivered. */
+interface MessageDeliveredData {
+  /** ID доставленного сообщения. */
+  readonly message_id: string;
 }
 
 /** DTO входящего сообщения send_message. */
@@ -47,6 +54,7 @@ export class WssGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly _jwtService: JwtService,
     @Inject(SessionRepository) private readonly _sessionRepo: SessionRepository,
     private readonly _sendMessageUseCase: SendMessageUseCase,
+    private readonly _messageDeliveredUseCase: MessageDeliveredUseCase,
   ) {}
 
   /**
@@ -162,6 +170,37 @@ export class WssGateway implements OnGatewayConnection, OnGatewayDisconnect {
       chat_id: result.chatId,
       sender_session_id: sessionId,
       encrypted_blob: result.encryptedBlobBase64,
+    });
+  }
+
+  /**
+   * Получатель подтверждает доставку сообщения. Удаляет blob, шлёт message_delivered отправителю.
+   * @param data - { message_id }.
+   * @param socket - Сокет получателя.
+   */
+  @SubscribeMessage('message_delivered')
+  public async handleMessageDelivered(
+    @MessageBody() data: MessageDeliveredData,
+    @ConnectedSocket() socket: WebSocket,
+  ): Promise<void> {
+    const sessionId = socketSessionMap.get(socket);
+    if (sessionId === undefined) return;
+
+    let result: Awaited<ReturnType<MessageDeliveredUseCase['execute']>>;
+    try {
+      result = await this._messageDeliveredUseCase.execute(sessionId, data.message_id ?? '');
+    } catch (err: unknown) {
+      const response = (err as HttpException).getResponse?.() as { code?: string } | undefined;
+      socket.send(JSON.stringify({
+        event: 'error',
+        data: { code: response?.code ?? 'internal_error' },
+      }));
+      return;
+    }
+
+    this._store.sendToSession(result.senderSessionId, 'message_delivered', {
+      message_id: result.messageId,
+      chat_id: result.chatId,
     });
   }
 

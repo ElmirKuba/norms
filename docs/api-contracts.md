@@ -723,6 +723,23 @@ Access TTL короткий (15с по умолчанию), WSS-коннект �
 ← { "event": "error", "data": { "code": "chat_not_found" | "not_your_chat" | "blob_too_large" | "invalid_blob" } }
 ```
 
+### Подтверждение доставки (client → server)
+
+Получатель шлёт после записи сообщения в локальную SQLite:
+```json
+→ { "event": "message_delivered", "data": { "message_id": "..." } }
+```
+
+Сервер удаляет blob из `pending_messages` и шлёт отправителю (если онлайн):
+```json
+← { "event": "message_delivered", "data": { "message_id": "...", "chat_id": "..." } }
+```
+
+Ошибки:
+```json
+← { "event": "error", "data": { "code": "message_not_found" | "not_your_message" } }
+```
+
 ### Heartbeat (client → server)
 
 Клиент периодически шлёт `{ "event": "ping", "data": {} }`. Сервер отвечает `{ "event": "pong", "data": {} }`.

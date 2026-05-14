@@ -56,6 +56,10 @@ export enum ErrorCode {
   CHAT_NAME_TAKEN = 'chat_name_taken',
   /** Текущая сессия не является участником чата. */
   NOT_YOUR_CHAT = 'not_your_chat',
+  /** Сообщение с данным ID не найдено. */
+  MESSAGE_NOT_FOUND = 'message_not_found',
+  /** Текущая сессия не является получателем сообщения. */
+  NOT_YOUR_MESSAGE = 'not_your_message',
   /** Размер зашифрованного blob превышает 1MB. */
   BLOB_TOO_LARGE = 'blob_too_large',
   /** Blob не является корректной base64-строкой или пустой. */
@@ -111,6 +115,8 @@ export const ErrorMessage: Record<ErrorCode, string> = {
   [ErrorCode.CHAT_NOT_FOUND]: 'Чат не найден',
   [ErrorCode.CHAT_NAME_TAKEN]: 'Чат с таким именем уже существует',
   [ErrorCode.NOT_YOUR_CHAT]: 'Нет доступа к этому чату',
+  [ErrorCode.MESSAGE_NOT_FOUND]: 'Сообщение не найдено',
+  [ErrorCode.NOT_YOUR_MESSAGE]: 'Нет доступа к этому сообщению',
   [ErrorCode.BLOB_TOO_LARGE]: 'Сообщение превышает допустимый размер (1MB)',
   [ErrorCode.INVALID_BLOB]: 'Некорректный формат сообщения',
 
