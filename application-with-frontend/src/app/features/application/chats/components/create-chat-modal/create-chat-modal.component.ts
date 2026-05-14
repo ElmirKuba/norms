@@ -8,7 +8,9 @@ import { SessionApiService } from '../../../../../core/services/session/session-
 import type { ApiPeerSession } from '../../../../../core/services/session/session-api.service';
 import { ChatApiService } from '../../../../../core/services/chat/chat-api.service';
 import { LocalChatRepository } from '../../../../../core/services/local-db/local-chat.repository';
-import type { LocalChat, LocalPeerDevice } from '../../../../../core/services/local-db/local-db.types';
+import type { LocalChat, LocalChatKey, LocalPeerDevice } from '../../../../../core/services/local-db/local-db.types';
+import { CryptoService } from '../../../../../core/services/crypto/crypto.service';
+import { MasterKeyService } from '../../../../../core/services/crypto/master-key.service';
 
 /** Данные, передаваемые в модалку создания чата. */
 export interface CreateChatModalData {
@@ -86,6 +88,12 @@ export class CreateChatModalComponent implements OnInit {
   /** Репозиторий локальной БД. */
   private readonly _chatRepo: LocalChatRepository = inject(LocalChatRepository);
 
+  /** Сервис криптографических примитивов. */
+  private readonly _crypto: CryptoService = inject(CryptoService);
+
+  /** Сервис мастер-ключа устройства. */
+  private readonly _masterKey: MasterKeyService = inject(MasterKeyService);
+
   /** @inheritdoc */
   public ngOnInit(): void {
     void this._loadSessions();
@@ -150,7 +158,7 @@ export class CreateChatModalComponent implements OnInit {
   }
 
   /**
-   * Выполняет создание чата через API и записывает результат в SQLite.
+   * Выполняет создание чата: POST /chat/create → ECDH keygen → PATCH /chat/submit-key → SQLite.
    * @param session - Выбранная сессия собеседника.
    * @param name - Название чата.
    */
@@ -186,6 +194,9 @@ export class CreateChatModalComponent implements OnInit {
       await this._chatRepo.upsertPeerDevice(peer);
       await this._chatRepo.upsertChat(chat);
 
+      // E2E: генерируем ECDH пару и загружаем публичный ключ на сервер
+      await this._submitEcdhKey(created.id, now);
+
       this._dialogRef.close({ chatId: created.id });
     } catch (err) {
       if (err instanceof HttpErrorResponse && err.status === 409) {
@@ -195,5 +206,32 @@ export class CreateChatModalComponent implements OnInit {
       }
       this.creating.set(false);
     }
+  }
+
+  /**
+   * Генерирует ECDH X25519 пару, загружает публичный ключ на сервер и сохраняет
+   * зашифрованный приватный ключ в SQLite chat_keys.
+   * Ошибка submit-key не блокирует открытие чата — чат останется в pending_key.
+   * @param chatId - ID созданного чата.
+   * @param createdAt - Unix-время создания (мс).
+   */
+  private async _submitEcdhKey(chatId: string, createdAt: number): Promise<void> {
+    const keyPair = await this._crypto.generateEcdhKeyPair();
+    const publicKeyB64 = await this._crypto.exportPublicKey(keyPair.publicKey);
+
+    await firstValueFrom(this._chatApi.submitKey(chatId, publicKeyB64));
+
+    const masterKey = await this._masterKey.getOrCreate();
+    const wrapped = await this._crypto.wrapEcdhPrivateKey(keyPair.privateKey, masterKey);
+
+    const chatKey: LocalChatKey = {
+      chatId,
+      encryptedKey: '',
+      keyIv: '',
+      encryptedPrivKey: wrapped.encryptedKey,
+      privKeyIv: wrapped.keyIv,
+      createdAt,
+    };
+    await this._chatRepo.saveChatKey(chatKey);
   }
 }

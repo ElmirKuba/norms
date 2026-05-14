@@ -44,14 +44,21 @@ export interface LocalChatWithPeer extends LocalChat {
   readonly peer: LocalPeerDevice | null;
 }
 
-/** AES-256-GCM ключ чата, зашифрованный мастер-ключом. */
+/** Ключи чата в локальной SQLite. В период pending_key хранит ECDH-приватный ключ, после обмена — AES-ключ. */
 export interface LocalChatKey {
   /** ID чата. */
   readonly chatId: string;
-  /** Зашифрованный ключ (base64, AES-GCM). */
+  /**
+   * Зашифрованный AES-256-GCM ключ чата (base64, wrapped мастер-ключом).
+   * Пустая строка '' до завершения обмена ключами (pending_key фаза).
+   */
   readonly encryptedKey: string;
-  /** IV шифрования (base64). */
+  /** IV оборачивания AES-ключа (base64). Пустая строка '' в pending_key фазе. */
   readonly keyIv: string;
+  /** Зашифрованный ECDH приватный ключ (base64, pkcs8, wrapped мастер-ключом). null после обмена. */
+  readonly encryptedPrivKey: string | null;
+  /** IV оборачивания ECDH приватного ключа (base64). null после обмена. */
+  readonly privKeyIv: string | null;
   /** Unix-время создания (мс). */
   readonly createdAt: number;
 }

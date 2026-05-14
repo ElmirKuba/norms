@@ -118,6 +118,25 @@ export class ChatApiService {
   }
 
   /**
+   * Загружает публичный ECDH-ключ текущей сессии в чат (PATCH /chat/submit-key).
+   * Если второй ключ — сервер обнуляет оба ключа, статус → active, обе стороны получают WSS chat_key_ready.
+   * Если первый — peer получает WSS chat_key_request с нашим публичным ключом.
+   * @param chatId - ID чата.
+   * @param publicKey - X25519 публичный ключ (base64, raw 32 байта).
+   * @returns Пустой Observable (204).
+   * @throws HttpErrorResponse 404 `chat_not_found`.
+   * @throws HttpErrorResponse 403 `not_your_chat`.
+   */
+  public submitKey(chatId: string, publicKey: string): Observable<unknown> {
+    /* eslint-disable @typescript-eslint/naming-convention -- snake_case соответствует API-контракту */
+    return this._http.patch(`${this._baseUrl}/chat/submit-key`, {
+      chat_id: chatId,
+      public_key: publicKey,
+    });
+    /* eslint-enable @typescript-eslint/naming-convention */
+  }
+
+  /**
    * Удаляет чат по ID (DELETE /chat/delete/:id).
    * @param id - ID чата.
    * @returns Пустой Observable (204).

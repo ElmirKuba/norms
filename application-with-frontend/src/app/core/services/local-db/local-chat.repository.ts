@@ -8,10 +8,14 @@ import type { LocalChat, LocalChatKey, LocalChatWithPeer, LocalMessage, LocalMes
 interface RawChatKey {
   /** ID чата. */
   readonly chat_id: string;
-  /** Зашифрованный ключ (base64). */
+  /** Зашифрованный AES-ключ (base64). Пустая строка в pending_key фазе. */
   readonly encrypted_key: string;
-  /** IV шифрования (base64). */
+  /** IV AES-ключа (base64). Пустая строка в pending_key фазе. */
   readonly key_iv: string;
+  /** Зашифрованный ECDH приватный ключ (base64). null после обмена. */
+  readonly encrypted_priv_key: string | null;
+  /** IV ECDH приватного ключа (base64). null после обмена. */
+  readonly priv_key_iv: string | null;
   /** Unix-время создания (мс). */
   readonly created_at: number;
 }
@@ -307,25 +311,29 @@ export class LocalChatRepository {
   }
 
   /**
-   * Вставляет или заменяет ключ чата.
-   * @param key - Данные ключа.
+   * Вставляет или заменяет запись ключей чата.
+   * В pending_key фазе: encryptedKey/keyIv = '', encryptedPrivKey/privKeyIv — зашифрованный ECDH ключ.
+   * После обмена: encryptedKey/keyIv — AES-ключ, encryptedPrivKey/privKeyIv = null.
+   * @param key - Данные ключей.
    */
   public async saveChatKey(key: LocalChatKey): Promise<void> {
     await this._db.run(
-      `INSERT OR REPLACE INTO chat_keys (chat_id, encrypted_key, key_iv, created_at)
-       VALUES (?, ?, ?, ?)`,
-      [key.chatId, key.encryptedKey, key.keyIv, key.createdAt],
+      `INSERT OR REPLACE INTO chat_keys
+         (chat_id, encrypted_key, key_iv, encrypted_priv_key, priv_key_iv, created_at)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [key.chatId, key.encryptedKey, key.keyIv, key.encryptedPrivKey, key.privKeyIv, key.createdAt],
     );
   }
 
   /**
-   * Возвращает ключ чата или null если не найден.
+   * Возвращает запись ключей чата или null если не найдена.
    * @param chatId - ID чата.
    * @returns LocalChatKey или null.
    */
   public async getChatKey(chatId: string): Promise<LocalChatKey | null> {
     const row = await this._db.get<RawChatKey>(
-      `SELECT chat_id, encrypted_key, key_iv, created_at FROM chat_keys WHERE chat_id = ?`,
+      `SELECT chat_id, encrypted_key, key_iv, encrypted_priv_key, priv_key_iv, created_at
+       FROM chat_keys WHERE chat_id = ?`,
       [chatId],
     );
     if (row === undefined) return null;
@@ -333,6 +341,8 @@ export class LocalChatRepository {
       chatId: row.chat_id,
       encryptedKey: row.encrypted_key,
       keyIv: row.key_iv,
+      encryptedPrivKey: row.encrypted_priv_key,
+      privKeyIv: row.priv_key_iv,
       createdAt: row.created_at,
     };
   }

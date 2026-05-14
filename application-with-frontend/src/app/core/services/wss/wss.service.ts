@@ -51,6 +51,22 @@ export interface WssChatDeletedData {
   readonly chatId: string;
 }
 
+/** Данные события chat_key_ready — обе стороны загрузили ECDH-ключи, обмен завершён. */
+export interface WssChatKeyReadyData {
+  /** ID чата. */
+  readonly chatId: string;
+  /** Публичный X25519 ключ собеседника (base64, raw 32 байта). */
+  readonly peerPublicKey: string;
+}
+
+/** Данные события chat_key_request — инициатор чата загрузил первый ключ, peer должен ответить. */
+export interface WssChatKeyRequestData {
+  /** ID чата. */
+  readonly chatId: string;
+  /** Публичный X25519 ключ инициатора (base64, raw 32 байта). */
+  readonly peerPublicKey: string;
+}
+
 /** Данные события session_created — новая сессия аккаунта. */
 export interface WssSessionCreatedData {
   /** ID новой сессии. */
@@ -123,6 +139,18 @@ export class WssService {
    * ChatEventsService обновляет SQLite; ChatDetailComponent и ChatsComponent обновляют UI.
    */
   public readonly chatDeleted$: Subject<WssChatDeletedData> = new Subject<WssChatDeletedData>();
+
+  /**
+   * Эмитирует при получении chat_key_ready — обе стороны загрузили ключи, можно вычислить AES-ключ.
+   * ChatEventsService подписывается для деривации AES-ключа и отправки pending_key сообщений.
+   */
+  public readonly chatKeyReady$: Subject<WssChatKeyReadyData> = new Subject<WssChatKeyReadyData>();
+
+  /**
+   * Эмитирует при получении chat_key_request — инициатор чата уже загрузил свой ключ.
+   * ChatEventsService подписывается чтобы сгенерировать свой ECDH-ключ и ответить.
+   */
+  public readonly chatKeyRequest$: Subject<WssChatKeyRequestData> = new Subject<WssChatKeyRequestData>();
 
   /** Base URL бэкенда (из InjectionToken). */
   private readonly _apiBaseUrl: string = inject(API_BASE_URL);
@@ -259,6 +287,12 @@ export class WssService {
       case 'chat_deleted':
         this._onChatDeleted(msg.data);
         break;
+      case 'chat_key_ready':
+        this._onChatKeyReady(msg.data);
+        break;
+      case 'chat_key_request':
+        this._onChatKeyRequest(msg.data);
+        break;
       case 'error':
         this._onWssError(msg.data);
         break;
@@ -381,6 +415,28 @@ export class WssService {
     const chatId = data['chat_id'];
     if (typeof chatId !== 'string') return;
     this.chatDeleted$.next({ chatId });
+  }
+
+  /**
+   * Эмитирует chatKeyReady$ — оба публичных ключа загружены, можно вычислить AES-ключ.
+   * @param data - Данные события chat_key_ready.
+   */
+  private _onChatKeyReady(data: Record<string, unknown>): void {
+    const chatId = data['chat_id'];
+    const peerPublicKey = data['peer_public_key'];
+    if (typeof chatId !== 'string' || typeof peerPublicKey !== 'string') return;
+    this.chatKeyReady$.next({ chatId, peerPublicKey });
+  }
+
+  /**
+   * Эмитирует chatKeyRequest$ — инициатор загрузил первый ключ, peer должен ответить своим.
+   * @param data - Данные события chat_key_request.
+   */
+  private _onChatKeyRequest(data: Record<string, unknown>): void {
+    const chatId = data['chat_id'];
+    const peerPublicKey = data['peer_public_key'];
+    if (typeof chatId !== 'string' || typeof peerPublicKey !== 'string') return;
+    this.chatKeyRequest$.next({ chatId, peerPublicKey });
   }
 
   /**

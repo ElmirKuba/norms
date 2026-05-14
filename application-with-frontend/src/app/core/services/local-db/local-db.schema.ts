@@ -36,9 +36,14 @@ CREATE TABLE IF NOT EXISTS messages (
 CREATE INDEX IF NOT EXISTS messages_chat_id_created_at_idx ON messages(chat_id, created_at);
 
 CREATE TABLE IF NOT EXISTS chat_keys (
-  chat_id       TEXT PRIMARY KEY,
-  encrypted_key TEXT NOT NULL,
-  key_iv        TEXT NOT NULL,
-  created_at    INTEGER NOT NULL
+  chat_id              TEXT PRIMARY KEY,
+  encrypted_key        TEXT NOT NULL DEFAULT '',
+  key_iv               TEXT NOT NULL DEFAULT '',
+  encrypted_priv_key   TEXT,
+  priv_key_iv          TEXT,
+  created_at           INTEGER NOT NULL
 );
+
+ALTER TABLE chat_keys ADD COLUMN IF NOT EXISTS encrypted_priv_key TEXT;
+ALTER TABLE chat_keys ADD COLUMN IF NOT EXISTS priv_key_iv TEXT;
 `.trim();
