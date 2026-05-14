@@ -8,6 +8,7 @@ import type { LocalChatWithPeer, LocalMessage, LocalMessageStatus } from '../../
 import { TokenStorageService } from '../../../../../core/services/storage/token-storage.service';
 import { WssService } from '../../../../../core/services/wss/wss.service';
 import type { WssChatDeletedData, WssMessageSentData, WssMessageNewData, WssMessageStatusData } from '../../../../../core/services/wss/wss.service';
+import { ChatEventsService } from '../../../../../core/services/chat/chat-events.service';
 import { avatarColorForId } from '../../../search/services/search-api.service';
 
 /** Данные чата для отображения. */
@@ -46,7 +47,7 @@ interface MessageItem {
   readonly status: LocalMessageStatus;
 }
 
-/** Запись об оптимистично отправленном сообщении. */
+/** Запись об оптимистично отправленном сообщении в активном WSS-потоке. */
 interface PendingSend {
   /** Временный ID в сигнале. */
   readonly tempId: string;
@@ -72,20 +73,6 @@ function decodeSessionId(token: string): string | null {
   } catch {
     return null;
   }
-}
-
-/**
- * Кодирует UTF-8 строку в base64 (для encrypted_blob в phase 1).
- * @param text - Исходная строка.
- * @returns base64-строка.
- */
-function textToBase64(text: string): string {
-  const bytes = new TextEncoder().encode(text);
-  let binary = '';
-  bytes.forEach((byte: number): void => {
-    binary += String.fromCharCode(byte);
-  });
-  return btoa(binary);
 }
 
 /**
@@ -160,7 +147,7 @@ function mapMessage(msg: LocalMessage): MessageItem {
   };
 }
 
-/** Экран чата — загрузка из SQLite, отправка через WSS. */
+/** Экран чата — загрузка из SQLite, отправка через ChatEventsService (E2E AES-256-GCM). */
 @Component({
   imports: [FormsModule],
   selector: 'application-chat-detail',
@@ -193,8 +180,11 @@ export class ChatDetailApplicationComponent implements OnInit {
   /** Хранилище токенов. */
   private readonly _tokenStorage: TokenStorageService = inject(TokenStorageService);
 
-  /** WSS-сервис. */
+  /** WSS-сервис (статусы и события доставки). */
   private readonly _wss: WssService = inject(WssService);
+
+  /** Сервис событий чата (отправка, расшифровка, обмен ключами). */
+  private readonly _chatEvents: ChatEventsService = inject(ChatEventsService);
 
   /** DestroyRef для очистки подписок. */
   private readonly _destroyRef: DestroyRef = inject(DestroyRef);
@@ -205,8 +195,17 @@ export class ChatDetailApplicationComponent implements OnInit {
   /** ID текущей сессии (из JWT). */
   private _mySessionId: string = '';
 
-  /** Очередь оптимистично отправленных сообщений (FIFO). */
+  /**
+   * Очередь оптимистично отправленных сообщений в WSS (FIFO для message_sent).
+   * Только для сообщений, уже отправленных по WSS.
+   */
   private readonly _pendingSends: PendingSend[] = [];
+
+  /**
+   * Сообщения, набранные в период pending_key.
+   * Отправляются когда chatActivated$ сигнализирует о завершении обмена ключами.
+   */
+  private readonly _pendingKeySends: PendingSend[] = [];
 
   /** @inheritdoc */
   public ngOnInit(): void {
@@ -225,6 +224,7 @@ export class ChatDetailApplicationComponent implements OnInit {
     this._subscribeToMessageNew();
     this._subscribeToStatusUpdates();
     this._subscribeToChatDeleted();
+    this._subscribeToChatActivated();
     void this._load(chatId);
   }
 
@@ -242,7 +242,7 @@ export class ChatDetailApplicationComponent implements OnInit {
     void this._router.navigate(['/application/main/chats']);
   }
 
-  /** Отправить сообщение — оптимистичный UI + WSS. */
+  /** Отправить сообщение — оптимистичный UI + шифрование через ChatEventsService. */
   public sendMessage(): void {
     const text = this.messageText.trim();
     const currentChat = this.chat();
@@ -262,24 +262,18 @@ export class ChatDetailApplicationComponent implements OnInit {
     this.messages.update((msgs: readonly MessageItem[]): readonly MessageItem[] => [...msgs, optimistic]);
     this.messageText = '';
 
-    const pending: PendingSend = { tempId, content: text, createdAt: now };
-    this._pendingSends.push(pending);
-
-    /* eslint-disable @typescript-eslint/naming-convention -- snake_case соответствует API-контракту */
-    const sent = this._wss.send('send_message', {
-      chat_id: this._chatId,
-      encrypted_blob: textToBase64(text),
-    });
-    /* eslint-enable @typescript-eslint/naming-convention */
-
-    if (!sent) {
-      this._markFirstPendingFailed();
+    if (currentChat.pendingKey) {
+      this._pendingKeySends.push({ tempId, content: text, createdAt: now });
+      return;
     }
+
+    this._pendingSends.push({ tempId, content: text, createdAt: now });
+    void this._doSend(tempId, text);
   }
 
   /**
    * Повторная отправка упавшего сообщения.
-   * @param messageId - ID сообщения.
+   * @param messageId - ID сообщения со статусом failed.
    */
   public retryMessage(messageId: string): void {
     const msg = this.messages().find((m: MessageItem): boolean => m.id === messageId);
@@ -294,19 +288,8 @@ export class ChatDetailApplicationComponent implements OnInit {
       ),
     );
 
-    const pending: PendingSend = { tempId, content: msg.text, createdAt: now };
-    this._pendingSends.push(pending);
-
-    /* eslint-disable @typescript-eslint/naming-convention -- snake_case соответствует API-контракту */
-    const sent = this._wss.send('send_message', {
-      chat_id: this._chatId,
-      encrypted_blob: textToBase64(msg.text),
-    });
-    /* eslint-enable @typescript-eslint/naming-convention */
-
-    if (!sent) {
-      this._markFirstPendingFailed();
-    }
+    this._pendingSends.push({ tempId, content: msg.text, createdAt: now });
+    void this._doSend(tempId, msg.text);
   }
 
   /**
@@ -342,6 +325,33 @@ export class ChatDetailApplicationComponent implements OnInit {
     this.messages.set(withRead.map(mapMessage));
   }
 
+  /**
+   * Шифрует и отправляет сообщение через ChatEventsService.
+   * При ошибке (WSS отключён) помечает сообщение как failed.
+   * @param tempId - Временный ID оптимистичного сообщения.
+   * @param content - Открытый текст.
+   */
+  private async _doSend(tempId: string, content: string): Promise<void> {
+    const sent = await this._chatEvents.sendMessage(this._chatId, content);
+    if (!sent) {
+      this._failSend(tempId);
+    }
+  }
+
+  /**
+   * Помечает оптимистичное сообщение как failed и убирает из очереди.
+   * @param tempId - Временный ID сообщения.
+   */
+  private _failSend(tempId: string): void {
+    const idx = this._pendingSends.findIndex((p: PendingSend): boolean => p.tempId === tempId);
+    if (idx !== -1) this._pendingSends.splice(idx, 1);
+    this.messages.update((msgs: readonly MessageItem[]): readonly MessageItem[] =>
+      msgs.map((m: MessageItem): MessageItem =>
+        m.id === tempId ? { ...m, status: 'failed' as const } : m,
+      ),
+    );
+  }
+
   /** Подписывается на message_delivered и message_read для обновления статусов в UI. */
   private _subscribeToStatusUpdates(): void {
     const updateStatus = (data: WssMessageStatusData, status: 'delivered' | 'read'): void => {
@@ -358,21 +368,29 @@ export class ChatDetailApplicationComponent implements OnInit {
     this._destroyRef.onDestroy((): void => { subD.unsubscribe(); subR.unsubscribe(); });
   }
 
-  /** Подписывается на message_new от WssService для live-обновления UI. */
+  /** Подписывается на message_new: расшифровывает blob через ChatEventsService и обновляет UI. */
   private _subscribeToMessageNew(): void {
     const sub = this._wss.messageNew$.subscribe((data: WssMessageNewData): void => {
       if (data.chatId !== this._chatId) return;
-      const content = this._base64ToText(data.encryptedBlob);
-      const incoming: MessageItem = {
-        id: data.messageId,
-        text: content,
-        time: formatTime(Date.now()),
-        isOwn: false,
-        status: 'delivered',
-      };
-      this.messages.update((msgs: readonly MessageItem[]): readonly MessageItem[] => [...msgs, incoming]);
+      void this._onIncomingMessage(data);
     });
     this._destroyRef.onDestroy((): void => { sub.unsubscribe(); });
+  }
+
+  /**
+   * Расшифровывает и добавляет входящее сообщение в UI.
+   * @param data - Данные события message_new.
+   */
+  private async _onIncomingMessage(data: WssMessageNewData): Promise<void> {
+    const content = await this._chatEvents.decryptBlob(data.chatId, data.encryptedBlob);
+    const incoming: MessageItem = {
+      id: data.messageId,
+      text: content,
+      time: formatTime(Date.now()),
+      isOwn: false,
+      status: 'delivered',
+    };
+    this.messages.update((msgs: readonly MessageItem[]): readonly MessageItem[] => [...msgs, incoming]);
   }
 
   /** Подписывается на message_sent от WssService. */
@@ -412,20 +430,29 @@ export class ChatDetailApplicationComponent implements OnInit {
   }
 
   /**
-   * Декодирует base64-blob в UTF-8 текст (phase 1 — plaintext).
-   * @param blob - base64-строка.
-   * @returns Текст сообщения.
+   * Подписывается на chatActivated$: когда обмен ключами завершён —
+   * обновляет UI и отправляет сообщения из pending_key очереди.
    */
-  private _base64ToText(blob: string): string {
-    try {
-      const binary = atob(blob);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) {
-        bytes[i] = binary.charCodeAt(i) & 0xff;
-      }
-      return new TextDecoder().decode(bytes);
-    } catch {
-      return '[не удалось расшифровать]';
+  private _subscribeToChatActivated(): void {
+    const sub = this._chatEvents.chatActivated$.subscribe((chatId: string): void => {
+      if (chatId !== this._chatId) return;
+      this.chat.update((c: ChatDetailView | null): ChatDetailView | null =>
+        c !== null ? { ...c, pendingKey: false } : null,
+      );
+      this._flushPendingKeySends();
+    });
+    this._destroyRef.onDestroy((): void => { sub.unsubscribe(); });
+  }
+
+  /**
+   * Отправляет все сообщения, набранные в период pending_key.
+   * Вызывается когда chatActivated$ эмитирует chatId текущего чата.
+   */
+  private _flushPendingKeySends(): void {
+    const toSend = this._pendingKeySends.splice(0);
+    for (const item of toSend) {
+      this._pendingSends.push(item);
+      void this._doSend(item.tempId, item.content);
     }
   }
 
@@ -438,16 +465,5 @@ export class ChatDetailApplicationComponent implements OnInit {
       );
     });
     this._destroyRef.onDestroy((): void => { sub.unsubscribe(); });
-  }
-
-  /** Помечает первое ожидающее сообщение как failed. */
-  private _markFirstPendingFailed(): void {
-    const pending = this._pendingSends.shift();
-    if (pending === undefined) return;
-    this.messages.update((msgs: readonly MessageItem[]): readonly MessageItem[] =>
-      msgs.map((m: MessageItem): MessageItem =>
-        m.id === pending.tempId ? { ...m, status: 'failed' } : m,
-      ),
-    );
   }
 }
