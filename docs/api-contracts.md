@@ -576,6 +576,34 @@ Response 200:
 
 ## HTTP — Chat
 
+### `GET /api/v1/chat/read-list`
+Список чатов текущей сессии с данными собеседника. Auth required.
+
+Response 200:
+```json
+[
+  {
+    "id": "...",
+    "name": "фильмы",
+    "status": "active",
+    "created_at": "2025-01-01T00:00:00.000Z",
+    "peer": {
+      "session_id": "...",
+      "system_name": "iPhone 14 Pro",
+      "device_nickname": "Мой айфон" | null,
+      "account_id": "...",
+      "uin": "12345" | null,
+      "nickname": "Иван" | null,
+      "username": "ivan" | null
+    }
+  }
+]
+```
+
+Сортировка: новые чаты первыми (`created_at DESC`). Пустой массив если чатов нет.
+
+---
+
 ### `POST /api/v1/chat/create`
 Создание чата между текущей сессией и выбранным устройством собеседника. Auth required.
 

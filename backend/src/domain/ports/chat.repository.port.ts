@@ -1,4 +1,4 @@
-import type { ChatEntity, CreateChatData } from '../entities/chat.entity';
+import type { ChatEntity, ChatListItem, CreateChatData } from '../entities/chat.entity';
 
 /** Порт (абстракция) для операций с чатами — реализуется в слое персистентности. */
 export abstract class ChatRepository {
@@ -8,6 +8,13 @@ export abstract class ChatRepository {
    * @returns Сущность чата или null если не найден.
    */
   public abstract findById(id: string): Promise<ChatEntity | null>;
+
+  /**
+   * Возвращает список чатов сессии с данными собеседника.
+   * @param sessionId - ID сессии чьи чаты запрашиваются.
+   * @returns Список чатов с peer-инфо, отсортированных по дате создания (новые первые).
+   */
+  public abstract findListBySessionId(sessionId: string): Promise<ChatListItem[]>;
 
   /**
    * Создаёт и сохраняет новый чат.

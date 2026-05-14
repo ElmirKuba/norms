@@ -25,6 +25,35 @@ export interface ChatEntity {
   readonly updatedAt: Date;
 }
 
+/** Элемент списка чатов с данными собеседника. */
+export interface ChatListItem {
+  /** ID чата. */
+  readonly id: string;
+  /** Название чата. */
+  readonly name: string;
+  /** Статус обмена ключами. */
+  readonly status: ChatStatus;
+  /** Дата создания чата. */
+  readonly createdAt: Date;
+  /** Данные сессии-собеседника. */
+  readonly peer: {
+    /** ID сессии собеседника. */
+    readonly sessionId: string;
+    /** Системное имя устройства собеседника. */
+    readonly systemName: string;
+    /** Прозвище устройства собеседника или null. */
+    readonly deviceNickname: string | null;
+    /** ID аккаунта собеседника. */
+    readonly accountId: string;
+    /** UIN собеседника или null (ещё не назначен). */
+    readonly uin: string | null;
+    /** Никнейм аккаунта собеседника или null. */
+    readonly nickname: string | null;
+    /** Username собеседника или null. */
+    readonly username: string | null;
+  };
+}
+
 /** Данные для создания нового чата. */
 export interface CreateChatData {
   /** Название чата. */

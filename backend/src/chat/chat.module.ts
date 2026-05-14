@@ -3,11 +3,12 @@ import { AuthModule } from '../auth/auth.module';
 import { PersistenceModule } from '../persistence/persistence.module';
 import { ChatController } from './chat.controller';
 import { CreateChatUseCase } from './use-cases/create-chat.use-case';
+import { ReadChatListUseCase } from './use-cases/read-chat-list.use-case';
 
 /** Модуль чатов. */
 @Module({
   imports: [AuthModule, PersistenceModule],
   controllers: [ChatController],
-  providers: [CreateChatUseCase],
+  providers: [CreateChatUseCase, ReadChatListUseCase],
 })
 export class ChatModule {}
