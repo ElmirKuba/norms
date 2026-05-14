@@ -129,12 +129,18 @@ CREATE TABLE IF NOT EXISTS messages (
 );
 CREATE INDEX IF NOT EXISTS messages_chat_id_created_at_idx ON messages(chat_id, created_at);
 CREATE TABLE IF NOT EXISTS chat_keys (
-  chat_id            TEXT PRIMARY KEY,
-  encrypted_key      TEXT NOT NULL DEFAULT '',
-  key_iv             TEXT NOT NULL DEFAULT '',
-  encrypted_priv_key TEXT,
-  priv_key_iv        TEXT,
-  created_at         INTEGER NOT NULL
+  chat_id                       TEXT PRIMARY KEY,
+  encrypted_key                 TEXT NOT NULL DEFAULT '',
+  key_iv                        TEXT NOT NULL DEFAULT '',
+  encrypted_priv_key            TEXT,
+  priv_key_iv                   TEXT,
+  prev_encrypted_key            TEXT NOT NULL DEFAULT '',
+  prev_key_iv                   TEXT NOT NULL DEFAULT '',
+  my_ratchet_encrypted_priv_key TEXT,
+  my_ratchet_priv_key_iv        TEXT,
+  my_ratchet_pub_key            TEXT,
+  peer_ratchet_pub_key          TEXT,
+  created_at                    INTEGER NOT NULL
 );
 `.trim();
 
@@ -154,11 +160,20 @@ function getDb(accountId: string): Database.Database {
 ipcMain.handle('localdb:init', (_event, accountId: string): void => {
   const db = getDb(accountId);
   db.exec(LOCAL_DB_SCHEMA);
-  // Migration: добавить колонки приватного ключа если их нет (для существующих БД)
+  // Migration: добавить колонки если их нет (для существующих БД)
   const cols = db.pragma('table_info(chat_keys)') as ReadonlyArray<{ readonly name: string }>;
-  if (!cols.some((c) => c.name === 'encrypted_priv_key')) {
+  const colNames = new Set(cols.map((c) => c.name));
+  if (!colNames.has('encrypted_priv_key')) {
     db.exec('ALTER TABLE chat_keys ADD COLUMN encrypted_priv_key TEXT');
     db.exec('ALTER TABLE chat_keys ADD COLUMN priv_key_iv TEXT');
+  }
+  if (!colNames.has('prev_encrypted_key')) {
+    db.exec("ALTER TABLE chat_keys ADD COLUMN prev_encrypted_key TEXT NOT NULL DEFAULT ''");
+    db.exec("ALTER TABLE chat_keys ADD COLUMN prev_key_iv TEXT NOT NULL DEFAULT ''");
+    db.exec('ALTER TABLE chat_keys ADD COLUMN my_ratchet_encrypted_priv_key TEXT');
+    db.exec('ALTER TABLE chat_keys ADD COLUMN my_ratchet_priv_key_iv TEXT');
+    db.exec('ALTER TABLE chat_keys ADD COLUMN my_ratchet_pub_key TEXT');
+    db.exec('ALTER TABLE chat_keys ADD COLUMN peer_ratchet_pub_key TEXT');
   }
 });
 

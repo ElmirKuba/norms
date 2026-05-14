@@ -36,14 +36,26 @@ CREATE TABLE IF NOT EXISTS messages (
 CREATE INDEX IF NOT EXISTS messages_chat_id_created_at_idx ON messages(chat_id, created_at);
 
 CREATE TABLE IF NOT EXISTS chat_keys (
-  chat_id              TEXT PRIMARY KEY,
-  encrypted_key        TEXT NOT NULL DEFAULT '',
-  key_iv               TEXT NOT NULL DEFAULT '',
-  encrypted_priv_key   TEXT,
-  priv_key_iv          TEXT,
-  created_at           INTEGER NOT NULL
+  chat_id                       TEXT PRIMARY KEY,
+  encrypted_key                 TEXT NOT NULL DEFAULT '',
+  key_iv                        TEXT NOT NULL DEFAULT '',
+  encrypted_priv_key            TEXT,
+  priv_key_iv                   TEXT,
+  prev_encrypted_key            TEXT NOT NULL DEFAULT '',
+  prev_key_iv                   TEXT NOT NULL DEFAULT '',
+  my_ratchet_encrypted_priv_key TEXT,
+  my_ratchet_priv_key_iv        TEXT,
+  my_ratchet_pub_key            TEXT,
+  peer_ratchet_pub_key          TEXT,
+  created_at                    INTEGER NOT NULL
 );
 
 ALTER TABLE chat_keys ADD COLUMN IF NOT EXISTS encrypted_priv_key TEXT;
 ALTER TABLE chat_keys ADD COLUMN IF NOT EXISTS priv_key_iv TEXT;
+ALTER TABLE chat_keys ADD COLUMN IF NOT EXISTS prev_encrypted_key TEXT NOT NULL DEFAULT '';
+ALTER TABLE chat_keys ADD COLUMN IF NOT EXISTS prev_key_iv TEXT NOT NULL DEFAULT '';
+ALTER TABLE chat_keys ADD COLUMN IF NOT EXISTS my_ratchet_encrypted_priv_key TEXT;
+ALTER TABLE chat_keys ADD COLUMN IF NOT EXISTS my_ratchet_priv_key_iv TEXT;
+ALTER TABLE chat_keys ADD COLUMN IF NOT EXISTS my_ratchet_pub_key TEXT;
+ALTER TABLE chat_keys ADD COLUMN IF NOT EXISTS peer_ratchet_pub_key TEXT;
 `.trim();

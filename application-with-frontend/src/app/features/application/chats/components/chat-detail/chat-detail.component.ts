@@ -7,7 +7,7 @@ import { LocalChatRepository } from '../../../../../core/services/local-db/local
 import type { LocalChatWithPeer, LocalMessage, LocalMessageStatus } from '../../../../../core/services/local-db/local-db.types';
 import { TokenStorageService } from '../../../../../core/services/storage/token-storage.service';
 import { WssService } from '../../../../../core/services/wss/wss.service';
-import type { WssChatDeletedData, WssMessageSentData, WssMessageNewData, WssMessageStatusData } from '../../../../../core/services/wss/wss.service';
+import type { WssChatDeletedData, WssMessageSentData, WssMessageStatusData } from '../../../../../core/services/wss/wss.service';
 import { ChatEventsService } from '../../../../../core/services/chat/chat-events.service';
 import { avatarColorForId } from '../../../search/services/search-api.service';
 
@@ -368,29 +368,23 @@ export class ChatDetailApplicationComponent implements OnInit {
     this._destroyRef.onDestroy((): void => { subD.unsubscribe(); subR.unsubscribe(); });
   }
 
-  /** Подписывается на message_new: расшифровывает blob через ChatEventsService и обновляет UI. */
+  /**
+   * Подписывается на incomingMessage$ из ChatEventsService.
+   * Сообщение уже расшифровано и сохранено в SQLite — только обновляем UI.
+   */
   private _subscribeToMessageNew(): void {
-    const sub = this._wss.messageNew$.subscribe((data: WssMessageNewData): void => {
-      if (data.chatId !== this._chatId) return;
-      void this._onIncomingMessage(data);
+    const sub = this._chatEvents.incomingMessage$.subscribe((msg: LocalMessage): void => {
+      if (msg.chatId !== this._chatId) return;
+      const incoming: MessageItem = {
+        id: msg.id,
+        text: msg.content,
+        time: formatTime(msg.createdAt),
+        isOwn: false,
+        status: 'delivered',
+      };
+      this.messages.update((msgs: readonly MessageItem[]): readonly MessageItem[] => [...msgs, incoming]);
     });
     this._destroyRef.onDestroy((): void => { sub.unsubscribe(); });
-  }
-
-  /**
-   * Расшифровывает и добавляет входящее сообщение в UI.
-   * @param data - Данные события message_new.
-   */
-  private async _onIncomingMessage(data: WssMessageNewData): Promise<void> {
-    const content = await this._chatEvents.decryptBlob(data.chatId, data.encryptedBlob);
-    const incoming: MessageItem = {
-      id: data.messageId,
-      text: content,
-      time: formatTime(Date.now()),
-      isOwn: false,
-      status: 'delivered',
-    };
-    this.messages.update((msgs: readonly MessageItem[]): readonly MessageItem[] => [...msgs, incoming]);
   }
 
   /** Подписывается на message_sent от WssService. */

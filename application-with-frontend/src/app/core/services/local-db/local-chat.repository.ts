@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 
 import { LocalDbService } from './local-db.service';
-import type { LocalChat, LocalChatKey, LocalChatWithPeer, LocalMessage, LocalMessageStatus, LocalChatStatus, LocalPeerDevice } from './local-db.types';
+import type { LocalChat, LocalChatKey, LocalChatKeyRatchetUpdate, LocalChatWithPeer, LocalMessage, LocalMessageStatus, LocalChatStatus, LocalPeerDevice } from './local-db.types';
 
 /* eslint-disable @typescript-eslint/naming-convention */
 /** Строка из таблицы chat_keys. */
@@ -16,6 +16,18 @@ interface RawChatKey {
   readonly encrypted_priv_key: string | null;
   /** IV ECDH приватного ключа (base64). null после обмена. */
   readonly priv_key_iv: string | null;
+  /** Предыдущий AES-ключ (base64). Пустая строка если нет. */
+  readonly prev_encrypted_key: string;
+  /** IV предыдущего AES-ключа (base64). */
+  readonly prev_key_iv: string;
+  /** Рачет-приватный ключ (base64, wrapped). null до первой генерации. */
+  readonly my_ratchet_encrypted_priv_key: string | null;
+  /** IV рачет-приватного ключа (base64). null если my_ratchet_encrypted_priv_key = null. */
+  readonly my_ratchet_priv_key_iv: string | null;
+  /** Рачет-публичный ключ (base64). null до первой генерации. */
+  readonly my_ratchet_pub_key: string | null;
+  /** Последний полученный рачет-публичный ключ собеседника (base64). null до первого входящего. */
+  readonly peer_ratchet_pub_key: string | null;
   /** Unix-время создания (мс). */
   readonly created_at: number;
 }
@@ -313,15 +325,63 @@ export class LocalChatRepository {
   /**
    * Вставляет или заменяет запись ключей чата.
    * В pending_key фазе: encryptedKey/keyIv = '', encryptedPrivKey/privKeyIv — зашифрованный ECDH ключ.
-   * После обмена: encryptedKey/keyIv — AES-ключ, encryptedPrivKey/privKeyIv = null.
+   * После обмена: encryptedKey/keyIv — AES-ключ, encryptedPrivKey/privKeyIv = null, рачет-поля заполнены.
    * @param key - Данные ключей.
    */
   public async saveChatKey(key: LocalChatKey): Promise<void> {
     await this._db.run(
-      `INSERT OR REPLACE INTO chat_keys
-         (chat_id, encrypted_key, key_iv, encrypted_priv_key, priv_key_iv, created_at)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [key.chatId, key.encryptedKey, key.keyIv, key.encryptedPrivKey, key.privKeyIv, key.createdAt],
+      `INSERT OR REPLACE INTO chat_keys (
+         chat_id, encrypted_key, key_iv, encrypted_priv_key, priv_key_iv,
+         prev_encrypted_key, prev_key_iv,
+         my_ratchet_encrypted_priv_key, my_ratchet_priv_key_iv, my_ratchet_pub_key,
+         peer_ratchet_pub_key, created_at
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        key.chatId,
+        key.encryptedKey,
+        key.keyIv,
+        key.encryptedPrivKey,
+        key.privKeyIv,
+        key.prevEncryptedKey,
+        key.prevKeyIv,
+        key.myRatchetEncryptedPrivKey,
+        key.myRatchetPrivKeyIv,
+        key.myRatchetPubKey,
+        key.peerRatchetPubKey,
+        key.createdAt,
+      ],
+    );
+  }
+
+  /**
+   * Атомарно обновляет рачет-состояние chat_keys после DH-шага.
+   * Меняет AES-ключ, сохраняет предыдущий, обновляет рачет-пару и peer_ratchet_pub_key.
+   * @param chatId - ID чата.
+   * @param update - Новые значения рачет-полей.
+   */
+  public async updateChatKeyRatchet(chatId: string, update: LocalChatKeyRatchetUpdate): Promise<void> {
+    await this._db.run(
+      `UPDATE chat_keys SET
+         encrypted_key = ?,
+         key_iv = ?,
+         prev_encrypted_key = ?,
+         prev_key_iv = ?,
+         my_ratchet_encrypted_priv_key = ?,
+         my_ratchet_priv_key_iv = ?,
+         my_ratchet_pub_key = ?,
+         peer_ratchet_pub_key = ?
+       WHERE chat_id = ?`,
+      [
+        update.encryptedKey,
+        update.keyIv,
+        update.prevEncryptedKey,
+        update.prevKeyIv,
+        update.myRatchetEncryptedPrivKey,
+        update.myRatchetPrivKeyIv,
+        update.myRatchetPubKey,
+        update.peerRatchetPubKey,
+        chatId,
+      ],
     );
   }
 
@@ -332,7 +392,11 @@ export class LocalChatRepository {
    */
   public async getChatKey(chatId: string): Promise<LocalChatKey | null> {
     const row = await this._db.get<RawChatKey>(
-      `SELECT chat_id, encrypted_key, key_iv, encrypted_priv_key, priv_key_iv, created_at
+      `SELECT
+         chat_id, encrypted_key, key_iv, encrypted_priv_key, priv_key_iv,
+         prev_encrypted_key, prev_key_iv,
+         my_ratchet_encrypted_priv_key, my_ratchet_priv_key_iv,
+         my_ratchet_pub_key, peer_ratchet_pub_key, created_at
        FROM chat_keys WHERE chat_id = ?`,
       [chatId],
     );
@@ -343,6 +407,12 @@ export class LocalChatRepository {
       keyIv: row.key_iv,
       encryptedPrivKey: row.encrypted_priv_key,
       privKeyIv: row.priv_key_iv,
+      prevEncryptedKey: row.prev_encrypted_key,
+      prevKeyIv: row.prev_key_iv,
+      myRatchetEncryptedPrivKey: row.my_ratchet_encrypted_priv_key,
+      myRatchetPrivKeyIv: row.my_ratchet_priv_key_iv,
+      myRatchetPubKey: row.my_ratchet_pub_key,
+      peerRatchetPubKey: row.peer_ratchet_pub_key,
       createdAt: row.created_at,
     };
   }

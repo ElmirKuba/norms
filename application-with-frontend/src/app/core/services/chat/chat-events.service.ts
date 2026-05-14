@@ -11,8 +11,10 @@ import { ChatApiService } from './chat-api.service';
 
 /**
  * Глобальный обработчик WSS-событий чата.
- * Отвечает за: получение и расшифровку входящих сообщений, отправку исходящих,
- * обмен ECDH-ключами (chat_key_ready / chat_key_request) и ведение in-memory AES-кеша.
+ *
+ * Отвечает за: получение и расшифровку входящих сообщений, шифрование исходящих,
+ * обмен ECDH-ключами (chat_key_ready / chat_key_request), Double Ratchet (DH-шаг
+ * при каждом новом рачет-ключе собеседника) и ведение in-memory AES-кеша.
  * Активируется один раз в APP_INITIALIZER через init().
  */
 @Injectable({ providedIn: 'root' })
@@ -22,6 +24,12 @@ export class ChatEventsService {
    * ChatDetailComponent подписывается для сброса сообщений из pending_key очереди.
    */
   public readonly chatActivated$: Subject<string> = new Subject<string>();
+
+  /**
+   * Эмитирует LocalMessage после расшифровки и сохранения входящего сообщения в SQLite.
+   * ChatDetailComponent подписывается для отображения новых сообщений без повторного decrypt.
+   */
+  public readonly incomingMessage$: Subject<LocalMessage> = new Subject<LocalMessage>();
 
   /** WSS-сервис. */
   private readonly _wss: WssService = inject(WssService);
@@ -39,8 +47,8 @@ export class ChatEventsService {
   private readonly _chatApi: ChatApiService = inject(ChatApiService);
 
   /**
-   * In-memory кэш AES-ключей чатов.
-   * Заполняется при: 1) chat_key_ready (новый обмен); 2) первом decrypt/send (из SQLite).
+   * In-memory кэш AES-ключей чатов (текущий ключ).
+   * Обновляется при: 1) завершении ECDH-обмена; 2) каждом DH-рачет-шаге; 3) первом decrypt/send (из SQLite).
    * Очищается при logout (сервис singleton, пересоздаётся при перезагрузке).
    */
   private readonly _aesKeyCache: Map<string, CryptoKey> = new Map<string, CryptoKey>();
@@ -72,15 +80,19 @@ export class ChatEventsService {
 
   /**
    * Шифрует content и отправляет по WSS send_message.
+   * Всегда включает текущий рачет-публичный ключ в заголовок для Double Ratchet.
    * @param chatId - ID активного чата.
    * @param content - Открытый текст сообщения.
-   * @returns true если сообщение отправлено, false если WSS не подключён.
+   * @returns true если сообщение отправлено, false если WSS не подключён или нет AES-ключа.
    */
   public async sendMessage(chatId: string, content: string): Promise<boolean> {
     const aesKey = await this._getAesKey(chatId);
     if (aesKey === null) return false;
 
-    const encryptedBlob = await this._crypto.encrypt(content, aesKey);
+    const keyRecord = await this._chatRepo.getChatKey(chatId);
+    const ratchetPubKey = keyRecord?.myRatchetPubKey ?? null;
+
+    const encryptedBlob = await this._crypto.encryptMessage(content, aesKey, ratchetPubKey);
 
     /* eslint-disable @typescript-eslint/naming-convention -- snake_case соответствует API-контракту */
     return this._wss.send('send_message', {
@@ -88,23 +100,6 @@ export class ChatEventsService {
       encrypted_blob: encryptedBlob,
     });
     /* eslint-enable @typescript-eslint/naming-convention */
-  }
-
-  /**
-   * Расшифровывает AES-256-GCM blob в текст.
-   * При отсутствии ключа или ошибке расшифровки — возвращает заглушку.
-   * @param chatId - ID чата (для поиска AES-ключа).
-   * @param blob - base64-blob формата [iv:12][ciphertext+tag].
-   * @returns Расшифрованный текст или '[зашифровано]'.
-   */
-  public async decryptBlob(chatId: string, blob: string): Promise<string> {
-    const aesKey = await this._getAesKey(chatId);
-    if (aesKey === null) return '[зашифровано]';
-    try {
-      return await this._crypto.decrypt(blob, aesKey);
-    } catch {
-      return '[не удалось расшифровать]';
-    }
   }
 
   /**
@@ -127,8 +122,149 @@ export class ChatEventsService {
   }
 
   /**
+   * Расшифровывает входящий blob с поддержкой Double Ratchet и fallback на предыдущий ключ.
+   *
+   * Порядок попыток:
+   * 1. Текущий AES-ключ — стандартный случай.
+   * 2. Кандидат от DH-рачета — если текущий не подошёл, а собеседник прислал новый рачет-ключ.
+   * 3. Предыдущий AES-ключ — для сообщений «в пути» отправленных до нашего рачет-шага.
+   * @param chatId - ID чата.
+   * @param blob - base64 зашифрованного blob.
+   * @returns Расшифрованный текст или строка-заглушка.
+   */
+  private async _decryptIncoming(chatId: string, blob: string): Promise<string> {
+    const keyRecord = await this._chatRepo.getChatKey(chatId);
+    if (keyRecord === null || keyRecord.encryptedKey === '') return '[зашифровано]';
+
+    const masterKey = await this._masterKey.getOrCreate();
+
+    let currentKey = this._aesKeyCache.get(chatId);
+    if (currentKey === undefined) {
+      currentKey = await this._crypto.unwrapAesKey(keyRecord.encryptedKey, keyRecord.keyIv, masterKey);
+      this._aesKeyCache.set(chatId, currentKey);
+    }
+
+    // Попытка 1: текущий ключ
+    try {
+      const result = await this._crypto.decryptMessage(blob, currentKey);
+      if (this._isPeerRatchetKeyNew(result.peerRatchetPubKeyBase64, keyRecord)) {
+        await this._advanceRatchet(chatId, keyRecord, result.peerRatchetPubKeyBase64, masterKey);
+      }
+      return result.content;
+    } catch { /* текущий ключ не подошёл */ }
+
+    // Попытка 2: DH-рачет-кандидат (собеседник уже провёл рачет, мы ещё нет)
+    const peerNewPub = this._crypto.parseRatchetPubKey(blob);
+    if (
+      this._isPeerRatchetKeyNew(peerNewPub, keyRecord) &&
+      keyRecord.myRatchetEncryptedPrivKey !== null &&
+      keyRecord.myRatchetPrivKeyIv !== null
+    ) {
+      const myRatchetPriv = await this._crypto.unwrapEcdhPrivateKey(
+        keyRecord.myRatchetEncryptedPrivKey,
+        keyRecord.myRatchetPrivKeyIv,
+        masterKey,
+      );
+      const peerPub = await this._crypto.importPublicKey(peerNewPub);
+      const candidateKey = await this._crypto.deriveRatchetAesKey(myRatchetPriv, peerPub);
+      try {
+        const result = await this._crypto.decryptMessage(blob, candidateKey);
+        // Кандидат подошёл — фиксируем рачет-шаг
+        this._aesKeyCache.set(chatId, candidateKey);
+        await this._commitRatchet(chatId, keyRecord, peerNewPub, candidateKey, masterKey);
+        return result.content;
+      } catch { /* кандидат не подошёл */ }
+    }
+
+    // Попытка 3: предыдущий ключ (сообщение «в пути» до нашего рачет-шага)
+    if (keyRecord.prevEncryptedKey !== '') {
+      try {
+        const prevKey = await this._crypto.unwrapAesKey(keyRecord.prevEncryptedKey, keyRecord.prevKeyIv, masterKey);
+        const result = await this._crypto.decryptMessage(blob, prevKey);
+        return result.content;
+      } catch { /* предыдущий ключ не подошёл */ }
+    }
+
+    return '[не удалось расшифровать]';
+  }
+
+  /**
+   * Проверяет, является ли рачет-публичный ключ собеседника новым (ранее не виденным).
+   * @param peerPubKeyBase64 - Полученный рачет-ключ собеседника или null.
+   * @param keyRecord - Текущая запись ключей чата из SQLite.
+   * @returns true если ключ новый и требует DH-рачет-шага.
+   */
+  private _isPeerRatchetKeyNew(
+    peerPubKeyBase64: string | null,
+    keyRecord: LocalChatKey,
+  ): peerPubKeyBase64 is string {
+    return peerPubKeyBase64 !== null && peerPubKeyBase64 !== keyRecord.peerRatchetPubKey;
+  }
+
+  /**
+   * Выполняет DH-рачет-шаг: выводит новый AES-ключ и генерирует новую рачет-пару.
+   * Вызывается когда расшифровка удалась текущим ключом, но собеседник прислал новый рачет-ключ.
+   * @param chatId - ID чата.
+   * @param keyRecord - Текущая запись ключей из SQLite.
+   * @param peerNewPubKeyBase64 - Новый рачет-публичный ключ собеседника (base64).
+   * @param masterKey - Мастер-ключ устройства.
+   */
+  private async _advanceRatchet(
+    chatId: string,
+    keyRecord: LocalChatKey,
+    peerNewPubKeyBase64: string,
+    masterKey: CryptoKey,
+  ): Promise<void> {
+    if (keyRecord.myRatchetEncryptedPrivKey === null || keyRecord.myRatchetPrivKeyIv === null) return;
+
+    const myRatchetPriv = await this._crypto.unwrapEcdhPrivateKey(
+      keyRecord.myRatchetEncryptedPrivKey,
+      keyRecord.myRatchetPrivKeyIv,
+      masterKey,
+    );
+    const peerNewPub = await this._crypto.importPublicKey(peerNewPubKeyBase64);
+    const newAesKey = await this._crypto.deriveRatchetAesKey(myRatchetPriv, peerNewPub);
+    this._aesKeyCache.set(chatId, newAesKey);
+    await this._commitRatchet(chatId, keyRecord, peerNewPubKeyBase64, newAesKey, masterKey);
+  }
+
+  /**
+   * Фиксирует результат рачет-шага в SQLite: записывает новый AES-ключ,
+   * перемещает текущий в prev и генерирует новую рачет-пару.
+   * @param chatId - ID чата.
+   * @param keyRecord - Запись ключей до рачет-шага (для prev_key).
+   * @param peerNewPubKeyBase64 - Новый рачет-публичный ключ собеседника (base64).
+   * @param newAesKey - Новый AES-ключ (уже вычисленный).
+   * @param masterKey - Мастер-ключ устройства.
+   */
+  private async _commitRatchet(
+    chatId: string,
+    keyRecord: LocalChatKey,
+    peerNewPubKeyBase64: string,
+    newAesKey: CryptoKey,
+    masterKey: CryptoKey,
+  ): Promise<void> {
+    const newRatchetPair = await this._crypto.generateEcdhKeyPair();
+    const newRatchetPubBase64 = await this._crypto.exportPublicKey(newRatchetPair.publicKey);
+    const wrappedNewRatchetPriv = await this._crypto.wrapEcdhPrivateKey(newRatchetPair.privateKey, masterKey);
+    const wrappedNewAes = await this._crypto.wrapAesKey(newAesKey, masterKey);
+
+    await this._chatRepo.updateChatKeyRatchet(chatId, {
+      encryptedKey: wrappedNewAes.encryptedKey,
+      keyIv: wrappedNewAes.keyIv,
+      prevEncryptedKey: keyRecord.encryptedKey,
+      prevKeyIv: keyRecord.keyIv,
+      myRatchetEncryptedPrivKey: wrappedNewRatchetPriv.encryptedKey,
+      myRatchetPrivKeyIv: wrappedNewRatchetPriv.keyIv,
+      myRatchetPubKey: newRatchetPubBase64,
+      peerRatchetPubKey: peerNewPubKeyBase64,
+    });
+  }
+
+  /**
    * Обмен ключами завершён: обе стороны загрузили публичные ключи.
-   * Извлекает наш приватный ключ, выводит AES-ключ, кэширует, сохраняет в SQLite.
+   * Извлекает наш приватный ключ, выводит AES-ключ, генерирует первую рачет-пару,
+   * кэширует и сохраняет в SQLite.
    * @param data - Данные события chat_key_ready.
    */
   private async _handleChatKeyReady(data: WssChatKeyReadyData): Promise<void> {
@@ -150,13 +286,24 @@ export class ChatEventsService {
 
     this._aesKeyCache.set(chatId, aesKey);
 
-    const wrapped = await this._crypto.wrapAesKey(aesKey, masterKey);
+    // Генерируем первую рачет-пару для Double Ratchet
+    const ratchetPair = await this._crypto.generateEcdhKeyPair();
+    const ratchetPubBase64 = await this._crypto.exportPublicKey(ratchetPair.publicKey);
+    const wrappedRatchetPriv = await this._crypto.wrapEcdhPrivateKey(ratchetPair.privateKey, masterKey);
+    const wrappedAes = await this._crypto.wrapAesKey(aesKey, masterKey);
+
     const updatedKey: LocalChatKey = {
       chatId,
-      encryptedKey: wrapped.encryptedKey,
-      keyIv: wrapped.keyIv,
+      encryptedKey: wrappedAes.encryptedKey,
+      keyIv: wrappedAes.keyIv,
       encryptedPrivKey: null,
       privKeyIv: null,
+      prevEncryptedKey: '',
+      prevKeyIv: '',
+      myRatchetEncryptedPrivKey: wrappedRatchetPriv.encryptedKey,
+      myRatchetPrivKeyIv: wrappedRatchetPriv.keyIv,
+      myRatchetPubKey: ratchetPubBase64,
+      peerRatchetPubKey: null,
       createdAt: keyRecord.createdAt,
     };
     await this._chatRepo.saveChatKey(updatedKey);
@@ -166,7 +313,7 @@ export class ChatEventsService {
   }
 
   /**
-   * Первый из двух участников загрузил ключ: генерируем своту пару, отвечаем.
+   * Первый из двух участников загрузил ключ: генерируем свою пару, отвечаем.
    * После нашего submit-key сервер пришлёт chat_key_ready обеим сторонам.
    * @param data - Данные события chat_key_request.
    */
@@ -187,18 +334,25 @@ export class ChatEventsService {
       keyIv: '',
       encryptedPrivKey: wrapped.encryptedKey,
       privKeyIv: wrapped.keyIv,
+      prevEncryptedKey: '',
+      prevKeyIv: '',
+      myRatchetEncryptedPrivKey: null,
+      myRatchetPrivKeyIv: null,
+      myRatchetPubKey: null,
+      peerRatchetPubKey: null,
       createdAt: Date.now(),
     };
     await this._chatRepo.saveChatKey(chatKey);
-    // chat_key_ready придёт следом → _handleChatKeyReady завершит деривацию
+    // chat_key_ready придёт следом → _handleChatKeyReady сгенерирует рачет-пару
   }
 
   /**
-   * Расшифровывает входящее сообщение, сохраняет в SQLite и подтверждает доставку.
+   * Расшифровывает входящее сообщение, сохраняет в SQLite,
+   * эмитирует incomingMessage$ и подтверждает доставку по WSS.
    * @param data - Данные события message_new.
    */
   private async _handleMessageNew(data: WssMessageNewData): Promise<void> {
-    const content = await this.decryptBlob(data.chatId, data.encryptedBlob);
+    const content = await this._decryptIncoming(data.chatId, data.encryptedBlob);
 
     const msg: LocalMessage = {
       id: data.messageId,
@@ -212,6 +366,8 @@ export class ChatEventsService {
 
     await this._chatRepo.saveMessage(msg);
     await this._chatRepo.updateChatStatus(data.chatId, 'active');
+
+    this.incomingMessage$.next(msg);
 
     /* eslint-disable @typescript-eslint/naming-convention -- snake_case соответствует API-контракту */
     this._wss.send('message_delivered', {

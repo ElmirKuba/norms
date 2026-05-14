@@ -44,7 +44,7 @@ export interface LocalChatWithPeer extends LocalChat {
   readonly peer: LocalPeerDevice | null;
 }
 
-/** Ключи чата в локальной SQLite. В период pending_key хранит ECDH-приватный ключ, после обмена — AES-ключ. */
+/** Ключи чата в локальной SQLite. В период pending_key хранит ECDH-приватный ключ, после обмена — AES-ключ и рачет-состояние. */
 export interface LocalChatKey {
   /** ID чата. */
   readonly chatId: string;
@@ -59,8 +59,56 @@ export interface LocalChatKey {
   readonly encryptedPrivKey: string | null;
   /** IV оборачивания ECDH приватного ключа (base64). null после обмена. */
   readonly privKeyIv: string | null;
+  /**
+   * Предыдущий AES-ключ (base64, wrapped мастер-ключом).
+   * Используется для расшифровки сообщений «в пути» при рачет-ротации.
+   * Пустая строка '' если предыдущего ключа нет.
+   */
+  readonly prevEncryptedKey: string;
+  /** IV предыдущего AES-ключа (base64). Пустая строка '' если нет предыдущего. */
+  readonly prevKeyIv: string;
+  /**
+   * Текущий рачет-приватный ключ (base64, pkcs8, wrapped мастер-ключом).
+   * Используется для DH-шага при получении нового публичного ключа собеседника.
+   * null до первой генерации или после рачет-шага с новым ключом.
+   */
+  readonly myRatchetEncryptedPrivKey: string | null;
+  /** IV оборачивания рачет-приватного ключа (base64). null если myRatchetEncryptedPrivKey = null. */
+  readonly myRatchetPrivKeyIv: string | null;
+  /**
+   * Текущий рачет-публичный ключ (base64, raw 32 байта).
+   * Включается в заголовок каждого исходящего сообщения.
+   * null до первой генерации.
+   */
+  readonly myRatchetPubKey: string | null;
+  /**
+   * Последний полученный рачет-публичный ключ собеседника (base64).
+   * Используется для детектирования нового ключа и предотвращения повторных рачет-шагов.
+   * null до получения первого сообщения с рачет-ключом.
+   */
+  readonly peerRatchetPubKey: string | null;
   /** Unix-время создания (мс). */
   readonly createdAt: number;
+}
+
+/** Поля для атомарного обновления рачет-состояния в chat_keys. */
+export interface LocalChatKeyRatchetUpdate {
+  /** Новый зашифрованный AES-ключ (base64). */
+  readonly encryptedKey: string;
+  /** IV нового AES-ключа (base64). */
+  readonly keyIv: string;
+  /** Предыдущий зашифрованный AES-ключ (base64). */
+  readonly prevEncryptedKey: string;
+  /** IV предыдущего AES-ключа (base64). */
+  readonly prevKeyIv: string;
+  /** Новый рачет-приватный ключ (base64, wrapped). */
+  readonly myRatchetEncryptedPrivKey: string;
+  /** IV нового рачет-приватного ключа (base64). */
+  readonly myRatchetPrivKeyIv: string;
+  /** Новый рачет-публичный ключ (base64). */
+  readonly myRatchetPubKey: string;
+  /** Рачет-публичный ключ собеседника (base64). */
+  readonly peerRatchetPubKey: string;
 }
 
 /** Сообщение из локальной SQLite. */
