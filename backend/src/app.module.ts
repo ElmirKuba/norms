@@ -10,6 +10,7 @@ import { RecoveryModule } from './recovery/recovery.module';
 import { WssModule } from './wss/wss.module';
 import { AppConfigModule } from './config/app-config.module';
 import { SearchModule } from './search/search.module';
+import { ChatModule } from './chat/chat.module';
 
 /** Конфигурация BullMQ Redis-подключения. */
 interface BullRedisConfig {
@@ -50,6 +51,7 @@ interface BullRootConfig {
     UinModule,
     RecoveryModule,
     SearchModule,
+    ChatModule,
     AppConfigModule,
   ],
 })

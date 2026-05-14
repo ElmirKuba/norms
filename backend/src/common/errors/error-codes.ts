@@ -49,6 +49,12 @@ export enum ErrorCode {
   /** Попытка управлять сессией другого аккаунта. */
   NOT_YOUR_SESSION = 'not_your_session',
 
+  // Chat
+  /** Чат с данным ID не найден. */
+  CHAT_NOT_FOUND = 'chat_not_found',
+  /** Чат с таким именем между этой парой устройств уже существует. */
+  CHAT_NAME_TAKEN = 'chat_name_taken',
+
   // Recovery
   /** Вопрос безопасности не найден. */
   RECOVERY_QUESTION_NOT_FOUND = 'recovery_question_not_found',
@@ -94,6 +100,10 @@ export const ErrorMessage: Record<ErrorCode, string> = {
   [ErrorCode.REFRESH_REUSED]: 'Refresh-токен уже был использован. Сессия аннулирована.',
   [ErrorCode.SESSION_NOT_FOUND]: 'Сессия не найдена',
   [ErrorCode.NOT_YOUR_SESSION]: 'Нет доступа к этой сессии',
+
+  // Chat
+  [ErrorCode.CHAT_NOT_FOUND]: 'Чат не найден',
+  [ErrorCode.CHAT_NAME_TAKEN]: 'Чат с таким именем уже существует',
 
   // Recovery
   [ErrorCode.RECOVERY_QUESTION_NOT_FOUND]: 'Вопрос безопасности не найден',

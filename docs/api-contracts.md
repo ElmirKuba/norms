@@ -12,7 +12,8 @@
 6. [HTTP — Invites](#http--invites)
 7. [HTTP — Recovery](#http--recovery)
 8. [HTTP — Search](#http--search)
-9. [WSS](#wss)
+9. [HTTP — Chat](#http--chat)
+10. [WSS](#wss)
 
 ---
 
@@ -570,6 +571,41 @@ Response 200:
 - Первый символ — буква → поиск по `accounts.username` (case-insensitive через CITEXT)
 
 Множества не пересекаются: username не может начинаться с цифры (регекс `^[a-zA-Z][a-zA-Z0-9]{2,29}$`).
+
+---
+
+## HTTP — Chat
+
+### `POST /api/v1/chat/create`
+Создание чата между текущей сессией и выбранным устройством собеседника. Auth required.
+
+Request:
+```json
+{
+  "name": "фильмы",
+  "receiver_session_id": "..."
+}
+```
+
+Response 201:
+```json
+{
+  "id": "...",
+  "name": "фильмы",
+  "session_a_id": "...",
+  "session_b_id": "...",
+  "status": "active",
+  "created_at": "2025-01-01T00:00:00.000Z"
+}
+```
+
+`session_a_id` / `session_b_id` — нормализованная пара: `session_a_id < session_b_id` (lexicographic). Порядок определяется сервером, фронт не управляет.
+
+Фаза 1 (plaintext): статус сразу `active`, без обмена ключами. Фаза 2 добавит `pending_key` + `public_key_a/b`.
+
+Errors:
+- 404 `session_not_found` — получатель не найден
+- 409 `chat_name_taken` — чат с таким именем у этой пары устройств уже есть
 
 ---
 
