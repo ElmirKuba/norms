@@ -5,11 +5,12 @@ import { ChatController } from './chat.controller';
 import { CreateChatUseCase } from './use-cases/create-chat.use-case';
 import { ReadChatListUseCase } from './use-cases/read-chat-list.use-case';
 import { ReadOrphanPeersUseCase } from './use-cases/read-orphan-peers.use-case';
+import { DeleteChatUseCase } from './use-cases/delete-chat.use-case';
 
 /** Модуль чатов. */
 @Module({
   imports: [AuthModule, PersistenceModule],
   controllers: [ChatController],
-  providers: [CreateChatUseCase, ReadChatListUseCase, ReadOrphanPeersUseCase],
+  providers: [CreateChatUseCase, ReadChatListUseCase, ReadOrphanPeersUseCase, DeleteChatUseCase],
 })
 export class ChatModule {}

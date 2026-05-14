@@ -247,7 +247,7 @@ _Перед стартом фазы 1 — **переключиться обра�
 - [x] **9.7** — WSS `message_delivered` от получателя → удалить blob → WSS `message_delivered` отправителю
 - [x] **9.8** — WSS sync при подключении — `handleConnection` пушит все `pending_messages` для сессии
 - [x] **9.9** — WSS `message_read` от получателя → WSS `message_read` отправителю
-- [ ] **9.10** — `DELETE /chat/delete/:id` — удаление чата (cascade; WSS `chat_deleted` собеседнику)
+- [x] **9.10** — `DELETE /chat/delete/:id` — удаление чата (cascade; WSS `chat_deleted` собеседнику)
 
 **Фронт:**
 - [ ] **9.11** — SQLite инфраструктура: `better-sqlite3` (Electron) + `@capacitor-community/sqlite` (Capacitor); `LocalDbService`; per-account DB + schema (`chats`, `messages`, `peer_devices`)

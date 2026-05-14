@@ -58,4 +58,10 @@ export abstract class ChatRepository {
    * @returns Созданная сущность чата.
    */
   public abstract create(data: CreateChatData): Promise<ChatEntity>;
+
+  /**
+   * Удаляет чат по ID. Pending_messages каскадируются на уровне БД.
+   * @param id - ID чата.
+   */
+  public abstract deleteById(id: string): Promise<void>;
 }

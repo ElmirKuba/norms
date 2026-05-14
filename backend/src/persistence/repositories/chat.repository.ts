@@ -306,6 +306,14 @@ export class DrizzleChatRepository extends ChatRepository {
   }
 
   /**
+   * Удаляет чат по ID. Pending_messages удаляются каскадом (FK ON DELETE CASCADE).
+   * @param id - ID чата.
+   */
+  public async deleteById(id: string): Promise<void> {
+    await this._db.delete(chats).where(eq(chats.id, id));
+  }
+
+  /**
    * Преобразует строку из БД в доменную сущность.
    * @param row - Строка из Drizzle-запроса.
    * @returns Доменная сущность чата.
