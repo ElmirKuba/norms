@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Delete, Body, Param, UseGuards, HttpCode } from '@nestjs/common';
+import { Controller, Post, Get, Delete, Patch, Body, Param, UseGuards, HttpCode } from '@nestjs/common';
 import { JwtGuard } from '../auth/jwt.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { JwtPayload } from '../auth/types/jwt-payload.type';
@@ -6,8 +6,10 @@ import { CreateChatUseCase } from './use-cases/create-chat.use-case';
 import { ReadChatListUseCase } from './use-cases/read-chat-list.use-case';
 import { ReadOrphanPeersUseCase } from './use-cases/read-orphan-peers.use-case';
 import { DeleteChatUseCase } from './use-cases/delete-chat.use-case';
+import { SubmitChatKeyUseCase } from './use-cases/submit-chat-key.use-case';
 import { WssConnectionStore } from '../wss/wss-connection.store';
 import { CreateChatDto } from './dto/create-chat.dto';
+import { SubmitChatKeyDto } from './dto/submit-chat-key.dto';
 
 /** Контроллер чатов. */
 @Controller('chat')
@@ -17,6 +19,7 @@ export class ChatController {
     private readonly _readChatListUseCase: ReadChatListUseCase,
     private readonly _readOrphanPeersUseCase: ReadOrphanPeersUseCase,
     private readonly _deleteChatUseCase: DeleteChatUseCase,
+    private readonly _submitChatKeyUseCase: SubmitChatKeyUseCase,
     private readonly _store: WssConnectionStore,
   ) {}
 
@@ -75,5 +78,36 @@ export class ChatController {
   ): Promise<void> {
     const result = await this._deleteChatUseCase.execute(user.sessionId, id);
     this._store.sendToSession(result.otherSessionId, 'chat_deleted', { chat_id: result.chatId });
+  }
+
+  /**
+   * Загружает публичный ECDH-ключ в чат. Если это второй ключ — обмен завершён, статус → active,
+   * оба участника получают WSS chat_key_ready. Если первый — peer получает WSS chat_key_request.
+   * @param user - Payload текущего JWT.
+   * @param dto - ID чата и публичный ключ.
+   */
+  @Patch('submit-key')
+  @UseGuards(JwtGuard)
+  @HttpCode(204)
+  public async submitKey(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: SubmitChatKeyDto,
+  ): Promise<void> {
+    const result = await this._submitChatKeyUseCase.execute(user.sessionId, dto.chat_id, dto.public_key);
+    if (result.exchangeComplete) {
+      this._store.sendToSession(user.sessionId, 'chat_key_ready', {
+        chat_id: dto.chat_id,
+        peer_public_key: result.peerPublicKey,
+      });
+      this._store.sendToSession(result.peerSessionId, 'chat_key_ready', {
+        chat_id: dto.chat_id,
+        peer_public_key: result.myPublicKey,
+      });
+    } else {
+      this._store.sendToSession(result.peerSessionId, 'chat_key_request', {
+        chat_id: dto.chat_id,
+        peer_public_key: dto.public_key,
+      });
+    }
   }
 }

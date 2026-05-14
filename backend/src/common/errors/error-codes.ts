@@ -64,6 +64,10 @@ export enum ErrorCode {
   BLOB_TOO_LARGE = 'blob_too_large',
   /** Blob не является корректной base64-строкой или пустой. */
   INVALID_BLOB = 'invalid_blob',
+  /** Чат уже активен — обмен ключами завершён. */
+  CHAT_ALREADY_ACTIVE = 'chat_already_active',
+  /** Публичный ключ для этого чата уже был загружен этой сессией. */
+  CHAT_KEY_ALREADY_SUBMITTED = 'chat_key_already_submitted',
 
   // Recovery
   /** Вопрос безопасности не найден. */
@@ -119,6 +123,8 @@ export const ErrorMessage: Record<ErrorCode, string> = {
   [ErrorCode.NOT_YOUR_MESSAGE]: 'Нет доступа к этому сообщению',
   [ErrorCode.BLOB_TOO_LARGE]: 'Сообщение превышает допустимый размер (1MB)',
   [ErrorCode.INVALID_BLOB]: 'Некорректный формат сообщения',
+  [ErrorCode.CHAT_ALREADY_ACTIVE]: 'Чат уже активен — обмен ключами завершён',
+  [ErrorCode.CHAT_KEY_ALREADY_SUBMITTED]: 'Публичный ключ для этого чата уже загружен',
 
   // Recovery
   [ErrorCode.RECOVERY_QUESTION_NOT_FOUND]: 'Вопрос безопасности не найден',

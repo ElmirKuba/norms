@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { eq, or, and, ne, inArray, desc } from 'drizzle-orm';
+import { eq, or, and, ne, inArray, desc, isNull, isNotNull } from 'drizzle-orm';
 import { ChatRepository } from '../../domain/ports/chat.repository.port';
-import type { ChatEntity, ChatListItem, OrphanPeer, PendingMessageEntity, CreateChatData, CreatePendingMessageData } from '../../domain/entities/chat.entity';
+import type { ChatEntity, ChatListItem, OrphanPeer, PendingMessageEntity, CreateChatData, CreatePendingMessageData, SubmitKeyResult, PendingKeyRequest } from '../../domain/entities/chat.entity';
 import { generateId } from '../../common/utils/id.util';
 import { chats, sessions, accounts, uins, pendingMessages } from '../schemas';
 import { DRIZZLE_DB } from '../drizzle.module';
@@ -311,6 +311,70 @@ export class DrizzleChatRepository extends ChatRepository {
    */
   public async deleteById(id: string): Promise<void> {
     await this._db.delete(chats).where(eq(chats.id, id));
+  }
+
+  /**
+   * Загружает публичный ключ сессии в чат в транзакции.
+   * Если оба ключа присутствуют — очищает их из БД и переводит чат в active.
+   * @param chatId - ID чата.
+   * @param sessionId - ID текущей сессии (определяет slot A или B).
+   * @param publicKey - X25519 публичный ключ в base64.
+   * @returns Результат обмена.
+   * @throws Error если чат не найден.
+   */
+  public async submitKey(chatId: string, sessionId: string, publicKey: string): Promise<SubmitKeyResult> {
+    return this._db.transaction(async (tx) => {
+      const rows = await tx.select().from(chats).where(eq(chats.id, chatId)).limit(1);
+      const row = rows[0];
+      if (row === undefined) throw new Error('Chat not found in submitKey');
+
+      const isA = row.sessionAId === sessionId;
+      const peerSessionId = isA ? row.sessionBId : row.sessionAId;
+      const peerKey = isA ? row.publicKeyB : row.publicKeyA;
+
+      const updateValues = isA
+        ? { publicKeyA: publicKey, updatedAt: new Date() }
+        : { publicKeyB: publicKey, updatedAt: new Date() };
+
+      await tx.update(chats).set(updateValues).where(eq(chats.id, chatId));
+
+      if (peerKey !== null) {
+        await tx.update(chats).set({ publicKeyA: null, publicKeyB: null, status: 'active', updatedAt: new Date() }).where(eq(chats.id, chatId));
+        return { exchangeComplete: true, peerSessionId, peerPublicKey: peerKey, myPublicKey: publicKey };
+      }
+
+      return { exchangeComplete: false, peerSessionId, peerPublicKey: null, myPublicKey: null };
+    });
+  }
+
+  /**
+   * Возвращает чаты, где сессия ещё не загрузила свой ключ, но у собеседника ключ уже есть.
+   * @param sessionId - ID подключившейся сессии.
+   * @returns Список pending key requests.
+   */
+  public async findPendingKeyRequestsForSession(sessionId: string): Promise<PendingKeyRequest[]> {
+    const rows = await this._db
+      .select()
+      .from(chats)
+      .where(
+        and(
+          eq(chats.status, 'pending_key'),
+          or(
+            and(eq(chats.sessionAId, sessionId), isNull(chats.publicKeyA), isNotNull(chats.publicKeyB)),
+            and(eq(chats.sessionBId, sessionId), isNull(chats.publicKeyB), isNotNull(chats.publicKeyA)),
+          ),
+        ),
+      );
+
+    return rows.map((row: typeof chats.$inferSelect): PendingKeyRequest => {
+      const isA = row.sessionAId === sessionId;
+      return {
+        chatId: row.id,
+        chatName: row.name,
+        peerSessionId: isA ? row.sessionBId : row.sessionAId,
+        peerPublicKey: (isA ? row.publicKeyB : row.publicKeyA) as string,
+      };
+    });
   }
 
   /**

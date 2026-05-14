@@ -109,3 +109,27 @@ export interface CreateChatData {
   /** Начальный статус. */
   readonly status: ChatStatus;
 }
+
+/** Результат загрузки публичного ключа в чат. */
+export interface SubmitKeyResult {
+  /** true — оба ключа теперь получены, обмен завершён. */
+  readonly exchangeComplete: boolean;
+  /** ID сессии-собеседника. */
+  readonly peerSessionId: string;
+  /** Ключ собеседника (только если exchangeComplete, иначе null). */
+  readonly peerPublicKey: string | null;
+  /** Загруженный ключ (только если exchangeComplete, нужен для отправки собеседнику). */
+  readonly myPublicKey: string | null;
+}
+
+/** Запрос обмена ключами для пуша при handleConnection. */
+export interface PendingKeyRequest {
+  /** ID чата. */
+  readonly chatId: string;
+  /** Название чата. */
+  readonly chatName: string;
+  /** ID сессии-собеседника. */
+  readonly peerSessionId: string;
+  /** Публичный ключ собеседника (уже загружен). */
+  readonly peerPublicKey: string;
+}

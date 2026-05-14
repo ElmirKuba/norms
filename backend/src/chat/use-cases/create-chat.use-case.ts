@@ -62,7 +62,7 @@ export class CreateChatUseCase {
         sessionAId,
         sessionBId,
         createdBySessionId: mySessionId,
-        status: 'active',
+        status: 'pending_key',
       });
     } catch (err: unknown) {
       if (

@@ -105,6 +105,20 @@ export class WssGateway implements OnGatewayConnection, OnGatewayDisconnect {
         },
       }));
     }
+
+    const keyRequests = await this._chatRepo.findPendingKeyRequestsForSession(payload.sessionId);
+    for (const req of keyRequests) {
+      if (socket.readyState !== 1 /* OPEN */) break;
+      socket.send(JSON.stringify({
+        event: 'chat_key_request',
+        data: {
+          chat_id: req.chatId,
+          chat_name: req.chatName,
+          peer_public_key: req.peerPublicKey,
+          peer_session_id: req.peerSessionId,
+        },
+      }));
+    }
   }
 
   /**

@@ -1,4 +1,4 @@
-import type { ChatEntity, ChatListItem, OrphanPeer, PendingMessageEntity, CreateChatData, CreatePendingMessageData } from '../entities/chat.entity';
+import type { ChatEntity, ChatListItem, OrphanPeer, PendingMessageEntity, CreateChatData, CreatePendingMessageData, SubmitKeyResult, PendingKeyRequest } from '../entities/chat.entity';
 
 /** Порт (абстракция) для операций с чатами — реализуется в слое персистентности. */
 export abstract class ChatRepository {
@@ -64,4 +64,21 @@ export abstract class ChatRepository {
    * @param id - ID чата.
    */
   public abstract deleteById(id: string): Promise<void>;
+
+  /**
+   * Загружает публичный ключ сессии в чат. Если оба ключа теперь есть — очищает их из БД и активирует чат.
+   * @param chatId - ID чата.
+   * @param sessionId - ID текущей сессии (определяет slot A или B).
+   * @param publicKey - X25519 публичный ключ в base64.
+   * @returns Результат обмена.
+   */
+  public abstract submitKey(chatId: string, sessionId: string, publicKey: string): Promise<SubmitKeyResult>;
+
+  /**
+   * Возвращает чаты, где сессия ещё не загрузила свой ключ, но у собеседника ключ уже есть.
+   * Используется при handleConnection для пуша chat_key_request.
+   * @param sessionId - ID подключившейся сессии.
+   * @returns Список pending key requests.
+   */
+  public abstract findPendingKeyRequestsForSession(sessionId: string): Promise<PendingKeyRequest[]>;
 }
