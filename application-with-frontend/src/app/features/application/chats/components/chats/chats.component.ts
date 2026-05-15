@@ -6,6 +6,7 @@ import type { LocalChatWithPeer, LocalPeerDevice } from '../../../../../core/ser
 import { avatarColorForId } from '../../../search/services/search-api.service';
 import { WssService } from '../../../../../core/services/wss/wss.service';
 import type { WssChatDeletedData } from '../../../../../core/services/wss/wss.service';
+import { ChatEventsService } from '../../../../../core/services/chat/chat-events.service';
 
 /** Результат buildPeerDisplay. */
 interface PeerDisplayResult {
@@ -147,6 +148,9 @@ export class ChatsApplicationComponent implements OnInit {
   /** WSS-сервис для live-обновлений. */
   private readonly _wss: WssService = inject(WssService);
 
+  /** Сервис событий чата. */
+  private readonly _chatEvents: ChatEventsService = inject(ChatEventsService);
+
   /** DestroyRef для очистки подписок. */
   private readonly _destroyRef: DestroyRef = inject(DestroyRef);
 
@@ -154,6 +158,7 @@ export class ChatsApplicationComponent implements OnInit {
   public ngOnInit(): void {
     void this._load();
     this._subscribeToChatDeleted();
+    this._subscribeToChatReceived();
   }
 
   /** Загружает активные чаты из локальной SQLite (is_dead исключены). */
@@ -174,6 +179,14 @@ export class ChatsApplicationComponent implements OnInit {
       this.chats.update((list: readonly ChatListItem[]): readonly ChatListItem[] =>
         list.filter((c: ChatListItem): boolean => c.id !== data.chatId),
       );
+    });
+    this._destroyRef.onDestroy((): void => { sub.unsubscribe(); });
+  }
+
+  /** Подписывается на chatReceived$: перезагружает список при появлении нового чата. */
+  private _subscribeToChatReceived(): void {
+    const sub = this._chatEvents.chatReceived$.subscribe((): void => {
+      void this._load();
     });
     this._destroyRef.onDestroy((): void => { sub.unsubscribe(); });
   }
