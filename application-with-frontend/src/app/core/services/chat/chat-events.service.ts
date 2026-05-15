@@ -31,6 +31,12 @@ export class ChatEventsService {
    */
   public readonly incomingMessage$: Subject<LocalMessage> = new Subject<LocalMessage>();
 
+  /**
+   * Эмитирует ID чата после сохранения нового входящего чата (chat_key_request).
+   * ChatsComponent подписывается для перезагрузки списка.
+   */
+  public readonly chatReceived$: Subject<string> = new Subject<string>();
+
   /** WSS-сервис. */
   private readonly _wss: WssService = inject(WssService);
 
@@ -333,13 +339,14 @@ export class ChatEventsService {
         updatedAt: now,
       };
       await this._chatRepo.upsertChat(chat);
+      this.chatReceived$.next(chatId);
     }
 
     const keyPair = await this._crypto.generateEcdhKeyPair();
     const publicKeyB64 = await this._crypto.exportPublicKey(keyPair.publicKey);
 
-    await firstValueFrom(this._chatApi.submitKey(chatId, publicKeyB64));
-
+    // Сохраняем приватный ключ ДО submit — иначе chat_key_ready может прийти
+    // раньше чем saveChatKey завершится, и _handleChatKeyReady не найдёт запись.
     const masterKey = await this._masterKey.getOrCreate();
     const wrapped = await this._crypto.wrapEcdhPrivateKey(keyPair.privateKey, masterKey);
 
@@ -358,6 +365,8 @@ export class ChatEventsService {
       createdAt: Date.now(),
     };
     await this._chatRepo.saveChatKey(chatKey);
+
+    await firstValueFrom(this._chatApi.submitKey(chatId, publicKeyB64));
     // chat_key_ready придёт следом → _handleChatKeyReady сгенерирует рачет-пару
   }
 
