@@ -1,6 +1,7 @@
 import { type ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
 import { routes } from './app.routes';
@@ -90,9 +91,19 @@ export const appConfig: ApplicationConfig = {
         if (accountId !== null) await localDb.initialize(accountId);
         chatEvents.init();
         wss.connect();
-      } catch {
-        // Refresh-токен истёк или уже использован — требуется повторный логин
-        tokenStorage.clear();
+      } catch (err) {
+        // Чистим токены только при явном отказе сервера (401/403) — токен невалиден.
+        // Сетевая ошибка (status 0) или 5xx = бэк недоступен, токен всё ещё действителен.
+        if (err instanceof HttpErrorResponse && (err.status === 401 || err.status === 403)) {
+          tokenStorage.clear();
+        } else {
+          // Бэк недоступен — инициализируем локальную БД из кешированного accountId
+          const cachedAccountId = decodeAccountId(tokenStorage.accessToken ?? '');
+          if (cachedAccountId !== null) {
+            await localDb.initialize(cachedAccountId);
+            chatEvents.init();
+          }
+        }
       }
     }),
     provideAppInitializer(async (): Promise<void> => firstValueFrom(inject(FeatureFlagsService).load())),
