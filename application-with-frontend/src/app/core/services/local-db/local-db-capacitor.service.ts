@@ -1,5 +1,5 @@
 import { CapacitorSQLite, SQLiteConnection, type SQLiteDBConnection } from '@capacitor-community/sqlite';
-import { LOCAL_DB_SCHEMA } from './local-db.schema';
+import { LOCAL_DB_MIGRATIONS, LOCAL_DB_SCHEMA } from './local-db.schema';
 import { LocalDbService } from './local-db.service';
 
 const sqlite = new SQLiteConnection(CapacitorSQLite);
@@ -27,6 +27,15 @@ export class LocalDbCapacitorService extends LocalDbService {
     }
     await this._db.open();
     await this._db.execute(LOCAL_DB_SCHEMA);
+
+    // Миграции запускаем по одному — ошибка «duplicate column» игнорируется
+    for (const migration of LOCAL_DB_MIGRATIONS) {
+      try {
+        await this._db.execute(migration);
+      } catch {
+        // Колонка уже существует — ожидаемо на повторных запусках
+      }
+    }
   }
 
   /**

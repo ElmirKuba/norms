@@ -158,9 +158,14 @@ export class ChatsApplicationComponent implements OnInit {
 
   /** Загружает активные чаты из локальной SQLite (is_dead исключены). */
   private async _load(): Promise<void> {
-    const raw = await this._chatRepo.getChats();
-    this.chats.set(raw.filter((c: LocalChatWithPeer): boolean => c.status !== 'is_dead').map(mapToListItem));
-    this.loading.set(false);
+    try {
+      const raw = await this._chatRepo.getChats();
+      this.chats.set(raw.filter((c: LocalChatWithPeer): boolean => c.status !== 'is_dead').map(mapToListItem));
+    } catch (err) {
+      console.error('[Chats] getChats failed:', err);
+    } finally {
+      this.loading.set(false);
+    }
   }
 
   /** Подписывается на chat_deleted: удаляет чат из списка при получении события. */

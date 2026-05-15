@@ -49,13 +49,20 @@ CREATE TABLE IF NOT EXISTS chat_keys (
   peer_ratchet_pub_key          TEXT,
   created_at                    INTEGER NOT NULL
 );
-
-ALTER TABLE chat_keys ADD COLUMN IF NOT EXISTS encrypted_priv_key TEXT;
-ALTER TABLE chat_keys ADD COLUMN IF NOT EXISTS priv_key_iv TEXT;
-ALTER TABLE chat_keys ADD COLUMN IF NOT EXISTS prev_encrypted_key TEXT NOT NULL DEFAULT '';
-ALTER TABLE chat_keys ADD COLUMN IF NOT EXISTS prev_key_iv TEXT NOT NULL DEFAULT '';
-ALTER TABLE chat_keys ADD COLUMN IF NOT EXISTS my_ratchet_encrypted_priv_key TEXT;
-ALTER TABLE chat_keys ADD COLUMN IF NOT EXISTS my_ratchet_priv_key_iv TEXT;
-ALTER TABLE chat_keys ADD COLUMN IF NOT EXISTS my_ratchet_pub_key TEXT;
-ALTER TABLE chat_keys ADD COLUMN IF NOT EXISTS peer_ratchet_pub_key TEXT;
 `.trim();
+
+/**
+ * Миграции колонок chat_keys для существующих БД.
+ * Выполняются по одной с обработкой ошибок — ошибка «column already exists» игнорируется.
+ * Порядок важен: более старые колонки первыми.
+ */
+export const LOCAL_DB_MIGRATIONS: readonly string[] = [
+  "ALTER TABLE chat_keys ADD COLUMN encrypted_priv_key TEXT",
+  "ALTER TABLE chat_keys ADD COLUMN priv_key_iv TEXT",
+  "ALTER TABLE chat_keys ADD COLUMN prev_encrypted_key TEXT NOT NULL DEFAULT ''",
+  "ALTER TABLE chat_keys ADD COLUMN prev_key_iv TEXT NOT NULL DEFAULT ''",
+  "ALTER TABLE chat_keys ADD COLUMN my_ratchet_encrypted_priv_key TEXT",
+  "ALTER TABLE chat_keys ADD COLUMN my_ratchet_priv_key_iv TEXT",
+  "ALTER TABLE chat_keys ADD COLUMN my_ratchet_pub_key TEXT",
+  "ALTER TABLE chat_keys ADD COLUMN peer_ratchet_pub_key TEXT",
+];

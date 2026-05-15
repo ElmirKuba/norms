@@ -194,8 +194,13 @@ export class CreateChatModalComponent implements OnInit {
       await this._chatRepo.upsertPeerDevice(peer);
       await this._chatRepo.upsertChat(chat);
 
-      // E2E: генерируем ECDH пару и загружаем публичный ключ на сервер
-      await this._submitEcdhKey(created.id, now);
+      // E2E: генерируем ECDH пару и загружаем публичный ключ на сервер.
+      // Ошибка не блокирует открытие чата — он останется в pending_key.
+      try {
+        await this._submitEcdhKey(created.id, now);
+      } catch (submitErr) {
+        console.error('[CreateChat] submit-key failed:', submitErr);
+      }
 
       this._dialogRef.close({ chatId: created.id });
     } catch (err) {
