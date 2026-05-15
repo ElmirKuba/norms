@@ -199,6 +199,7 @@ export class CreateChatModalComponent implements OnInit {
       try {
         await this._submitEcdhKey(created.id, now);
       } catch (submitErr) {
+        /* eslint-disable-next-line no-console */
         console.error('[CreateChat] submit-key failed:', submitErr);
       }
 
@@ -244,7 +245,13 @@ export class CreateChatModalComponent implements OnInit {
       createdAt,
     };
     await this._chatRepo.saveChatKey(chatKey);
+    /* eslint-disable no-console */
+    console.warn(`[ECDH] creator: saved privKey, submitting pubKey=${publicKeyB64.slice(0, 12)} chatId=${chatId.slice(-6)}`);
+    /* eslint-enable no-console */
 
     await firstValueFrom(this._chatApi.submitKey(chatId, publicKeyB64));
+    /* eslint-disable no-console */
+    console.warn(`[ECDH] creator: submitKey done chatId=${chatId.slice(-6)}`);
+    /* eslint-enable no-console */
   }
 }

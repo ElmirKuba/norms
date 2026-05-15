@@ -10,6 +10,7 @@ import { TokenStorageService } from '../../../../../core/services/storage/token-
 import { WssService } from '../../../../../core/services/wss/wss.service';
 import { PlatformDetectorService, AppPlatform } from '../../../../../core/services/platform/platform.service';
 import { LocalDbService } from '../../../../../core/services/local-db/local-db.service';
+import { ChatEventsService } from '../../../../../core/services/chat/chat-events.service';
 
 /** Экран входа в аккаунт */
 @Component({
@@ -55,6 +56,9 @@ export class LoginApplicationComponent {
   /** Локальная БД — инициализируется после входа */
   private readonly _localDb: LocalDbService = inject(LocalDbService);
 
+  /** ChatEventsService — подписки на WSS-события чата */
+  private readonly _chatEvents: ChatEventsService = inject(ChatEventsService);
+
   /** Выполняет вход и при успехе переходит в main */
   public onSubmit(): void {
     if (!this._isValid) return;
@@ -73,8 +77,10 @@ export class LoginApplicationComponent {
       next: (response: AuthAccountResponse): void => {
         this._tokenStorage.store(response.session.access_token, response.session.refresh_token);
         void this._localDb.initialize(response.account.id)
-          .catch((err: unknown) => { console.error('[Login] DB init failed:', err); })
+          /* eslint-disable-next-line no-console */
+          .catch((err: unknown): void => { console.error('[Login] DB init failed:', err); })
           .finally((): void => {
+            this._chatEvents.init();
             this._wss.connect();
             void this._router.navigate(['/application/main'], { replaceUrl: true });
           });

@@ -60,10 +60,19 @@ export class ChatEventsService {
   private readonly _aesKeyCache: Map<string, CryptoKey> = new Map<string, CryptoKey>();
 
   /**
+   * Флаг первичной инициализации — защищает от повторного вызова init().
+   * false до первого вызова, true после — повторные вызовы игнорируются.
+   */
+  private _initialized: boolean = false;
+
+  /**
    * Подписывается на все WSS-события чата.
-   * Вызывать один раз из APP_INITIALIZER перед wss.connect().
+   * Идемпотентен — повторный вызов игнорируется.
+   * Вызывать из APP_INITIALIZER и из login/create-account компонентов.
    */
   public init(): void {
+    if (this._initialized) return;
+    this._initialized = true;
     this._wss.messageNew$.subscribe((data: WssMessageNewData): void => {
       void this._handleMessageNew(data);
     });
@@ -140,7 +149,12 @@ export class ChatEventsService {
    */
   private async _decryptIncoming(chatId: string, blob: string): Promise<string> {
     const keyRecord = await this._chatRepo.getChatKey(chatId);
-    if (keyRecord === null || keyRecord.encryptedKey === '') return '[зашифровано]';
+    if (keyRecord === null || keyRecord.encryptedKey === '') {
+      /* eslint-disable no-console */
+      console.warn(`[DECRYPT] chatId=${chatId.slice(-6)} NO AES key (encryptedKey=${keyRecord?.encryptedKey === '' ? 'empty' : 'null record'})`);
+      /* eslint-enable no-console */
+      return '[зашифровано]';
+    }
 
     const masterKey = await this._masterKey.getOrCreate();
 
@@ -191,6 +205,9 @@ export class ChatEventsService {
       } catch { /* предыдущий ключ не подошёл */ }
     }
 
+    /* eslint-disable no-console */
+    console.warn(`[DECRYPT] chatId=${chatId.slice(-6)} ALL keys failed → [не удалось расшифровать]`);
+    /* eslint-enable no-console */
     return '[не удалось расшифровать]';
   }
 
@@ -276,10 +293,27 @@ export class ChatEventsService {
   private async _handleChatKeyReady(data: WssChatKeyReadyData): Promise<void> {
     const { chatId, peerPublicKey } = data;
 
-    const keyRecord = await this._chatRepo.getChatKey(chatId);
-    if (keyRecord === null) return;
-    if (keyRecord.encryptedPrivKey === null || keyRecord.privKeyIv === null) return;
+    /* eslint-disable no-console */
+    console.warn(`[ECDH] chat_key_ready chatId=${chatId.slice(-6)} peerPub=${peerPublicKey.slice(0, 12)}`);
+    /* eslint-enable no-console */
 
+    const keyRecord = await this._chatRepo.getChatKey(chatId);
+    if (keyRecord === null) {
+      /* eslint-disable no-console */
+      console.warn(`[ECDH] chat_key_ready: NO key record for ${chatId.slice(-6)} — MISSING`);
+      /* eslint-enable no-console */
+      return;
+    }
+    if (keyRecord.encryptedPrivKey === null || keyRecord.privKeyIv === null) {
+      /* eslint-disable no-console */
+      console.warn(`[ECDH] chat_key_ready: encryptedPrivKey=null for ${chatId.slice(-6)} — RETURNING EARLY`);
+      /* eslint-enable no-console */
+      return;
+    }
+
+    /* eslint-disable no-console */
+    console.warn(`[ECDH] chat_key_ready: found privKey for ${chatId.slice(-6)}, deriving AES...`);
+    /* eslint-enable no-console */
     const masterKey = await this._masterKey.getOrCreate();
 
     const myPrivKey = await this._crypto.unwrapEcdhPrivateKey(
@@ -290,6 +324,9 @@ export class ChatEventsService {
     const peerPubKey = await this._crypto.importPublicKey(peerPublicKey);
     const aesKey = await this._crypto.deriveAesKey(myPrivKey, peerPubKey);
 
+    /* eslint-disable no-console */
+    console.warn(`[ECDH] chat_key_ready: AES derived OK for ${chatId.slice(-6)}`);
+    /* eslint-enable no-console */
     this._aesKeyCache.set(chatId, aesKey);
 
     // Генерируем первую рачет-пару для Double Ratchet
@@ -325,6 +362,10 @@ export class ChatEventsService {
    */
   private async _handleChatKeyRequest(data: WssChatKeyRequestData): Promise<void> {
     const { chatId, chatName, chatCreatedAt, peerSessionId } = data;
+
+    /* eslint-disable no-console */
+    console.warn(`[ECDH] chat_key_request chatId=${chatId.slice(-6)} peerPub=${data.peerPublicKey.slice(0, 12)}`);
+    /* eslint-enable no-console */
 
     // Сохраняем чат локально если есть данные (peer получает чат через это событие)
     if (peerSessionId !== undefined) {

@@ -167,6 +167,7 @@ export class ChatsApplicationComponent implements OnInit {
       const raw = await this._chatRepo.getChats();
       this.chats.set(raw.filter((c: LocalChatWithPeer): boolean => c.status !== 'is_dead').map(mapToListItem));
     } catch (err) {
+      /* eslint-disable-next-line no-console */
       console.error('[Chats] getChats failed:', err);
     } finally {
       this.loading.set(false);
