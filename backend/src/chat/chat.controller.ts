@@ -110,6 +110,16 @@ export class ChatController {
         chat_created_at: result.chatCreatedAt,
         peer_session_id: user.sessionId,
         peer_public_key: dto.public_key,
+        ...(result.peer !== null
+          ? {
+              peer_account_id: result.peer.accountId,
+              peer_uin: result.peer.uin,
+              peer_nickname: result.peer.nickname,
+              peer_username: result.peer.username,
+              peer_system_name: result.peer.systemName,
+              peer_device_nickname: result.peer.deviceNickname,
+            }
+          : {}),
       });
     }
   }

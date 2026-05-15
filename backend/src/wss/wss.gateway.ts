@@ -114,8 +114,19 @@ export class WssGateway implements OnGatewayConnection, OnGatewayDisconnect {
         data: {
           chat_id: req.chatId,
           chat_name: req.chatName,
+          chat_created_at: req.chatCreatedAt,
           peer_public_key: req.peerPublicKey,
           peer_session_id: req.peerSessionId,
+          ...(req.peer !== null
+            ? {
+                peer_account_id: req.peer.accountId,
+                peer_uin: req.peer.uin,
+                peer_nickname: req.peer.nickname,
+                peer_username: req.peer.username,
+                peer_system_name: req.peer.systemName,
+                peer_device_nickname: req.peer.deviceNickname,
+              }
+            : {}),
         },
       }));
     }

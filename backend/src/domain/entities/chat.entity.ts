@@ -110,6 +110,22 @@ export interface CreateChatData {
   readonly status: ChatStatus;
 }
 
+/** Информация о собеседнике (account + session) для заполнения peer_devices на устройстве. */
+export interface PeerInfo {
+  /** ID аккаунта собеседника. */
+  readonly accountId: string;
+  /** UIN собеседника или null (ещё не назначен). */
+  readonly uin: string | null;
+  /** Псевдоним аккаунта собеседника или null. */
+  readonly nickname: string | null;
+  /** Username собеседника или null. */
+  readonly username: string | null;
+  /** Системное имя устройства собеседника. */
+  readonly systemName: string;
+  /** Прозвище устройства собеседника или null. */
+  readonly deviceNickname: string | null;
+}
+
 /** Результат загрузки публичного ключа в чат. */
 export interface SubmitKeyResult {
   /** true — оба ключа теперь получены, обмен завершён. */
@@ -124,6 +140,11 @@ export interface SubmitKeyResult {
   readonly peerPublicKey: string | null;
   /** Загруженный ключ (только если exchangeComplete, нужен для отправки собеседнику). */
   readonly myPublicKey: string | null;
+  /**
+   * Информация о submitter (current user) для отправки получателю chat_key_request —
+   * receiver сохраняет это в свою peer_devices таблицу. null если сессия удалена.
+   */
+  readonly peer: PeerInfo | null;
 }
 
 /** Запрос обмена ключами для пуша при handleConnection. */
@@ -132,8 +153,15 @@ export interface PendingKeyRequest {
   readonly chatId: string;
   /** Название чата. */
   readonly chatName: string;
-  /** ID сессии-собеседника. */
+  /** ISO-8601 дата создания чата. */
+  readonly chatCreatedAt: string;
+  /** ID сессии-собеседника (того кто УЖЕ загрузил ключ — мы его догоняем). */
   readonly peerSessionId: string;
   /** Публичный ключ собеседника (уже загружен). */
   readonly peerPublicKey: string;
+  /**
+   * Информация о собеседнике (the one who already submitted) для отправки реконнектящемуся —
+   * receiver сохраняет это в свою peer_devices таблицу. null если сессия удалена.
+   */
+  readonly peer: PeerInfo | null;
 }

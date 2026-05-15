@@ -4,7 +4,7 @@ import { Subject } from 'rxjs';
 import { WssService } from '../wss/wss.service';
 import type { WssChatDeletedData, WssChatKeyReadyData, WssChatKeyRequestData, WssMessageNewData, WssMessageStatusData } from '../wss/wss.service';
 import { LocalChatRepository } from '../local-db/local-chat.repository';
-import type { LocalChat, LocalChatKey, LocalMessage } from '../local-db/local-db.types';
+import type { LocalChat, LocalChatKey, LocalMessage, LocalPeerDevice } from '../local-db/local-db.types';
 import { CryptoService } from '../crypto/crypto.service';
 import { MasterKeyService } from '../crypto/master-key.service';
 import { ChatApiService } from './chat-api.service';
@@ -104,8 +104,10 @@ export class ChatEventsService {
     const aesKey = await this._getAesKey(chatId);
     if (aesKey === null) return false;
 
-    const keyRecord = await this._chatRepo.getChatKey(chatId);
-    const ratchetPubKey = keyRecord?.myRatchetPubKey ?? null;
+    // Forward secrecy не в MVP — Double Ratchet отключён, всегда шифруем начальным K0.
+    // Поля myRatchetPubKey / myRatchetEncryptedPrivKey в chat_keys остаются как dormant
+    // инфраструктура для будущей реализации форвард-секретности.
+    const ratchetPubKey: string | null = null;
 
     const encryptedBlob = await this._crypto.encryptMessage(content, aesKey, ratchetPubKey);
 
@@ -293,10 +295,6 @@ export class ChatEventsService {
   private async _handleChatKeyReady(data: WssChatKeyReadyData): Promise<void> {
     const { chatId, peerPublicKey } = data;
 
-    /* eslint-disable no-console */
-    console.warn(`[ECDH] chat_key_ready chatId=${chatId.slice(-6)} peerPub=${peerPublicKey.slice(0, 12)}`);
-    /* eslint-enable no-console */
-
     const keyRecord = await this._chatRepo.getChatKey(chatId);
     if (keyRecord === null) {
       /* eslint-disable no-console */
@@ -311,9 +309,6 @@ export class ChatEventsService {
       return;
     }
 
-    /* eslint-disable no-console */
-    console.warn(`[ECDH] chat_key_ready: found privKey for ${chatId.slice(-6)}, deriving AES...`);
-    /* eslint-enable no-console */
     const masterKey = await this._masterKey.getOrCreate();
 
     const myPrivKey = await this._crypto.unwrapEcdhPrivateKey(
@@ -324,9 +319,6 @@ export class ChatEventsService {
     const peerPubKey = await this._crypto.importPublicKey(peerPublicKey);
     const aesKey = await this._crypto.deriveAesKey(myPrivKey, peerPubKey);
 
-    /* eslint-disable no-console */
-    console.warn(`[ECDH] chat_key_ready: AES derived OK for ${chatId.slice(-6)}`);
-    /* eslint-enable no-console */
     this._aesKeyCache.set(chatId, aesKey);
 
     // Генерируем первую рачет-пару для Double Ratchet
@@ -363,14 +355,27 @@ export class ChatEventsService {
   private async _handleChatKeyRequest(data: WssChatKeyRequestData): Promise<void> {
     const { chatId, chatName, chatCreatedAt, peerSessionId } = data;
 
-    /* eslint-disable no-console */
-    console.warn(`[ECDH] chat_key_request chatId=${chatId.slice(-6)} peerPub=${data.peerPublicKey.slice(0, 12)}`);
-    /* eslint-enable no-console */
-
     // Сохраняем чат локально если есть данные (peer получает чат через это событие)
     if (peerSessionId !== undefined) {
       const now = Date.now();
       const createdAt = chatCreatedAt !== undefined ? new Date(chatCreatedAt).getTime() : now;
+
+      // Сохраняем peer_devices ПЕРЕД chat'ом — JOIN при отображении чата опирается на эту запись.
+      // Если peer-инфа есть в payload (новый формат) — пишем; иначе оставляем без peer_devices
+      // (старый формат для обратной совместимости с не-обновлённым бэкендом).
+      if (data.peerAccountId !== undefined && data.peerSystemName !== undefined) {
+        const peer: LocalPeerDevice = {
+          sessionId: peerSessionId,
+          accountId: data.peerAccountId,
+          uin: data.peerUin ?? null,
+          nickname: data.peerNickname ?? null,
+          username: data.peerUsername ?? null,
+          systemName: data.peerSystemName,
+          deviceNickname: data.peerDeviceNickname ?? null,
+        };
+        await this._chatRepo.upsertPeerDevice(peer);
+      }
+
       const chat: LocalChat = {
         id: chatId,
         name: chatName ?? chatId,

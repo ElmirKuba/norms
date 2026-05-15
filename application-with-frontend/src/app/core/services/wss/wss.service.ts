@@ -71,6 +71,18 @@ export interface WssChatKeyRequestData {
   readonly chatCreatedAt?: string;
   /** ID сессии инициатора (присутствует при real-time событии и при подключении). */
   readonly peerSessionId?: string;
+  /** ID аккаунта инициатора. */
+  readonly peerAccountId?: string;
+  /** UIN инициатора или null. */
+  readonly peerUin?: string | null;
+  /** Псевдоним аккаунта инициатора или null. */
+  readonly peerNickname?: string | null;
+  /** Username инициатора или null. */
+  readonly peerUsername?: string | null;
+  /** Системное имя устройства инициатора. */
+  readonly peerSystemName?: string;
+  /** Прозвище устройства инициатора или null. */
+  readonly peerDeviceNickname?: string | null;
 }
 
 /** Данные события session_created — новая сессия аккаунта. */
@@ -445,13 +457,36 @@ export class WssService {
     const chatName = typeof data['chat_name'] === 'string' ? data['chat_name'] : undefined;
     const chatCreatedAt = typeof data['chat_created_at'] === 'string' ? data['chat_created_at'] : undefined;
     const peerSessionId = typeof data['peer_session_id'] === 'string' ? data['peer_session_id'] : undefined;
+    const peerAccountId = typeof data['peer_account_id'] === 'string' ? data['peer_account_id'] : undefined;
+    const peerSystemName = typeof data['peer_system_name'] === 'string' ? data['peer_system_name'] : undefined;
+    const peerUin = this._optionalNullableString(data['peer_uin']);
+    const peerNickname = this._optionalNullableString(data['peer_nickname']);
+    const peerUsername = this._optionalNullableString(data['peer_username']);
+    const peerDeviceNickname = this._optionalNullableString(data['peer_device_nickname']);
     this.chatKeyRequest$.next({
       chatId,
       peerPublicKey,
       ...(chatName !== undefined ? { chatName } : {}),
       ...(chatCreatedAt !== undefined ? { chatCreatedAt } : {}),
       ...(peerSessionId !== undefined ? { peerSessionId } : {}),
+      ...(peerAccountId !== undefined ? { peerAccountId } : {}),
+      ...(peerUin !== undefined ? { peerUin } : {}),
+      ...(peerNickname !== undefined ? { peerNickname } : {}),
+      ...(peerUsername !== undefined ? { peerUsername } : {}),
+      ...(peerSystemName !== undefined ? { peerSystemName } : {}),
+      ...(peerDeviceNickname !== undefined ? { peerDeviceNickname } : {}),
     });
+  }
+
+  /**
+   * Парсит поле, которое может быть строкой, null или undefined в API контракте.
+   * @param value - Сырое значение из payload.
+   * @returns string, null или undefined (если поле отсутствует или некорректно).
+   */
+  private _optionalNullableString(value: unknown): string | null | undefined {
+    if (typeof value === 'string') return value;
+    if (value === null) return null;
+    return undefined;
   }
 
   /**

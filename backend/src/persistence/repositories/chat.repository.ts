@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { eq, or, and, ne, inArray, desc, isNull, isNotNull } from 'drizzle-orm';
 import { ChatRepository } from '../../domain/ports/chat.repository.port';
-import type { ChatEntity, ChatListItem, OrphanPeer, PendingMessageEntity, CreateChatData, CreatePendingMessageData, SubmitKeyResult, PendingKeyRequest } from '../../domain/entities/chat.entity';
+import type { ChatEntity, ChatListItem, OrphanPeer, PendingMessageEntity, CreateChatData, CreatePendingMessageData, SubmitKeyResult, PendingKeyRequest, PeerInfo } from '../../domain/entities/chat.entity';
 import { generateId } from '../../common/utils/id.util';
 import { chats, sessions, accounts, uins, pendingMessages } from '../schemas';
 import { DRIZZLE_DB } from '../drizzle.module';
@@ -323,7 +323,7 @@ export class DrizzleChatRepository extends ChatRepository {
    * @throws Error если чат не найден.
    */
   public async submitKey(chatId: string, sessionId: string, publicKey: string): Promise<SubmitKeyResult> {
-    return this._db.transaction(async (tx) => {
+    const txResult = await this._db.transaction(async (tx) => {
       const rows = await tx.select().from(chats).where(eq(chats.id, chatId)).limit(1);
       const row = rows[0];
       if (row === undefined) throw new Error('Chat not found in submitKey');
@@ -346,8 +346,13 @@ export class DrizzleChatRepository extends ChatRepository {
         return { exchangeComplete: true, peerSessionId, chatName, chatCreatedAt, peerPublicKey: peerKey, myPublicKey: publicKey };
       }
 
-      return { exchangeComplete: false, peerSessionId, chatName, chatCreatedAt, peerPublicKey: null, myPublicKey: null };
+      return { exchangeComplete: false, peerSessionId, chatName, chatCreatedAt, peerPublicKey: null as string | null, myPublicKey: null as string | null };
     });
+
+    // peer в SubmitKeyResult = инфа о submitter (current user) — это «peer» с точки зрения
+    // получателя chat_key_request события, который и пишет её в свой peer_devices.
+    const peer = await this._fetchPeerInfo(sessionId);
+    return { ...txResult, peer };
   }
 
   /**
@@ -369,15 +374,87 @@ export class DrizzleChatRepository extends ChatRepository {
         ),
       );
 
-    return rows.map((row: typeof chats.$inferSelect): PendingKeyRequest => {
+    const requests = rows.map((row: typeof chats.$inferSelect): Omit<PendingKeyRequest, 'peer'> => {
       const isA = row.sessionAId === sessionId;
       return {
         chatId: row.id,
         chatName: row.name,
+        chatCreatedAt: row.createdAt.toISOString(),
         peerSessionId: isA ? row.sessionBId : row.sessionAId,
         peerPublicKey: (isA ? row.publicKeyB : row.publicKeyA) as string,
       };
     });
+
+    const peerSessionIds = [...new Set(requests.map((r): string => r.peerSessionId))];
+    const peerMap = await this._fetchPeerInfoBatch(peerSessionIds);
+    return requests.map((r): PendingKeyRequest => ({ ...r, peer: peerMap.get(r.peerSessionId) ?? null }));
+  }
+
+  /**
+   * JOIN sessions + accounts + uins по одной сессии. Возвращает null если сессия не найдена.
+   * @param sessionId - ID сессии собеседника.
+   * @returns Данные собеседника или null.
+   */
+  private async _fetchPeerInfo(sessionId: string): Promise<PeerInfo | null> {
+    const rows = await this._db
+      .select({
+        systemName: sessions.systemName,
+        deviceNickname: sessions.nickname,
+        accountId: sessions.accountId,
+        accountNickname: accounts.nickname,
+        accountUsername: accounts.username,
+        uin: uins.number,
+      })
+      .from(sessions)
+      .innerJoin(accounts, eq(accounts.id, sessions.accountId))
+      .leftJoin(uins, eq(uins.accountId, sessions.accountId))
+      .where(eq(sessions.id, sessionId))
+      .limit(1);
+    const row = rows[0];
+    if (row === undefined) return null;
+    return {
+      accountId: row.accountId,
+      uin: row.uin,
+      nickname: row.accountNickname,
+      username: row.accountUsername,
+      systemName: row.systemName,
+      deviceNickname: row.deviceNickname,
+    };
+  }
+
+  /**
+   * Батч-вариант _fetchPeerInfo — один запрос на массив sessionIds.
+   * @param sessionIds - Список ID сессий собеседников.
+   * @returns Map sessionId → PeerInfo (только найденные).
+   */
+  private async _fetchPeerInfoBatch(sessionIds: readonly string[]): Promise<Map<string, PeerInfo>> {
+    const map = new Map<string, PeerInfo>();
+    if (sessionIds.length === 0) return map;
+    const rows = await this._db
+      .select({
+        sessionId: sessions.id,
+        systemName: sessions.systemName,
+        deviceNickname: sessions.nickname,
+        accountId: sessions.accountId,
+        accountNickname: accounts.nickname,
+        accountUsername: accounts.username,
+        uin: uins.number,
+      })
+      .from(sessions)
+      .innerJoin(accounts, eq(accounts.id, sessions.accountId))
+      .leftJoin(uins, eq(uins.accountId, sessions.accountId))
+      .where(inArray(sessions.id, [...sessionIds]));
+    for (const r of rows) {
+      map.set(r.sessionId, {
+        accountId: r.accountId,
+        uin: r.uin,
+        nickname: r.accountNickname,
+        username: r.accountUsername,
+        systemName: r.systemName,
+        deviceNickname: r.deviceNickname,
+      });
+    }
+    return map;
   }
 
   /**
