@@ -72,10 +72,12 @@ export class LoginApplicationComponent {
       /* eslint-enable @typescript-eslint/naming-convention */
       next: (response: AuthAccountResponse): void => {
         this._tokenStorage.store(response.session.access_token, response.session.refresh_token);
-        void this._localDb.initialize(response.account.id).then((): void => {
-          this._wss.connect();
-          void this._router.navigate(['/application/main'], { replaceUrl: true });
-        });
+        void this._localDb.initialize(response.account.id)
+          .catch((err: unknown) => { console.error('[Login] DB init failed:', err); })
+          .finally((): void => {
+            this._wss.connect();
+            void this._router.navigate(['/application/main'], { replaceUrl: true });
+          });
       },
       error: (err: unknown): void => {
         this._isLoading.set(false);

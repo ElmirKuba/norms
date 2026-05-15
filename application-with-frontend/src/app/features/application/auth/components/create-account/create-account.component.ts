@@ -79,7 +79,9 @@ export class CreateAccountApplicationComponent {
       /* eslint-enable @typescript-eslint/naming-convention */
       next: (response: CreateAccountResponse): void => {
         this._tokenStorage.store(response.session.access_token, response.session.refresh_token);
-        void this._localDb.initialize(response.account.id).then((): void => {
+        void this._localDb.initialize(response.account.id)
+          .catch((err: unknown) => { console.error('[CreateAccount] DB init failed:', err); })
+          .finally((): void => {
           this._wss.connect();
           void this._router.navigate(['/application/main'], {
             replaceUrl: true,
