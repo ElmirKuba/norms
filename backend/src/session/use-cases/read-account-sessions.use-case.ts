@@ -23,16 +23,19 @@ export class ReadAccountSessionsUseCase {
   /**
    * Возвращает активные сессии аккаунта без чувствительных данных.
    * @param accountId - ID аккаунта чьи сессии запрашиваются.
+   * @param excludeSessionId - ID сессии, которую нужно исключить из результата (текущая сессия).
    * @returns Список сессий.
    */
-  public async execute(accountId: string): Promise<AccountSessionItem[]> {
+  public async execute(accountId: string, excludeSessionId: string): Promise<AccountSessionItem[]> {
     const sessions = await this._sessionRepo.findByAccountId(accountId);
 
-    return sessions.map((session: SessionEntity): AccountSessionItem => ({
-      id: session.id,
-      system_name: session.systemName,
-      nickname: session.nickname,
-      platform: session.platform,
-    }));
+    return sessions
+      .filter((session: SessionEntity): boolean => session.id !== excludeSessionId)
+      .map((session: SessionEntity): AccountSessionItem => ({
+        id: session.id,
+        system_name: session.systemName,
+        nickname: session.nickname,
+        platform: session.platform,
+      }));
   }
 }

@@ -54,6 +54,8 @@ export enum ErrorCode {
   CHAT_NOT_FOUND = 'chat_not_found',
   /** Чат с таким именем между этой парой устройств уже существует. */
   CHAT_NAME_TAKEN = 'chat_name_taken',
+  /** Нельзя создать чат с самим собой (той же сессией). */
+  CHAT_SELF_SESSION = 'chat_self_session',
   /** Текущая сессия не является участником чата. */
   NOT_YOUR_CHAT = 'not_your_chat',
   /** Сообщение с данным ID не найдено. */
@@ -118,6 +120,7 @@ export const ErrorMessage: Record<ErrorCode, string> = {
   // Chat
   [ErrorCode.CHAT_NOT_FOUND]: 'Чат не найден',
   [ErrorCode.CHAT_NAME_TAKEN]: 'Чат с таким именем уже существует',
+  [ErrorCode.CHAT_SELF_SESSION]: 'Нельзя создать чат с самим собой',
   [ErrorCode.NOT_YOUR_CHAT]: 'Нет доступа к этому чату',
   [ErrorCode.MESSAGE_NOT_FOUND]: 'Сообщение не найдено',
   [ErrorCode.NOT_YOUR_MESSAGE]: 'Нет доступа к этому сообщению',

@@ -48,15 +48,18 @@ export class SessionController {
 
   /**
    * Возвращает публичные сессии (устройства) аккаунта для выбора при создании чата.
+   * Текущая сессия запрашивающего исключается из результата.
+   * @param user - Payload текущего JWT.
    * @param accountId - ID аккаунта чьи устройства запрашиваются.
    * @returns Список сессий без чувствительных данных.
    */
   @Get('read-sessions')
   @UseGuards(JwtGuard)
   public readAccountSessions(
+    @CurrentUser() user: JwtPayload,
     @Query('account_id') accountId: string = '',
   ): ReturnType<ReadAccountSessionsUseCase['execute']> {
-    return this._readAccountSessionsUseCase.execute(accountId);
+    return this._readAccountSessionsUseCase.execute(accountId, user.sessionId);
   }
 
   /**

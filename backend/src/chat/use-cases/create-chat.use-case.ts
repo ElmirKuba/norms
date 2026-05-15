@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { DatabaseError } from 'pg';
 import { ChatRepository } from '../../domain/ports/chat.repository.port';
 import { SessionRepository } from '../../domain/ports/session.repository.port';
@@ -47,6 +47,10 @@ export class CreateChatUseCase {
     receiverSessionId: string,
     name: string,
   ): Promise<CreateChatResponse> {
+    if (mySessionId === receiverSessionId) {
+      throw new BadRequestException(makeError(ErrorCode.CHAT_SELF_SESSION));
+    }
+
     const receiverSession = await this._sessionRepo.findById(receiverSessionId);
     if (receiverSession === null) {
       throw new NotFoundException(makeError(ErrorCode.SESSION_NOT_FOUND));
