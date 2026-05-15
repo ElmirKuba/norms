@@ -9,6 +9,7 @@ import type { ApiPlatform, CreateAccountResponse } from '../../services/auth-api
 import { TokenStorageService } from '../../../../../core/services/storage/token-storage.service';
 import { WssService } from '../../../../../core/services/wss/wss.service';
 import { PlatformDetectorService, AppPlatform } from '../../../../../core/services/platform/platform.service';
+import { LocalDbService } from '../../../../../core/services/local-db/local-db.service';
 
 /** Экран создания аккаунта — ввод пароля */
 @Component({
@@ -48,6 +49,9 @@ export class CreateAccountApplicationComponent {
   /** Сервис определения платформы */
   private readonly _platform: PlatformDetectorService = inject(PlatformDetectorService);
 
+  /** Локальная БД — инициализируется после регистрации */
+  private readonly _localDb: LocalDbService = inject(LocalDbService);
+
   /** Инвайт-код, переданный со screen invite-code через router state */
   private readonly _inviteCode: string | undefined;
 
@@ -75,10 +79,12 @@ export class CreateAccountApplicationComponent {
       /* eslint-enable @typescript-eslint/naming-convention */
       next: (response: CreateAccountResponse): void => {
         this._tokenStorage.store(response.session.access_token, response.session.refresh_token);
-        this._wss.connect();
-        void this._router.navigate(['/application/main'], {
-          replaceUrl: true,
-          state: { pendingUin: true },
+        void this._localDb.initialize(response.account.id).then((): void => {
+          this._wss.connect();
+          void this._router.navigate(['/application/main'], {
+            replaceUrl: true,
+            state: { pendingUin: true },
+          });
         });
       },
       error: (err: unknown): void => {

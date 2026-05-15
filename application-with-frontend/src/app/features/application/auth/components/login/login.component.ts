@@ -9,6 +9,7 @@ import type { ApiPlatform, AuthAccountResponse } from '../../services/auth-api.s
 import { TokenStorageService } from '../../../../../core/services/storage/token-storage.service';
 import { WssService } from '../../../../../core/services/wss/wss.service';
 import { PlatformDetectorService, AppPlatform } from '../../../../../core/services/platform/platform.service';
+import { LocalDbService } from '../../../../../core/services/local-db/local-db.service';
 
 /** Экран входа в аккаунт */
 @Component({
@@ -51,6 +52,9 @@ export class LoginApplicationComponent {
   /** Сервис определения платформы */
   private readonly _platform: PlatformDetectorService = inject(PlatformDetectorService);
 
+  /** Локальная БД — инициализируется после входа */
+  private readonly _localDb: LocalDbService = inject(LocalDbService);
+
   /** Выполняет вход и при успехе переходит в main */
   public onSubmit(): void {
     if (!this._isValid) return;
@@ -68,8 +72,10 @@ export class LoginApplicationComponent {
       /* eslint-enable @typescript-eslint/naming-convention */
       next: (response: AuthAccountResponse): void => {
         this._tokenStorage.store(response.session.access_token, response.session.refresh_token);
-        this._wss.connect();
-        void this._router.navigate(['/application/main'], { replaceUrl: true });
+        void this._localDb.initialize(response.account.id).then((): void => {
+          this._wss.connect();
+          void this._router.navigate(['/application/main'], { replaceUrl: true });
+        });
       },
       error: (err: unknown): void => {
         this._isLoading.set(false);
