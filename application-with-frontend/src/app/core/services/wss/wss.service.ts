@@ -445,7 +445,13 @@ export class WssService {
     const chatName = typeof data['chat_name'] === 'string' ? data['chat_name'] : undefined;
     const chatCreatedAt = typeof data['chat_created_at'] === 'string' ? data['chat_created_at'] : undefined;
     const peerSessionId = typeof data['peer_session_id'] === 'string' ? data['peer_session_id'] : undefined;
-    this.chatKeyRequest$.next({ chatId, peerPublicKey, chatName, chatCreatedAt, peerSessionId });
+    this.chatKeyRequest$.next({
+      chatId,
+      peerPublicKey,
+      ...(chatName !== undefined ? { chatName } : {}),
+      ...(chatCreatedAt !== undefined ? { chatCreatedAt } : {}),
+      ...(peerSessionId !== undefined ? { peerSessionId } : {}),
+    });
   }
 
   /**
