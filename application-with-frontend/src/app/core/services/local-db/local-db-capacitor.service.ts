@@ -23,7 +23,12 @@ export class LocalDbCapacitorService extends LocalDbService {
     if (isConn.result === true) {
       this._db = await sqlite.retrieveConnection(dbName, false);
     } else {
-      this._db = await sqlite.createConnection(dbName, false, 'no-encryption', 1, false);
+      try {
+        this._db = await sqlite.createConnection(dbName, false, 'no-encryption', 1, false);
+      } catch {
+        // Race condition: parallel initialize() created connection first
+        this._db = await sqlite.retrieveConnection(dbName, false);
+      }
     }
     await this._db.open();
     await this._db.execute(LOCAL_DB_SCHEMA);
