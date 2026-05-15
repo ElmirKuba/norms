@@ -16,6 +16,12 @@
         <span class="chat-detail__subtitle">{{ chat()!.peerDisplay }} · {{ chat()!.deviceLabel }}</span>
       </div>
     </button>
+
+    <button class="chat-detail__delete" type="button" (click)="deleteChat()" aria-label="Удалить чат">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="M3 6H21M8 6V4H16V6M19 6L18 20H6L5 6H19Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
   </header>
 
   @if (chat()!.pendingKey) {

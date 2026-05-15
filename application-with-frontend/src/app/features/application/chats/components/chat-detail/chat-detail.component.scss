@@ -98,6 +98,26 @@
     text-overflow: ellipsis;
   }
 
+  &__delete {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--clr-danger);
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background 0.1s ease;
+
+    &:active {
+      background: var(--clr-danger-tint);
+    }
+  }
+
   &__pending-banner {
     display: flex;
     align-items: flex-start;

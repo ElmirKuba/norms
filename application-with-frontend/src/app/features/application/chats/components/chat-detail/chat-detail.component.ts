@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '
 import type { OnInit, WritableSignal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
+import { firstValueFrom } from 'rxjs';
 import { ChatsStateService } from '../../services/chats-state.service';
 import { LocalChatRepository } from '../../../../../core/services/local-db/local-chat.repository';
 import type { LocalChatWithPeer, LocalMessage, LocalMessageStatus } from '../../../../../core/services/local-db/local-db.types';
@@ -9,7 +11,12 @@ import { TokenStorageService } from '../../../../../core/services/storage/token-
 import { WssService } from '../../../../../core/services/wss/wss.service';
 import type { WssChatDeletedData, WssMessageSentData, WssMessageStatusData } from '../../../../../core/services/wss/wss.service';
 import { ChatEventsService } from '../../../../../core/services/chat/chat-events.service';
+import { ChatApiService } from '../../../../../core/services/chat/chat-api.service';
 import { avatarColorForId } from '../../../search/services/search-api.service';
+import { DialogModalComponent } from '../../../../../shared/modals/components/dialog-modal/dialog-modal.component';
+import { MODAL_BOTTOM_SHEET_PARAMS } from '../../../../../shared/modals/constants/modal.constants';
+import { ModalHeaderIcon } from '../../../../../shared/modals/types/modal.types';
+import type { DialogModalData } from '../../../../../shared/modals/types/modal.types';
 
 /** Данные чата для отображения. */
 interface ChatDetailView {
@@ -186,6 +193,12 @@ export class ChatDetailApplicationComponent implements OnInit {
   /** Сервис событий чата (отправка, расшифровка, обмен ключами). */
   private readonly _chatEvents: ChatEventsService = inject(ChatEventsService);
 
+  /** API чатов (удаление). */
+  private readonly _chatApi: ChatApiService = inject(ChatApiService);
+
+  /** Диалог подтверждения. */
+  private readonly _dialog: MatDialog = inject(MatDialog);
+
   /** DestroyRef для очистки подписок. */
   private readonly _destroyRef: DestroyRef = inject(DestroyRef);
 
@@ -240,6 +253,35 @@ export class ChatDetailApplicationComponent implements OnInit {
   public goBack(): void {
     this._chatsState.clearActiveChat();
     void this._router.navigate(['/application/main/chats']);
+  }
+
+  /** Открывает подтверждение удаления чата. */
+  public deleteChat(): void {
+    this._dialog.open<DialogModalComponent, DialogModalData>(DialogModalComponent, {
+      ...MODAL_BOTTOM_SHEET_PARAMS,
+      data: {
+        icon: ModalHeaderIcon.WARNING,
+        title: 'Удалить чат?',
+        text: 'Все сообщения будут удалены с этого устройства. Собеседник увидит уведомление.',
+        isConfirmModal: true,
+        confirmBtnText: 'Удалить',
+        cancelBtnText: 'Отмена',
+        isFooterButtonsVertically: true,
+        confirmCallback: (): void => { void this._doDelete(); },
+      },
+    });
+  }
+
+  /** Удаляет чат на сервере и в локальной SQLite, затем возвращается к списку. */
+  private async _doDelete(): Promise<void> {
+    try {
+      await firstValueFrom(this._chatApi.delete(this._chatId));
+    } catch {
+      // Чат уже удалён на сервере — продолжаем локальную очистку
+    }
+    await this._chatRepo.deleteChatKey(this._chatId);
+    await this._chatRepo.deleteChat(this._chatId);
+    this.goBack();
   }
 
   /** Отправить сообщение — оптимистичный UI + шифрование через ChatEventsService. */
