@@ -37,7 +37,7 @@ export class MasterKeyService {
       keyBytes,
       { name: 'AES-GCM' },
       false,
-      ['encrypt', 'decrypt'],
+      ['encrypt', 'decrypt', 'wrapKey', 'unwrapKey'],
     );
 
     return this._cachedKey;
