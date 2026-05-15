@@ -24,17 +24,12 @@ npm run dev:electron:attach
 npm run dev:ios:attach
 ```
 
-**Terminal 4** — Android эмулятор (sync + запуск):
+**Terminal 4** — Android эмулятор (эмулятор должен быть уже запущен):
 ```bash
 npm run dev:android:attach
 ```
-
-**После того как Android эмулятор полностью загрузился** — обязательно, один раз за сессию:
-```bash
-npm run dev:android:reverse
-```
-> Без этого Android не достучится до бэкенда и до dev-сервера.
-> iOS симулятору это не нужно — он разделяет сеть с маком напрямую.
+> Скрипт автоматически запускает `adb reverse` до деплоя — Android загружается с `localhost:4200` (secure context, `crypto.subtle` работает).
+> iOS симулятору `adb reverse` не нужен — он разделяет сеть с маком напрямую.
 
 **Бэкенд** — из `backend/`:
 ```bash
