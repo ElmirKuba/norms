@@ -116,6 +116,10 @@ export interface SubmitKeyResult {
   readonly exchangeComplete: boolean;
   /** ID сессии-собеседника. */
   readonly peerSessionId: string;
+  /** Название чата. */
+  readonly chatName: string;
+  /** ISO-8601 дата создания чата. */
+  readonly chatCreatedAt: string;
   /** Ключ собеседника (только если exchangeComplete, иначе null). */
   readonly peerPublicKey: string | null;
   /** Загруженный ключ (только если exchangeComplete, нужен для отправки собеседнику). */

@@ -106,6 +106,9 @@ export class ChatController {
     } else {
       this._store.sendToSession(result.peerSessionId, 'chat_key_request', {
         chat_id: dto.chat_id,
+        chat_name: result.chatName,
+        chat_created_at: result.chatCreatedAt,
+        peer_session_id: user.sessionId,
         peer_public_key: dto.public_key,
       });
     }

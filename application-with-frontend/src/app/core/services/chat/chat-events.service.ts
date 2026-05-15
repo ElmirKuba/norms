@@ -4,7 +4,7 @@ import { Subject } from 'rxjs';
 import { WssService } from '../wss/wss.service';
 import type { WssChatDeletedData, WssChatKeyReadyData, WssChatKeyRequestData, WssMessageNewData, WssMessageStatusData } from '../wss/wss.service';
 import { LocalChatRepository } from '../local-db/local-chat.repository';
-import type { LocalChatKey, LocalMessage } from '../local-db/local-db.types';
+import type { LocalChat, LocalChatKey, LocalMessage } from '../local-db/local-db.types';
 import { CryptoService } from '../crypto/crypto.service';
 import { MasterKeyService } from '../crypto/master-key.service';
 import { ChatApiService } from './chat-api.service';
@@ -318,7 +318,22 @@ export class ChatEventsService {
    * @param data - Данные события chat_key_request.
    */
   private async _handleChatKeyRequest(data: WssChatKeyRequestData): Promise<void> {
-    const { chatId } = data;
+    const { chatId, chatName, chatCreatedAt, peerSessionId } = data;
+
+    // Сохраняем чат локально если есть данные (peer получает чат через это событие)
+    if (peerSessionId !== undefined) {
+      const now = Date.now();
+      const createdAt = chatCreatedAt !== undefined ? new Date(chatCreatedAt).getTime() : now;
+      const chat: LocalChat = {
+        id: chatId,
+        name: chatName ?? chatId,
+        status: 'pending_key',
+        peerSessionId,
+        createdAt,
+        updatedAt: now,
+      };
+      await this._chatRepo.upsertChat(chat);
+    }
 
     const keyPair = await this._crypto.generateEcdhKeyPair();
     const publicKeyB64 = await this._crypto.exportPublicKey(keyPair.publicKey);

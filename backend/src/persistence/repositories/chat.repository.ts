@@ -338,12 +338,15 @@ export class DrizzleChatRepository extends ChatRepository {
 
       await tx.update(chats).set(updateValues).where(eq(chats.id, chatId));
 
+      const chatName = row.name;
+      const chatCreatedAt = row.createdAt.toISOString();
+
       if (peerKey !== null) {
         await tx.update(chats).set({ publicKeyA: null, publicKeyB: null, status: 'active', updatedAt: new Date() }).where(eq(chats.id, chatId));
-        return { exchangeComplete: true, peerSessionId, peerPublicKey: peerKey, myPublicKey: publicKey };
+        return { exchangeComplete: true, peerSessionId, chatName, chatCreatedAt, peerPublicKey: peerKey, myPublicKey: publicKey };
       }
 
-      return { exchangeComplete: false, peerSessionId, peerPublicKey: null, myPublicKey: null };
+      return { exchangeComplete: false, peerSessionId, chatName, chatCreatedAt, peerPublicKey: null, myPublicKey: null };
     });
   }
 

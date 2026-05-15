@@ -63,8 +63,14 @@ export interface WssChatKeyReadyData {
 export interface WssChatKeyRequestData {
   /** ID чата. */
   readonly chatId: string;
-  /** Публичный X25519 ключ инициатора (base64, raw 32 байта). */
+  /** Публичный ECDH ключ инициатора (base64). */
   readonly peerPublicKey: string;
+  /** Название чата (присутствует при real-time событии и при подключении). */
+  readonly chatName?: string;
+  /** ISO-8601 дата создания чата (присутствует при real-time событии и при подключении). */
+  readonly chatCreatedAt?: string;
+  /** ID сессии инициатора (присутствует при real-time событии и при подключении). */
+  readonly peerSessionId?: string;
 }
 
 /** Данные события session_created — новая сессия аккаунта. */
@@ -436,7 +442,10 @@ export class WssService {
     const chatId = data['chat_id'];
     const peerPublicKey = data['peer_public_key'];
     if (typeof chatId !== 'string' || typeof peerPublicKey !== 'string') return;
-    this.chatKeyRequest$.next({ chatId, peerPublicKey });
+    const chatName = typeof data['chat_name'] === 'string' ? data['chat_name'] : undefined;
+    const chatCreatedAt = typeof data['chat_created_at'] === 'string' ? data['chat_created_at'] : undefined;
+    const peerSessionId = typeof data['peer_session_id'] === 'string' ? data['peer_session_id'] : undefined;
+    this.chatKeyRequest$.next({ chatId, peerPublicKey, chatName, chatCreatedAt, peerSessionId });
   }
 
   /**
