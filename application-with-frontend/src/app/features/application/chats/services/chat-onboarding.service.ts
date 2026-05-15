@@ -26,6 +26,14 @@ export class ChatOnboardingService {
     }
 
     this._shown.set(true);
+
+    let called = false;
+    const once = (): void => {
+      if (called) return;
+      called = true;
+      onAcknowledge();
+    };
+
     const ref: MatDialogRef<DialogModalComponent> = this._dialog.open<DialogModalComponent, DialogModalData>(
       DialogModalComponent,
       {
@@ -34,13 +42,11 @@ export class ChatOnboardingService {
           title: 'Как работают чаты в Нормисах',
           text: 'Каждый чат привязан к этому устройству. Если зайдёшь со второго устройства — этого чата там не будет.\n\nЧтобы общаться с тем же человеком с другого устройства, попроси его создать новый чат, выбрав нужное устройство в твоём профиле.\n\nЭто особенность сквозного шифрования: приватные ключи хранятся только здесь.',
           closeBtnText: 'Понятно',
-          closeCallback: onAcknowledge,
+          closeCallback: once,
         },
       },
     );
-    // Если закрыли без кнопки (клик по backdrop) — всё равно выполняем callback
-    ref.afterClosed().subscribe((result: unknown): void => {
-      if (result === undefined) onAcknowledge();
-    });
+    // Покрывает закрытие по backdrop (closeCallback там не вызывается)
+    ref.afterClosed().subscribe((): void => { once(); });
   }
 }

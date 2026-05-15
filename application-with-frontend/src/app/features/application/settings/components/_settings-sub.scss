@@ -1,5 +1,9 @@
 // Общие стили для подэкранов Settings (включаются через @use)
 
+:host {
+  padding-top: env(safe-area-inset-top);
+}
+
 .settings-sub {
   &__header {
     display: flex;

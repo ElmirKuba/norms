@@ -4,6 +4,7 @@
   flex: 1 1 auto;
   overflow: hidden;
   background: var(--clr-bg-page);
+  padding-top: env(safe-area-inset-top);
 }
 
 .user-profile {
