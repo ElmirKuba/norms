@@ -20,11 +20,12 @@ export interface DecryptedMessage {
 }
 
 const IV_LENGTH = 12;
-const RATCHET_PUBKEY_LENGTH = 32;
+const RATCHET_PUBKEY_LENGTH = 65; // P-256 raw public key: 04 || x(32) || y(32)
 const BLOB_FLAG_NO_RATCHET = 0x00;
 const BLOB_FLAG_HAS_RATCHET_KEY = 0x01;
 
-const ECDH_ALGORITHM: EcKeyGenParams = { name: 'ECDH', namedCurve: 'X25519' };
+// P-256 поддерживается во всех WebView (Electron/iOS/Android). X25519 не поддерживается в ряде Chromium-версий.
+const ECDH_ALGORITHM: EcKeyGenParams = { name: 'ECDH', namedCurve: 'P-256' };
 
 /** HKDF-параметры для начального AES-ключа (initial ECDH exchange). */
 const INITIAL_HKDF_PARAMS: HkdfParams = {
@@ -50,14 +51,14 @@ const AES_KEY_ALGO: AesDerivedKeyParams = { name: 'AES-GCM', length: 256 };
 /**
  * Криптографические примитивы для E2E шифрования чатов.
  *
- * Схема: ECDH X25519 → HKDF-SHA256 → AES-256-GCM.
+ * Схема: ECDH P-256 → HKDF-SHA256 → AES-256-GCM.
  * Double Ratchet: DH-шаг при каждом новом рачет-ключе собеседника.
  * Мастер-ключ устройства оборачивает ключи чата перед записью в SQLite.
  */
 @Injectable({ providedIn: 'root' })
 export class CryptoService {
   /**
-   * Генерирует пару ECDH X25519 ключей.
+   * Генерирует пару ECDH P-256 ключей.
    * @returns CryptoKeyPair (extractable, deriveBits).
    */
   public generateEcdhKeyPair(): Promise<CryptoKeyPair> {
@@ -75,8 +76,8 @@ export class CryptoService {
   }
 
   /**
-   * Импортирует публичный X25519 ключ из base64.
-   * @param base64 - base64-строка (raw 32 байта).
+   * Импортирует публичный P-256 ключ из base64.
+   * @param base64 - base64-строка (raw 65 байт, uncompressed: 04 || x || y).
    * @returns Публичный CryptoKey.
    */
   public importPublicKey(base64: string): Promise<CryptoKey> {
@@ -84,10 +85,10 @@ export class CryptoService {
   }
 
   /**
-   * Выводит начальный AES-256-GCM ключ через ECDH + HKDF-SHA256 (normisy-chat-key-v1).
+   * Выводит начальный AES-256-GCM ключ через ECDH P-256 + HKDF-SHA256 (normisy-chat-key-v1).
    * Используется только при первичном обмене ключами (создание чата).
-   * @param myPrivateKey - Приватный ECDH ключ текущего устройства.
-   * @param peerPublicKey - Публичный ECDH ключ собеседника.
+   * @param myPrivateKey - Приватный P-256 ключ текущего устройства.
+   * @param peerPublicKey - Публичный P-256 ключ собеседника.
    * @returns AES-256-GCM CryptoKey (extractable).
    */
   public async deriveAesKey(myPrivateKey: CryptoKey, peerPublicKey: CryptoKey): Promise<CryptoKey> {
