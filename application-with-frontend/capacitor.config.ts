@@ -19,7 +19,9 @@ function getLocalIP(): string {
 }
 
 const devServer: CapacitorConfig['server'] = {
-  url: `http://${getLocalIP()}:4200`,
+  // localhost — secure context на iOS Simulator и Android Emulator (с adb reverse tcp:4200 tcp:4200).
+  // Реальное устройство требует IP — для него собирать отдельно без CAP_DEV.
+  url: 'http://localhost:4200',
   cleartext: true,
 };
 
